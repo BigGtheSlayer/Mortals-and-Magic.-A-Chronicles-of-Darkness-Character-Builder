@@ -117,15 +117,15 @@
 /* Key accent sampled: #401010 (deep crimson/near-black red), dark red wash.  */
 [data-theme="vampire"]{
   --bg:#f0eaea;
-  --surface:#faf4f4;
+  --surface:#fffefe;
   --border:#c8a0a0;
   --border-light:#e0c8c8;
   --text:#1c1010;
   --muted:#703030;
   --faint:#a87878;
-  --accent:#401010;
+  --accent:#000000;
   --accent-hover:#280808;
-  --chip:#ecdcdc;
+  --chip:#fa65656b;
   --tag:#e4d0d0;
   --danger:#c0392b;--danger-bg:#fdf2f1;
   --info:#1a5fa8;--info-bg:#eef4fb;
@@ -278,10 +278,33 @@
 }
 /* ── End splat themes ─────────────────────────────────────────────────────── */
 
+/* ── Splat watermark ──────────────────────────────────────────────────────── */
+/* Fixed skull silhouette behind all content. Defaults to mortal skull.       */
+/* mix-blend-mode:multiply makes the white JPEG background invisible.         */
+/* .watermark-hidden is toggled by JS and respected at both screen and print. */
+#splat-watermark{
+  position:fixed;
+  top:50%;left:50%;
+  transform:translate(-50%,-48%);
+  width:60vmin;height:60vmin;
+  pointer-events:none;
+  z-index:0;
+}
+#splat-watermark img{
+  width:100%;height:100%;
+  object-fit:contain;
+  opacity:0.030;
+  mix-blend-mode:multiply;
+}
+#splat-watermark.watermark-hidden{display:none}
+/* ── End splat watermark ──────────────────────────────────────────────────── */
+
 body{font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
 .page{max-width:1000px;margin:0 auto;padding:2rem 1.25rem 5rem}
 h1{font-size:1.6rem;font-weight:normal;letter-spacing:.03em;margin-bottom:.2rem}
 .app-sub{font-size:.8rem;font-family:sans-serif;color:var(--muted);margin-bottom:2rem}
+.app-sub-link{color:var(--muted);text-decoration:none;border-bottom:1px dotted var(--faint)}
+.app-sub-link:hover{color:var(--text);border-bottom-color:var(--text)}
 .gen-bar{display:flex;flex-wrap:wrap;gap:1.25rem;align-items:flex-start;margin-bottom:2rem;padding:1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:6px}
 .gen-group{display:flex;flex-direction:column;gap:.4rem}
 .gen-group-label{font-size:.6rem;font-family:sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.1rem}
@@ -475,7 +498,7 @@ button.sm{font-size:.75rem;padding:.25rem .6rem}
 .rsquare.on{background:var(--text);border-color:var(--text)}
 .arcana-row{display:flex;align-items:center;gap:5px;padding:2px 0;border-bottom:1px solid var(--border-light);font-family:sans-serif;font-size:.82rem;min-height:24px}
 .arcana-row:last-child{border-bottom:none}
-.arcana-lbl{flex:1;min-width:0;font-family:sans-serif;font-size:.82rem}
+.arcana-lbl{flex:1;font-family:sans-serif;font-size:.82rem}
 .renown-row{display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid var(--border-light);font-family:sans-serif;font-size:.82rem}
 .renown-row:last-child{border-bottom:none}
 .renown-lbl{flex:1;font-family:sans-serif;font-size:.82rem}
@@ -856,6 +879,8 @@ body.touch-device .ta-wrap textarea{
   .drawer-backdrop,
   .help-backdrop,
   .sec-chevron{display:none!important}
+  /* Watermark: hide only when toggled off; otherwise inherits fixed position from base CSS */
+  #splat-watermark.watermark-hidden{display:none!important}
 
   /* ── Remove outer page chrome ─────────────────────────────────────────── */
   body{background:#fff;font-size:12px}
@@ -1015,8 +1040,10 @@ body.touch-device .ta-wrap textarea{
   /* Option B: tinted background on skill category labels */
   .print-skill-cat{font-size:.65rem;font-family:sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:var(--chip);padding:1px 3px;margin:4px 0 2px;border-radius:2px}
   .print-skill-row{display:grid;grid-template-columns:9px 95px 59px 1fr;align-items:center;gap:3px;border-bottom:1px solid var(--border-light);padding:0;font-family:sans-serif;font-size:.78rem;min-height:13px;line-height:1.2}
+  .print-arcana-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px;border-bottom:1px solid var(--border-light);padding:1px 0;font-family:sans-serif;font-size:.78rem;min-height:13px;line-height:1.2}
   .print-skill-rote{font-size:.6rem;color:var(--accent);text-align:center}
   .print-skill-name{color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .print-arcana-name{color:var(--text);white-space:normal;word-break:break-word}
   .print-skill-dots{display:flex;gap:2px;justify-content:flex-end}
   .print-skill-spec{font-size:.6rem;color:var(--muted);font-style:italic;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
   .print-skill-spec-blank{border-bottom:1px solid var(--border-light);height:1px;align-self:flex-end;margin-bottom:3px}
@@ -1086,9 +1113,10 @@ body.touch-device .ta-wrap textarea{
        .drawer-backdrop   — Modal drawer (tablet only)
      ═══════════════════════════════════════════════════════════════════════════ -->
 <body>
+<div id="splat-watermark"><img id="splatWatermarkImg" src="assets/skull-mortal.jpg" alt="" onerror="this.style.display='none'"></div>
 <div class="page">
 <h1>Mortals+</h1>
-<p class="app-sub">Chronicles of Darkness — character sheet builder</p>
+<p class="app-sub">Chronicles of Darkness — character sheet builder &nbsp;·&nbsp; <a href="https://github.com/bonewolf22/Mortals-A-Chronicles-of-Darkness-Character-Builder" target="_blank" rel="noopener" class="app-sub-link">GitHub</a></p>
 
 <div class="gen-bar">
   <div class="gen-group">
@@ -1192,6 +1220,10 @@ body.touch-device .ta-wrap textarea{
         <option value="">— Custom —</option>
       </select>
     </div>
+    <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:6px;font-family:sans-serif;font-size:.78rem;color:var(--muted)">
+      <input type="checkbox" id="watermarkToggle" checked onchange="toggleWatermark(this.checked)" style="cursor:pointer">
+      <label for="watermarkToggle" style="cursor:pointer">Toggle image</label>
+    </div>
     <div class="hint" style="margin-bottom:6px">Toggle sections on or off. Data is preserved when hidden.</div>
     <div class="hint" style="margin-bottom:6px">Drag section titles on the sheet to reorder or move between columns.</div>
     <div style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap">
@@ -1286,6 +1318,10 @@ body.touch-device .ta-wrap textarea{
           <select id="drawerPresetSelect" onchange="applyPreset(this.value)">
             <option value="">— Custom —</option>
           </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:6px;font-family:sans-serif;font-size:.78rem;color:var(--muted)">
+          <input type="checkbox" id="drawerWatermarkToggle" checked onchange="toggleWatermark(this.checked)" style="cursor:pointer">
+          <label for="drawerWatermarkToggle" style="cursor:pointer">Toggle image</label>
         </div>
         <div class="hint" style="margin-bottom:6px">Toggle sections on or off. Data is preserved when hidden.</div>
         <div class="hint" style="margin-bottom:6px">Drag section titles on the sheet to reorder or move between columns.</div>
@@ -1707,12 +1743,14 @@ function commitDrop(dragKey,targetZone,insertion){
   STATE.sectionConfig._zoneOrder[targetZone]=newOrder;
   rebuildZones();
   renderEditor();
+  autoSave();
 }
 
 function toggleLayoutLock(){
   STATE.layoutLocked=!STATE.layoutLocked;
   updateLayoutLockButton();
   showStatus(STATE.layoutLocked?'Layout locked.':'Layout unlocked.');
+  autoSave();
 }
 function updateLayoutLockButton(){
   document.querySelectorAll('.layout-lock-btn').forEach(btn=>{
@@ -1730,18 +1768,47 @@ function applyTheme(theme){
   theme=theme||'neutral';
   STATE.theme=theme;
   document.body.setAttribute('data-theme',theme);
+  // Swap splat watermark skull — each theme maps to its own asset; fall back to mortal
+  const WATERMARK_MAP={
+    mage:'assets/skull-mage.jpg',
+    vampire:'assets/skull-vampire.jpg',
+    beast:'assets/skull-beast.jpg',
+    changeling:'assets/skull-changeling.jpg',
+    deviant:'assets/skull-deviant.jpg',
+    geist:'assets/skull-geist.jpg',
+    hunter:'assets/skull-hunter.jpg',
+    mummy:'assets/skull-mummy.jpg',
+    promethean:'assets/skull-promethean.jpg',
+    werewolf:'assets/skull-werewolf.jpg',
+    demon:'assets/skull-demon.jpg'
+  };
+  const wm=document.getElementById('splatWatermarkImg');
+  if(wm) wm.src=WATERMARK_MAP[theme]||'assets/skull-mortal.jpg';
   // Keep both selectors in sync
   const d=document.getElementById('themeSelect');
   const dr=document.getElementById('drawerThemeSelect');
   if(d)d.value=theme;
   if(dr)dr.value=theme;
   // Silently persist if a character is already saved
-  if(currentSaveId&&STATE.id){
-    try{localStorage.setItem(LS_PREFIX+STATE.id,JSON.stringify(STATE));}catch(e){}
-  }
+  autoSave();
 }
 
-// initCollapsibleSections — called after every renderEditor(). Finds all
+// toggleWatermark — shows or hides the splat watermark. Persists to STATE so
+// the preference survives save/load. Keeps both checkboxes in sync.
+function toggleWatermark(visible){
+  STATE.watermarkVisible = visible;
+  const wm = document.getElementById('splat-watermark');
+  if(wm) wm.classList.toggle('watermark-hidden', !visible);
+  // Keep both checkboxes in sync
+  const d  = document.getElementById('watermarkToggle');
+  const dr = document.getElementById('drawerWatermarkToggle');
+  if(d)  d.checked  = visible;
+  if(dr) dr.checked = visible;
+  // Silently persist if a character is already saved
+  autoSave();
+}
+
+
 // sec-blocks in collapsible zones, attaches the collapse chevron and click
 // handler if not already done (idempotent via dataset.collapseInit), then
 // restores previously-collapsed state from localStorage.
@@ -2358,6 +2425,7 @@ function renderEditor(){
   applySectionConfig();
   updateLayoutLockButton();
   applyTheme(STATE.theme||'neutral');
+  toggleWatermark(STATE.watermarkVisible !== false);
   requestAnimationFrame(()=>{
     initDragAndDrop();
     initCollapsibleSections();
@@ -2654,7 +2722,7 @@ function buildSectionHTML(sd){
       </div>`).join('');
     return `<div class="sec-block ${hidden}" id="secblock-${sd.key}">
       <div class="sec">${lbl} <span style="font-weight:400;font-size:.6rem;color:var(--faint)">(0–5)</span></div>
-      <div class="sec-collapsible-body"><div id="arcana-inner-${sd.key}" style="overflow:hidden;min-width:0">${rows}</div></div>
+      <div class="sec-collapsible-body"><div id="arcana-inner-${sd.key}">${rows}</div></div>
     </div>`;
   }
 
@@ -4334,6 +4402,26 @@ function saveCharacter(){
     showStatus('Saved.');loadSaves();
   }catch(e){showStatus('Save failed: '+e.message);}
 }
+
+// autoSave — debounced silent save. Only fires for sheets that already have a
+// currentSaveId (i.e. have been manually saved at least once). New unsaved
+// sheets are never auto-saved. Waits 1.5s after the last change before writing
+// so rapid edits (typing, clicking dots) are batched into a single write.
+let _autoSaveTimer=null;
+function autoSave(){
+  if(!currentSaveId||!STATE.id)return;
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer=setTimeout(()=>{
+    try{
+      localStorage.setItem(LS_PREFIX+STATE.id,JSON.stringify(STATE));
+      const idx=lsGetIndex();
+      const existing=idx.findIndex(s=>s.id===STATE.id);
+      const entry={id:STATE.id,name:STATE.name||'Unnamed'};
+      if(existing>=0)idx[existing]=entry;
+      lsSaveIndex(idx);
+    }catch(e){showStatus('Auto-save failed: '+e.message);}
+  },1500);
+}
 function loadSaves(){
   const list=lsGetIndex();
   // Update desktop sidebar
@@ -4465,6 +4553,22 @@ function showStatus(msg){
 
 if(window.matchMedia('(pointer:coarse)').matches)document.body.classList.add('touch-device');
 loadDB();loadSaves();
+
+// ── Auto-save event delegation ────────────────────────────────────────────────
+// Catches all input/change/click mutations on the sheet and debounces autoSave.
+// Scoped to #editorCol so sidebar and toolbar interactions don't trigger it.
+// Excludes file inputs to avoid triggering on import dialogs.
+document.addEventListener('DOMContentLoaded',()=>{
+  const col=document.getElementById('editorCol');
+  if(!col)return;
+  const handler=e=>{
+    if(e.target.type==='file')return;
+    autoSave();
+  };
+  col.addEventListener('input',handler);
+  col.addEventListener('change',handler);
+  col.addEventListener('click',handler);
+});
 
 // ── Compact print renderers ───────────────────────────────────────────────────
 // Called in beforeprint; restored in afterprint. Zero live sheet impact.
@@ -4598,12 +4702,12 @@ function renderArcanaBlockCompact(sd){
     const dots=Array.from({length:5},(_,i)=>
       `<span class="dot${val>=i+1?' filled':''}" style="width:9px;height:9px;border-width:1px"></span>`
     ).join('');
-    return `<div class="print-skill-row" style="grid-template-columns:1fr auto"><span class="print-skill-name">${escH(f.label)}</span><span class="print-skill-dots">${dots}</span></div>`;
+    return `<div class="print-arcana-row"><span class="print-arcana-name">${escH(f.label)}</span><span class="print-skill-dots">${dots}</span></div>`;
   }).join('');
   const inner=document.getElementById(`arcana-inner-${sd.key}`);if(!inner)return;
-  inner.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px;min-width:0;overflow:hidden">
-    <div style="min-width:0;overflow:hidden">${renderCol(fields.slice(0,half))}</div>
-    <div style="min-width:0;overflow:hidden">${renderCol(fields.slice(half))}</div>
+  inner.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">
+    <div>${renderCol(fields.slice(0,half))}</div>
+    <div>${renderCol(fields.slice(half))}</div>
   </div>`;
 }
 
@@ -4638,7 +4742,7 @@ function renderRenownBlockCompact(sd){
     const dots=Array.from({length:5},(_,i)=>
       `<span class="dot${val>=i+1?' filled':''}" style="width:9px;height:9px;border-width:1px"></span>`
     ).join('');
-    return `<div class="print-skill-row"><span class="print-skill-name">${escH(f.label)}</span><span class="print-skill-dots">${dots}</span></div>`;
+    return `<div class="print-arcana-row"><span class="print-arcana-name">${escH(f.label)}</span><span class="print-skill-dots">${dots}</span></div>`;
   }).join('');
   const inner=document.getElementById(`renown-inner-${sd.key}`);if(!inner)return;
   inner.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">
@@ -4664,8 +4768,8 @@ function renderPillarsBlockCompact(sd){
       `<span class="tsquare${i<filled?' on':''}" style="width:9px;height:9px;border-width:1px"></span>`
     ).join('');
     const note=pf.note?`<span class="print-skill-spec">${escH(pf.note)}</span>`:'';
-    return `<div class="print-skill-row">
-      <span class="print-skill-name">${escH(f.label)}</span>
+    return `<div class="print-arcana-row">
+      <span class="print-arcana-name">${escH(f.label)}</span>
       <span style="display:flex;gap:2px;flex-shrink:0">${dots}</span>
       <span style="display:flex;gap:2px;flex-shrink:0;margin-left:3px">${sqs}</span>
       ${note}

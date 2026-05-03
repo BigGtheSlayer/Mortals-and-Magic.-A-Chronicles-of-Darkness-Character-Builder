@@ -152,3 +152,5 @@ Run locally using the **Live Server** VS Code extension (`Go Live` button). Do n
 ## License
 
 Fan tool. Chronicles of Darkness is a trademark of Paradox Interactive AB. Not affiliated with or endorsed by Paradox Interactive. Forks are welcome provided they are not used for commercial gain.
+
+Skull images are from https://mrgone.rocksolidshells.com/
