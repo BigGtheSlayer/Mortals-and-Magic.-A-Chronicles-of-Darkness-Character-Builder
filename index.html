@@ -294,6 +294,25 @@
   --info:#1a5fa8;--info-bg:#eef4fb;
   --green:#1a6b3a;--green-bg:#edf7f1;
 }
+/* Mage: the Ascension — deep violet-purple with warm gold accents,           */
+/* matching the Revised/20th Anniversary edition colour palette.              */
+/* Key: #3a006f (deep violet), #c8a832 (warm gold), warm parchment wash.     */
+[data-theme="ascension"]{
+  --bg:#f2eff8;
+  --surface:#fdfdfd;
+  --border:#72008fa1;
+  --border-light:#d8c8ec;
+  --text:#160028;
+  --muted:#5a3080;
+  --faint:#9870b8;
+  --accent:#3a006f;
+  --accent-hover:#26004e;
+  --chip:#e7d80259;
+  --tag:#ddd0f0;
+  --danger:#c0392b;--danger-bg:#fdf2f1;
+  --info:#c8a832;--info-bg:#fdf8e8;
+  --green:#1a6b3a;--green-bg:#edf7f1;
+}
 /* ── End splat themes ─────────────────────────────────────────────────────── */
 
 /* ── Splat watermark ──────────────────────────────────────────────────────── */
@@ -1233,6 +1252,7 @@ body.touch-device .ta-wrap textarea{
         <option value="mortal">Mortal</option>
         <option value="hunter">Hunter</option>
         <option value="mage">Mage</option>
+        <option value="ascension">Mage (Ascension)</option>
         <option value="werewolf">Werewolf</option>
         <option value="vampire">Vampire</option>
         <option value="changeling">Changeling</option>
@@ -1332,6 +1352,7 @@ body.touch-device .ta-wrap textarea{
             <option value="mortal">Mortal</option>
             <option value="hunter">Hunter</option>
             <option value="mage">Mage</option>
+            <option value="ascension">Mage (Ascension)</option>
             <option value="werewolf">Werewolf</option>
             <option value="vampire">Vampire</option>
             <option value="changeling">Changeling</option>
@@ -1834,8 +1855,9 @@ function applyTheme(theme){
   STATE.theme=theme;
   document.body.setAttribute('data-theme',theme);
   // Swap splat watermark skull — each theme maps to its own asset; fall back to mortal
-  const WATERMARK_MAP={
+  const WATERMARK_MAP={ 
     mage:'assets/skull-mage.jpg',
+    ascension:'assets/prime.jpg',
     vampire:'assets/skull-vampire.jpg',
     beast:'assets/skull-beast.jpg',
     changeling:'assets/skull-changeling.jpg',
