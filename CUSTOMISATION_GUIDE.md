@@ -99,9 +99,14 @@ Ranged — add `ranges` (short/medium/long in yards) and `clip`:
   "speed_penalty": 0,
   "strength_req": 2,
   "availability": 3,
-  "notes": "Concealable under loose clothing."
+  "notes": "Concealable under loose clothing.",
+  "coverage": { "head": false, "torso": true, "arms": false, "legs": false }
 }
 ```
+
+The `coverage` object sets which locations are pre-checked when this entry is added from the library. All four keys must be present. Players can adjust coverage on any armor card at any time. Multiple equipped pieces covering the same location stack — this is intentional, to support edge cases like Mage Armor combining with mundane armor.
+
+**Coverage and derived stats** — when any armor is equipped, the Other Traits section shows an Armor row listing the summed general/ballistic rating per location (e.g. `Head 0/0 · Torso 1/3`). This row appears for both mortal and Ephemeral Entity sheets.
 
 ### Equipment
 
@@ -505,8 +510,8 @@ No theme required — half-splats use the Neutral theme by default. No code chan
 | `attributes-9` | The 9 core mortal attributes. Special renderer. Note: the section key is `attributes` but the type is `attributes-9`. |
 | `attributes-3` | Power / Finesse / Resistance for Ephemeral Entities. Special renderer. |
 | `skills` | All skills with rote checkbox and specialty. Special renderer. |
-| `derived-traits` | Mortal Health, Willpower, Defense, Initiative, Speed, Size. Special renderer. |
-| `derived-traits-entity` | Entity Corpus, Willpower, Essence, and derived stats. Uses entity formulas. Special renderer. |
+| `derived-traits` | Mortal Health, Willpower, Defense, Initiative, Speed, Size. When armor is equipped, also shows an Armor row with per-location general/ballistic totals. Special renderer. |
+| `derived-traits-entity` | Entity Corpus, Willpower, Essence, and derived stats. Also shows the Armor coverage row when armor is equipped (same data as mortal). Special renderer. |
 | `dot-track` | Clickable 1–N dot track (Integrity, Gnosis, Pilgrimage, etc.). State: single integer. |
 | `dot-square-track` | Dot row (max rating) above a square row (current damage or condition). Used for Clarity and Stability. State: `sk` (integer) + `sk_squares` (array of booleans). |
 | `labeled-track` | Vertical 1–N track where each level has a dot toggle and an inline-editable label. Used for Synergy. State: `sk` (integer) + `sk_labels` (string array). |
@@ -522,7 +527,7 @@ No theme required — half-splats use the Neutral theme by default. No code chan
 | `covers` | Structured identity cards with name, age, appearance, Cover Rating, notes, and per-cover Merits. Demon only. |
 | `quinpar-wheel` | Circular 20-square track for Quintessence and Paradox. Quintessence fills clockwise from the left; Paradox counter-clockwise. Increasing Paradox decrements Quintessence to keep their sum at 20. State: `sk_quintessence` and `sk_paradox` (integers). Controls hide on print; SVG prints as-is. |
 | `weapons` | Weapon cards with full weapon fields. Special renderer. |
-| `armor` | Armor cards with full armor fields. Special renderer. |
+| `armor` | Armor cards with full armor fields, including per-location coverage checkboxes (Head, Torso, Arms, Legs). Equipped pieces contribute to the Armor row in Other Traits. Special renderer. |
 | `equipment` | Equipment cards with full equipment fields. Special renderer. |
 | `textarea` | Multi-line free text with markdown support. Shows rendered text by default; click to edit. |
 
