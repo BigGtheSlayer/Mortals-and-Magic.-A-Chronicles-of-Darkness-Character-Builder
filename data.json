@@ -3017,7 +3017,13 @@
       "defense_penalty": 0,
       "strength_req": 1,
       "availability": 1,
-      "notes": "This armor is concealed. Covers torso, arms, and legs."
+      "notes": "This armor is concealed. Covers torso, arms, and legs.",
+      "coverage": {
+        "head": false,
+        "torso": true,
+        "arms": true,
+        "legs": true
+      }
     },
     {
       "name": "Plate",
@@ -3027,7 +3033,13 @@
       "speed_penalty": -3,
       "strength_req": 3,
       "availability": 4,
-      "notes": "Covers torso, arms, and legs."
+      "notes": "Covers torso, arms, and legs.",
+      "coverage": {
+        "head": false,
+        "torso": true,
+        "arms": true,
+        "legs": true
+      }
     }
   ],
   "equipment": [
@@ -3899,7 +3911,6 @@
       ]
     }
   },
-
   "_help_comment": "── HELP ──────────────────────────────────────────────────────────────────────",
   "help_sections": [
     {

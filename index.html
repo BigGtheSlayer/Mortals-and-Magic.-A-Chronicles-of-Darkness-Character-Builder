@@ -7,12 +7,30 @@
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
      CSS — Visual appearance, layout, colour scheme, responsive breakpoints,
-     and print stylesheet. All colours are defined as CSS variables in :root
-     at the top of this section — that is the only place they need to change
-     for splat theming (v7).
+     and print stylesheet.
+
+     Section index (in order):
+       :root variables    — all colour tokens; only place to change for theming
+       Splat themes       — per-splat [data-theme] overrides of :root variables
+       Splat watermark    — fixed skull silhouette behind sheet content
+       Layout & UI        — page, buttons, inputs, sheet columns, cards, etc.
+       Markdown display   — .desc-display click-to-edit field pattern
+       Trackers           — health boxes, willpower, dot/square/resource tracks
+       Section types      — arcana, renown, pillars, labeled-track, forms, cipher, covers
+       Touch styles       — enlarged tap targets, sidebar/FAB swap (pointer:coarse)
+       Responsive reflow  — ≤830px viewport adjustments
+       Tablet drawer      — FAB, backdrop, bottom-sheet panel, tabs
+       Help modal         — full-screen help overlay
+       Textarea resize    — touch-friendly drag handle for textarea height
+       Print stylesheet   — @media print: compact layout, hidden UI, page breaks
      ═══════════════════════════════════════════════════════════════════════════ -->
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;touch-action:manipulation}
+/* ── Colour tokens ────────────────────────────────────────────────────────── */
+/* All colours are CSS variables. Splat themes below override these values.   */
+/* To add a new theme: copy a [data-theme] block, change the values, add the  */
+/* theme name to both <select> elements in the HTML, add a WATERMARK_MAP entry */
+/* in applyTheme() in JS, and add an assets/skull-{theme}.jpg asset.          */
 :root{
   --bg:#f7f5f0;--surface:#fff;--border:#d4cfc5;--border-light:#e8e4dd;
   --text:#1a1916;--muted:#6b6760;--faint:#999690;
@@ -432,19 +450,15 @@ button.sm{font-size:.75rem;padding:.25rem .6rem}
 .add-row input{flex:1;min-width:110px}
 .hint{font-size:.7rem;font-family:sans-serif;color:var(--faint);margin-top:3px}
 /* ── Markdown description display / edit toggle ──────────────────────────── */
-/* .desc-display — rendered HTML view. Click to switch to textarea.          */
-/* .desc-preview — live preview above full textarea sections.                */
+/* .desc-display — the default rendered-markdown view of a description field. */
+/* Clicking it hides itself and reveals the textarea for editing.             */
+/* hideDescEdit() reverses this: saves the value, re-renders markdown, shows  */
+/* the display div again. descField() in JS builds both elements together.    */
 .desc-display{font-family:sans-serif;font-size:.8rem;line-height:1.55;padding:4px 6px;min-height:2.4em;border:1px solid var(--border-light);border-radius:3px;background:var(--surface);color:var(--text);cursor:text;width:100%;white-space:pre-wrap;word-break:break-word}
 .desc-display:empty::before,.desc-display.empty::before{content:'Click to edit…';color:var(--faint);font-style:italic}
 .desc-display strong{font-weight:700}
 .desc-display em{font-style:italic}
 .desc-edit-hint{font-size:.62rem;font-family:sans-serif;color:var(--faint);margin-top:2px;letter-spacing:.02em}
-.desc-preview{font-family:sans-serif;font-size:.85rem;line-height:1.6;padding:.4rem .6rem;border:1px solid var(--border-light);border-radius:3px 3px 0 0;background:var(--chip);color:var(--text);width:100%;white-space:pre-wrap;word-break:break-word;border-bottom:none}
-.desc-preview:empty::before{content:'Preview will appear here…';color:var(--faint);font-style:italic}
-.desc-preview strong{font-weight:700}
-.desc-preview em{font-style:italic}
-.desc-preview-lbl{font-size:.62rem;font-family:sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:2px}
-.has-preview textarea{border-radius:0 0 3px 3px}
 /* desc-display print rules consolidated into main @media print block below */
 .merit-toggle-hd{display:flex;align-items:center;justify-content:space-between;margin-top:14px;margin-bottom:5px}
 .merit-toggle-hd .sec{margin:0;border:none;padding:0}
@@ -490,8 +504,8 @@ button.sm{font-size:.75rem;padding:.25rem .6rem}
 .quinpar-ctrl-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .quinpar-ctrl-row{display:flex;align-items:center;gap:5px}
 .quinpar-val{font-size:1.1rem;font-weight:700;min-width:20px;text-align:center}
-/* Print: wheel SVG prints, but hide the +/- controls and numeric values */
-/* ── Print: Quintessence/Paradox wheel — hide controls, empty squares ─────── */
+/* Print: hide +/- controls; render SVG squares as empty outlines so the      */
+/* wheel can be filled in pencil. Paradox/Quintessence values zero out.       */
 @media print{.quinpar-controls{display:none!important}.quinpar-svg rect{fill:transparent!important;stroke:var(--border)!important}.quinpar-svg line{display:none!important}}
 .rsquare{width:100%;aspect-ratio:1;border:1.5px solid var(--border);border-radius:2px;cursor:pointer;background:var(--surface);transition:background .1s}
 .rsquare:hover{border-color:var(--muted)}
@@ -597,7 +611,6 @@ button.sm{font-size:.75rem;padding:.25rem .6rem}
 .cover-card.open .cover-card-toggle{transform:rotate(90deg)}
 .cover-card-body{display:none;padding:8px 10px 12px;border-top:1px solid var(--border-light);background:var(--surface)}
 .cover-card.open .cover-card-body{display:block}
-.cover-meta-row{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;margin-bottom:8px}
 .cover-rating-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-family:sans-serif;font-size:.82rem}
 .cover-rating-lbl{color:var(--muted);white-space:nowrap}
 .cover-merits-hd{font-size:.65rem;font-family:sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 0 4px;border-top:1px solid var(--border-light);padding-top:6px}
@@ -680,7 +693,12 @@ body.touch-device .app-cols{grid-template-columns:1fr}
   }
 }
 
-/* Floating trigger button — only visible on tablet */
+/* ── Tablet drawer ────────────────────────────────────────────────────────── */
+/* On touch devices the desktop sidebar is hidden. A floating action button   */
+/* (FAB) opens a bottom-sheet modal with four tabs: Saved, Configure, Sheet,  */
+/* Library. The drawer is z-index:1001, above the FAB at 1000.                */
+
+/* FAB — hidden by default; display:flex set by body.touch-device rule above  */
 .sidebar-fab{
   display:none;
   position:fixed;
@@ -705,7 +723,7 @@ body.touch-device .app-cols{grid-template-columns:1fr}
 .sidebar-fab:hover{background:var(--accent-hover);box-shadow:0 4px 12px rgba(0,0,0,.3)}
 body.touch-device .sidebar-fab{display:flex}
 
-/* Modal backdrop */
+/* Backdrop — full-screen translucent overlay; clicking it closes the drawer  */
 .drawer-backdrop{
   display:none;
   position:fixed;
@@ -717,7 +735,7 @@ body.touch-device .sidebar-fab{display:flex}
 .drawer-backdrop.open{display:block}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-/* Modal panel */
+/* Panel — slides up from the bottom, rounded top corners, max 85vh height    */
 .drawer-panel{
   position:absolute;
   bottom:0;
@@ -733,7 +751,7 @@ body.touch-device .sidebar-fab{display:flex}
 }
 @keyframes slideUp{from{transform:translateY(60px);opacity:.6}to{transform:translateY(0);opacity:1}}
 
-/* Drag handle pill */
+/* Drag-handle pill at top of panel — decorative, matches native sheet UX     */
 .drawer-pill{
   width:36px;height:4px;
   background:var(--border);
@@ -742,7 +760,7 @@ body.touch-device .sidebar-fab{display:flex}
   flex-shrink:0;
 }
 
-/* Tab bar */
+/* Tab bar — horizontal strip of four tab buttons; hides scrollbar on narrow  */
 .drawer-tabs{
   display:flex;
   border-bottom:1px solid var(--border);
@@ -772,7 +790,7 @@ body.touch-device .sidebar-fab{display:flex}
 .drawer-tab:hover{color:var(--text);background:var(--chip)}
 .drawer-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
 
-/* Tab content area */
+/* Scrollable content area beneath the tab bar                                */
 .drawer-body{
   flex:1;
   overflow-y:auto;
@@ -780,11 +798,11 @@ body.touch-device .sidebar-fab{display:flex}
   -webkit-overflow-scrolling:touch;
 }
 
-/* Tab panes */
+/* Each tab pane; only the active pane is visible                             */
 .drawer-pane{display:none}
 .drawer-pane.active{display:block}
 
-/* Inside drawer: save list can be taller since we have more height budget */
+/* Drawer save list has no max-height — the panel itself constrains scroll    */
 .drawer-body .save-list{max-height:none}
 
 /* ── End tablet drawer ───────────────────────────────────────────────────── */
@@ -1009,6 +1027,7 @@ body.touch-device .ta-wrap textarea{
   .arcana-row{break-inside:avoid}
   .labeled-track-row{break-inside:avoid}
   .pillars-row{break-inside:avoid}
+  [id^="pillars-inner"]{break-inside:avoid}
 
   /* Forms table (werewolf forms): keep the whole table together */
   .forms-wrap{break-inside:avoid}
@@ -1041,6 +1060,12 @@ body.touch-device .ta-wrap textarea{
   .print-skill-cat{font-size:.65rem;font-family:sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:var(--chip);padding:1px 3px;margin:4px 0 2px;border-radius:2px}
   .print-skill-row{display:grid;grid-template-columns:9px 95px 59px 1fr;align-items:center;gap:3px;border-bottom:1px solid var(--border-light);padding:0;font-family:sans-serif;font-size:.78rem;min-height:13px;line-height:1.2}
   .print-arcana-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px;border-bottom:1px solid var(--border-light);padding:1px 0;font-family:sans-serif;font-size:.78rem;min-height:13px;line-height:1.2}
+  .print-pillars-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px;border-bottom:1px solid var(--border-light);padding:2px 0;font-family:sans-serif;font-size:.78rem}
+  .print-pillars-row:last-child{border-bottom:none}
+  .print-pillars-left{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .print-pillars-lbl{color:var(--muted);font-size:.75rem}
+  .print-pillars-note{color:var(--text);font-size:.72rem;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .print-pillars-tracks{display:flex;flex-direction:column;align-items:flex-start;gap:2px;flex-shrink:0}
   .print-skill-rote{font-size:.6rem;color:var(--accent);text-align:center}
   .print-skill-name{color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
   .print-arcana-name{color:var(--text);white-space:normal;word-break:break-word}
@@ -1095,22 +1120,28 @@ body.touch-device .ta-wrap textarea{
 </head>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     HTML SKELETON — Static page structure. Most of this is empty containers
-     that JavaScript fills at runtime. Key landmarks:
+     HTML SKELETON — Static page structure. Most containers are empty shells
+     that JavaScript fills at runtime via renderSheetZone() / renderEditor().
+     Zone container IDs must match the ZONE_IDS map in JS.
 
-       .gen-bar          — Generate baseline / New blank sheet buttons
+     Key landmarks:
+       #splat-watermark  — Fixed skull silhouette behind all content
+       .gen-bar          — Generate / Blank buttons at the top of the page
        #editorCol        — The entire character sheet area (left side)
-         #emptyState     — Placeholder shown before any character is loaded
-         #editorWrap     — The actual sheet; hidden until a character loads
-           #dynamicHeader  — Splat-specific header fields (injected by JS)
+         #emptyState       — Placeholder shown before any character loads
+         #editorWrap       — The actual sheet; hidden until a character loads
+           #dynamicHeader  — Splat-specific identity header (injected by JS)
            #zone-beats     — Beats/XP trackers (injected by JS)
-           #zone-full-width-top    — Attributes block (injected by JS)
-           #zone-left-column       — Skills and ability lists (injected by JS)
-           #zone-right-column      — Traits, resources, roleplaying (injected by JS)
-           #zone-full-width-bottom — Merits, gear, notes (injected by JS)
-       .desktop-sidebar   — Sidebar column (desktop only, hidden on touch devices)
-       .sidebar-fab       — Floating button (touch devices only)
-       .drawer-backdrop   — Modal drawer (tablet only)
+           #zone-full-width-top    — Attributes block
+           #zone-left-column       — Skills and ability lists
+           #zone-right-column      — Traits, resources, roleplaying
+           #zone-full-width-bottom — Merits, gear, notes
+       .desktop-sidebar  — Sidebar column (desktop only, hidden on touch)
+         #cfgPanel         — Section toggle checkboxes (built by buildCfgPanel)
+       .sidebar-fab      — Floating action button (touch devices only)
+       .drawer-backdrop  — Bottom-sheet modal drawer (touch devices only)
+         #drawerCfgPanel   — Mirror of #cfgPanel inside the drawer
+       #helpBackdrop     — Help modal (rendered lazily on first open)
      ═══════════════════════════════════════════════════════════════════════════ -->
 <body>
 <div id="splat-watermark"><img id="splatWatermarkImg" src="assets/skull-mortal.jpg" alt="" onerror="this.style.display='none'"></div>
@@ -1370,42 +1401,76 @@ body.touch-device .ta-wrap textarea{
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
      JAVASCRIPT — All application logic. No external libraries or frameworks.
+     Single-file architecture: HTML, CSS, and JS all live here. data.json is
+     fetched once at startup and drives all section definitions and content.
 
-     Print-specific logic is isolated to two sections at the bottom:
-       "Compact print renderers" — JS renderers called only in beforeprint,
-         replacing attrs/skills/lists with space-efficient versions. Zero
-         effect on the live sheet. Restored in afterprint.
-       "Print expand/restore"    — beforeprint/afterprint event handlers.
-         Expands collapsed sections, invokes compact renderers, then restores
-         everything after the print dialog closes.
-     The print CSS lives in the stylesheet above (see "Print stylesheet").
+     Section index (in order):
+       Global constants       — ATTRIBUTES, SKILLS, SECTION_DEFS, DB, STATE
+       Startup / loadDB()     — fetch data.json, wire all global structures
+       Zone layout            — ZONES map, rebuildZones(), drag-drop ordering
+       Collapsible sections   — collapse/expand with localStorage persistence
+       Drag and drop          — mouse + touch drag to reorder/move sections
+       Theme & watermark      — applyTheme(), toggleWatermark()
+       Config panel           — buildCfgPanel(), section visibility toggles
+       Section visibility     — getSecConfig(), secVisible(), toggleSec()
+       Tablet drawer          — openDrawer(), switchDrawerTab(), etc.
+       Character generation   — generateMortal(), generateEphemeral(), blank()
+       State management       — setState(), patchState()
+       Sheet rendering        — renderEditor(), renderSheetZone(), buildSectionHTML()
+       Section HTML builders  — buildBeatsXpHTML(), buildMeritsHTML(), etc.
+       Attribute renderers    — renderAttrBlock(), renderAttr3Block(), shared helpers
+       Entity derived traits  — renderCorpusTracker(), updateEntityDerived(), etc.
+       Skill renderer         — renderSkillBlock(), setSkillRating()
+       Derived traits         — updateDerived(), health/willpower trackers
+       Track renderers        — dot-track, dot-square-track, resource-track, labeled-track
+       Arcana / Renown        — setNestedDot(), renderArcanaBlock(), renderRenownBlock()
+       Pillars block          — renderPillarsBlock(), setPillarDot(), togglePillarSquare()
+       Forms block            — renderFormsBlock() (Werewolf forms table)
+       Cipher / Covers        — setCipherField(), renderCovers(), cover merits
+       Generic list renderers — renderGenericRatedList(), renderNamedList(), renderLineItems()
+       Merit list             — renderMeritList() wrapper + addMerit(), toggleMeritMax()
+       Gear renderers         — renderWeaponList(), renderArmorList(), renderEquipList()
+       Help modal             — openHelp(), closeHelp(), renderHelp()
+       Utilities              — escH(), mdH(), descField(), taWrap(), copyText()
+       localStorage           — saveCharacter(), loadCharacter(), autoSave()
+       Data import/export     — exportSheet(), importSheet(), exportData(), previewDataImport()
+       Auto-save delegation   — #editorCol event listener
+       Compact print renderers — beforeprint replacements for attrs/skills/lists/gear
+       Print expand/restore   — beforeprint/afterprint event handlers
      ═══════════════════════════════════════════════════════════════════════════ -->
 <script>
 // ── Global constants ──────────────────────────────────────────────────────────
-// ATTRIBUTES and ATTR_LABELS are hardcoded — they cannot be configured via
-// data.json. The 9 attributes are fixed by the Chronicles of Darkness system.
+// ATTRIBUTES / ATTR_LABELS — hardcoded; cannot be configured via data.json.
+// The 9 CofD attributes (3 categories × 3) are fixed by the game system.
 const ATTRIBUTES={mental:['intelligence','wits','resolve'],physical:['strength','dexterity','stamina'],social:['presence','manipulation','composure']};
 const ATTR_LABELS={intelligence:'Intelligence',wits:'Wits',resolve:'Resolve',strength:'Strength',dexterity:'Dexterity',stamina:'Stamina',presence:'Presence',manipulation:'Manipulation',composure:'Composure'};
 
-// SKILLS, SKILL_LABELS, ALL_SKILLS are populated from data.json skill_definitions.
+// SKILLS / SKILL_LABELS / ALL_SKILLS — populated from data.json skill_definitions.
+// Skills are configurable (add/remove/rename) unlike attributes.
 let SKILLS={},SKILL_LABELS={},ALL_SKILLS=[];
 
-// SECTION_DEFS    — full array of section definition objects from data.json
-// SEC_DEFAULTS    — map of key → default boolean (true = visible by default)
-// SECTION_MAP     — map of key → section definition object (fast lookup)
-// ZONES           — map of zone name → ordered array of section definitions
-//                   rebuilt by rebuildZones() on load and after drag-drop
-// PRESETS         — array of named preset objects from data.json
+// SECTION_DEFS — full array of section definition objects from data.json.
+// SEC_DEFAULTS — map of key → boolean (true = visible by default for that section).
+// SECTION_MAP  — map of key → section definition object (O(1) lookup by key).
+// ZONES        — map of zone name → ordered array of section definitions.
+//                Rebuilt by rebuildZones() on load and after every drag-drop.
+// PRESETS      — array of named preset objects (e.g. "Vampire", "Mage") from data.json.
 let SECTION_DEFS=[],SEC_DEFAULTS={},SECTION_MAP={},ZONES={},PRESETS=[];
+
+// ENTITY_ATTRS — the three fixed attributes for Ephemeral Entity sheets.
+// Unlike mortal attributes these are not data.json-configurable.
 const ENTITY_ATTRS=[{key:'power',label:'Power'},{key:'finesse',label:'Finesse'},{key:'resistance',label:'Resistance'}];
 
-// DB — in-memory content library. Keyed by db_key from section_definitions.
-// Populated from data.json on load. Examples: DB.merits, DB.disciplines, etc.
+// DB — in-memory content library, keyed by db_key from section_definitions.
+// Populated from data.json on load. e.g. DB.merits, DB.disciplines, DB.weapons.
+// Content arrays are sorted alphabetically on load unless preserve_order:true.
 const DB={};
 
-// STATE — the active character object. Everything on the sheet reads and writes
-// here. Persisted to localStorage as JSON on save. See patchState() for the
-// full field list and _baseCharacterFields() for initial values.
+// STATE — the active character object. Everything on the sheet reads/writes here.
+// Persisted to localStorage as JSON. See patchState() for the full field schema
+// and _baseCharacterFields() for the initial values assigned on character creation.
+// currentSaveId — the localStorage key suffix for the loaded character, or null
+// if the current sheet has never been saved.
 let STATE={},currentSaveId=null;
 
 // ── Startup: load data.json ───────────────────────────────────────────────────
@@ -1915,57 +1980,37 @@ function buildCfgPanel(){
   document.getElementById('drawerCfgPanel').innerHTML=html;
 }
 
-function getCfgGroupCollapsed(gname){
+// ── Config panel collapse helpers (unified) ───────────────────────────────────
+// getCfgCollapsed(key, storageKey, defaultFn) — reads collapse state from sessionStorage.
+// toggleCfgCollapse(key, storageKey, bodyClass, chevronClass) — toggles and persists.
+function getCfgCollapsed(key,storageKey,defaultFn){
   try{
-    const s=sessionStorage.getItem('cfgGroups');
+    const s=sessionStorage.getItem(storageKey);
     const map=s?JSON.parse(s):{};
-    if(map[gname]!==undefined)return map[gname];
+    if(map[key]!==undefined)return map[key];
   }catch(e){}
-  return gname!=='Mortal';
+  return defaultFn(key);
 }
-function toggleCfgGroup(gname){
-  // Slugify to avoid invalid CSS selectors from group names with spaces
-  const slug=gname.toLowerCase().replace(/[^a-z0-9]/g,'-');
-  const bodies=document.querySelectorAll(`.cfg-group-body-${slug}`);
-  const chevrons=document.querySelectorAll(`.cfg-chevron-${slug}`);
-  // Determine current state from first found body
-  const first=bodies[0];
-  if(!first)return;
+function toggleCfgCollapse(key,storageKey,bodyClass,chevronClass){
+  const slug=key.toLowerCase().replace(/[^a-z0-9]/g,'-');
+  const bodies=document.querySelectorAll(`.${bodyClass}-${slug}`);
+  const chevrons=document.querySelectorAll(`.${chevronClass}-${slug}`);
+  const first=bodies[0];if(!first)return;
   const nowCollapsed=first.style.display!=='none';
   bodies.forEach(b=>b.style.display=nowCollapsed?'none':'block');
   chevrons.forEach(c=>c.style.transform=nowCollapsed?'':'rotate(90deg)');
   try{
-    const s=sessionStorage.getItem('cfgGroups');
+    const s=sessionStorage.getItem(storageKey);
     const map=s?JSON.parse(s):{};
-    map[gname]=nowCollapsed;
-    sessionStorage.setItem('cfgGroups',JSON.stringify(map));
+    map[key]=nowCollapsed;
+    sessionStorage.setItem(storageKey,JSON.stringify(map));
   }catch(e){}
 }
-
-function getCfgCatCollapsed(cat){
-  try{
-    const s=sessionStorage.getItem('cfgCats');
-    const map=s?JSON.parse(s):{};
-    if(map[cat]!==undefined)return map[cat];
-  }catch(e){}
-  return false; // categories default to expanded
-}
-function toggleCfgCat(cat){
-  const slug=cat.toLowerCase().replace(/[^a-z0-9]/g,'-');
-  const bodies=document.querySelectorAll(`.cfg-cat-body-${slug}`);
-  const chevrons=document.querySelectorAll(`.cfg-cat-chevron-${slug}`);
-  const first=bodies[0];
-  if(!first)return;
-  const nowCollapsed=first.style.display!=='none';
-  bodies.forEach(b=>b.style.display=nowCollapsed?'none':'block');
-  chevrons.forEach(c=>c.style.transform=nowCollapsed?'':'rotate(90deg)');
-  try{
-    const s=sessionStorage.getItem('cfgCats');
-    const map=s?JSON.parse(s):{};
-    map[cat]=nowCollapsed;
-    sessionStorage.setItem('cfgCats',JSON.stringify(map));
-  }catch(e){}
-}
+// Public wrappers — call sites in buildCfgPanel() HTML use these names.
+function getCfgGroupCollapsed(gname){return getCfgCollapsed(gname,'cfgGroups',g=>g!=='Mortal');}
+function toggleCfgGroup(gname){toggleCfgCollapse(gname,'cfgGroups','cfg-group-body','cfg-chevron');}
+function getCfgCatCollapsed(cat){return getCfgCollapsed(cat,'cfgCats',()=>false);}
+function toggleCfgCat(cat){toggleCfgCollapse(cat,'cfgCats','cfg-cat-body','cfg-cat-chevron');}
 
 // ── Section visibility ────────────────────────────────────────────────────────
 // Section visibility is stored in STATE.sectionConfig as a flat key→boolean map.
@@ -2088,6 +2133,11 @@ function _distributeSkills(total,slots){
   for(let i=vals.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[vals[i],vals[j]]=[vals[j],vals[i]];}
   return vals;
 }
+// _baseCharacterFields(attrs, skills) — builds the initial STATE object for a
+// new character. Takes pre-computed attr and skill maps, derives initial health/
+// willpower/defense values, stamps zeroed state for every section type defined
+// in SECTION_DEFS, and returns the complete object. Called by generateMortal(),
+// generateEntity(), blank(), and blankEntity() — always followed by patchState().
 function _baseCharacterFields(attrs,skills){
   const stamina=attrs.stamina||1,resolve=attrs.resolve||1,composure=attrs.composure||1;
   const dexterity=attrs.dexterity||1,wits=attrs.wits||1,strength=attrs.strength||1;
@@ -2152,6 +2202,8 @@ function _baseCharacterFields(attrs,skills){
     numina:[],manifestations:[],influences:[],anchors:[],
     entity_ban:'',entity_bane:''};
 }
+// ── Character generation ──────────────────────────────────────────────────────
+// _rr(lo, hi) — inclusive random integer, used for rank stat ranges.
 function _rr(lo,hi){return lo+Math.floor(Math.random()*(hi-lo+1));}
 // _applySelectedPreset — reads the preset dropdown and applies the selected
 // preset to STATE.sectionConfig. Falls back to fallbackName if nothing selected.
@@ -2249,7 +2301,6 @@ function generateEntity(){
 }
 function blank(){
   // Respect the preset selected in the dropdown; fall back to Mortal
-  const savedConfig={}; // capture before _baseCharacterFields resets
   _applySelectedPreset('Mortal');
   const appliedConfig={...STATE.sectionConfig};
   const attrs=Object.fromEntries(Object.values(ATTRIBUTES).flat().map(a=>[a,1]));
@@ -2279,6 +2330,24 @@ function showEditor(){
 }
 
 // ── State management ──────────────────────────────────────────────────────────
+// setState(path, value) — canonical single-point STATE mutation that calls
+// autoSave() automatically. path is a dot-separated string, e.g. 'name' or
+// 'attributes.strength'. Nested paths are created if absent.
+// Usage: setState('name', 'Alice')  →  STATE.name = 'Alice'; autoSave();
+// All new mutation call sites should use this. Existing inline handlers
+// (oninput/onchange) are covered by the #editorCol delegation and continue
+// to work as-is; setState() is the preferred path for JS-driven mutations.
+function setState(path,value){
+  const parts=path.split('.');
+  let obj=STATE;
+  for(let i=0;i<parts.length-1;i++){
+    if(obj[parts[i]]==null||typeof obj[parts[i]]!=='object')obj[parts[i]]={};
+    obj=obj[parts[i]];
+  }
+  obj[parts[parts.length-1]]=value;
+  autoSave();
+}
+
 // patchState() — called after every load or import to ensure STATE is complete.
 // Adds any fields that are missing (e.g. a character saved before a new splat
 // was added). Safe to call repeatedly — only fills in missing values, never
@@ -2394,25 +2463,34 @@ function patchState(){
   if(!STATE.theme)STATE.theme='neutral';
   if(!STATE.sectionConfig)STATE.sectionConfig={};
   (STATE.weapons||[]).forEach(w=>{if(w.equipped===undefined)w.equipped=false;});
-  (STATE.armor||[]).forEach(a=>{if(a.equipped===undefined)a.equipped=false;if(a.speed_penalty===undefined)a.speed_penalty=0;});
+  (STATE.armor||[]).forEach(a=>{
+    if(a.equipped===undefined)a.equipped=false;
+    if(a.speed_penalty===undefined)a.speed_penalty=0;
+    if(!a.coverage||typeof a.coverage!=='object')a.coverage={head:false,torso:false,arms:false,legs:false};
+    ['head','torso','arms','legs'].forEach(loc=>{if(a.coverage[loc]===undefined)a.coverage[loc]=false;});
+  });
 }
 
 // ── Sheet rendering pipeline ──────────────────────────────────────────────────
-// renderEditor() is the top-level render call. It rebuilds ZONES, populates all
-// zone containers via renderSheetZone(), applies visibility and theme, then
-// initialises drag-drop and collapse in the next animation frame (so the DOM
-// is fully painted before we attach event listeners).
+// renderEditor() — top-level call. Rebuilds ZONES, populates all zone
+// containers via renderSheetZone(), applies visibility, theme, and watermark,
+// then initialises drag-drop and collapse in the next animation frame (so the
+// DOM is fully painted before event listeners are attached).
 //
-// renderSheetZone(zone, containerId) iterates the zone's section defs, calls
-// buildSectionHTML() to get the HTML string for each, injects it, then calls
-// the appropriate render function for sections that need live DOM work after
-// injection (attributes, skills, dot tracks, etc.).
+// renderSheetZone(zone, containerId) — iterates the zone's section defs in
+// order, calls buildSectionHTML() to get the HTML string for each, injects it,
+// then dispatches to per-type render functions that need live DOM work after
+// injection (attributes, skills, dot tracks, arcana, etc.).
 //
-// buildSectionHTML(sd) returns the full HTML string for one section based on
-// sd.type. Every section must wrap its content in <div class="sec-collapsible-body">
-// so the collapse system can hide/show it. New section types must add an `if`
-// branch here, a dispatch case in renderSheetZone, and state init in patchState
-// and _baseCharacterFields.
+// buildSectionHTML(sd) — returns the full HTML string for one section based on
+// sd.type. Every section wraps its content in .sec-collapsible-body so the
+// collapse system can hide/show it without unmounting the content.
+//
+// To add a new section type, you need to touch four places:
+//   1. buildSectionHTML()   — add an `if (t === 'your-type')` branch
+//   2. renderSheetZone()    — add a dispatch case to call your renderer
+//   3. patchState()         — initialise STATE fields with safe defaults
+//   4. _baseCharacterFields() — stamp zero values on new character creation
 function renderEditor(){
   rebuildZones();
   document.getElementById('charName').value=STATE.name||'';
@@ -2583,6 +2661,15 @@ function buildSectionHTML(sd){
           <span class="derived-spin-row"><button class="spin" onclick="adjDerived('speed',-1)">−</button><span id="d-speed" class="dv"></span><button class="spin" onclick="adjDerived('speed',1)">+</button></span>
           <span id="d-speed-calc" class="dv-calc" style="display:none"></span>
         </span>
+      </div>
+      <div id="d-coverage-row" style="display:none;grid-column:1/-1;padding:3px 0;border-bottom:1px solid var(--border-light)">
+        <div class="dl" style="margin-bottom:3px">Armor</div>
+        <div style="display:flex;gap:14px;font-family:sans-serif;font-size:.78rem;flex-wrap:wrap">
+          <span><span style="color:var(--muted);font-size:.68rem">Head </span><span id="d-cov-head" class="dv" title="General / Ballistic"></span></span>
+          <span><span style="color:var(--muted);font-size:.68rem">Torso </span><span id="d-cov-torso" class="dv" title="General / Ballistic"></span></span>
+          <span><span style="color:var(--muted);font-size:.68rem">Arms </span><span id="d-cov-arms" class="dv" title="General / Ballistic"></span></span>
+          <span><span style="color:var(--muted);font-size:.68rem">Legs </span><span id="d-cov-legs" class="dv" title="General / Ballistic"></span></span>
+        </div>
       </div>
     </div>
     <div style="text-align:right;margin-top:4px">
@@ -2980,6 +3067,15 @@ function buildSectionHTML(sd){
             <span class="derived-spin-row"><button class="spin" onclick="adjEntityDerived('entity_speed',-1)">−</button><span id="d-entity-speed" class="dv"></span><button class="spin" onclick="adjEntityDerived('entity_speed',1)">+</button></span>
           </span>
         </div>
+        <div id="d-entity-coverage-row" style="display:none;grid-column:1/-1;padding:3px 0;border-bottom:1px solid var(--border-light)">
+          <div class="dl" style="margin-bottom:3px">Armor</div>
+          <div style="display:flex;gap:14px;font-family:sans-serif;font-size:.78rem;flex-wrap:wrap">
+            <span><span style="color:var(--muted);font-size:.68rem">Head </span><span id="d-entity-cov-head" class="dv" title="General / Ballistic"></span></span>
+            <span><span style="color:var(--muted);font-size:.68rem">Torso </span><span id="d-entity-cov-torso" class="dv" title="General / Ballistic"></span></span>
+            <span><span style="color:var(--muted);font-size:.68rem">Arms </span><span id="d-entity-cov-arms" class="dv" title="General / Ballistic"></span></span>
+            <span><span style="color:var(--muted);font-size:.68rem">Legs </span><span id="d-entity-cov-legs" class="dv" title="General / Ballistic"></span></span>
+          </div>
+        </div>
       </div>
       <div style="text-align:right;margin-top:4px">
         <button class="sm" onclick="resetEntityDerivedOverrides()" style="font-size:.62rem;color:var(--faint)">Reset to formula</button>
@@ -3157,36 +3253,48 @@ function renderAttrBlock(){
   updateAttrMaxToggle();
   updateAttrSpinnerToggle();
 }
-function setAttrDot(attr,val){
-  if(!STATE.attributes)STATE.attributes={};
-  const cur=STATE.attributes[attr]||1;
-  const cap=STATE.attrMaxDots||5;
-  STATE.attributes[attr]=Math.max(1,Math.min(cap,val===cur?val-1:val));
-  renderAttrBlock();updateDerived();
+// ── Shared attribute helpers ───────────────────────────────────────────────────
+// _setAttrDotShared / _adjAttrShared — parameterised so mortal and entity share logic.
+function _setAttrDotShared(stateKey,maxKey,attr,val,renderFn,derivedFn){
+  if(!STATE[stateKey])STATE[stateKey]={};
+  const cap=STATE[maxKey]||5;
+  STATE[stateKey][attr]=Math.max(1,Math.min(cap,val===(STATE[stateKey][attr]||1)?val-1:val));
+  renderFn();if(derivedFn)derivedFn();
 }
-function adjAttr(attr,delta){
-  if(!STATE.attributes)STATE.attributes={};
-  const cap=STATE.attrMaxDots||5;
-  STATE.attributes[attr]=Math.max(1,Math.min(cap,(STATE.attributes[attr]||1)+delta));
-  renderAttrBlock();updateDerived();
+function _adjAttrShared(stateKey,maxKey,attr,delta,renderFn,derivedFn){
+  if(!STATE[stateKey])STATE[stateKey]={};
+  const cap=STATE[maxKey]||5;
+  STATE[stateKey][attr]=Math.max(1,Math.min(cap,(STATE[stateKey][attr]||1)+delta));
+  renderFn();if(derivedFn)derivedFn();
 }
+function setAttrDot(attr,val){_setAttrDotShared('attributes','attrMaxDots',attr,val,renderAttrBlock,updateDerived);}
+function adjAttr(attr,delta){_adjAttrShared('attributes','attrMaxDots',attr,delta,renderAttrBlock,updateDerived);}
 function toggleAttrMax(){
   const cur=STATE.attrMaxDots||5;
   STATE.attrMaxDots=cur===5?10:cur===10?15:5;
   renderAttrBlock();
 }
+// ── Toggle-button update utility ──────────────────────────────────────────────
+// updateToggleButton(id, active, label) — sets text, background, border and colour
+// on any toggle button using the standard info-colour active state.
+function updateToggleButton(id,active,label){
+  const el=document.getElementById(id);if(!el)return;
+  el.textContent=label;
+  el.style.background=active?'var(--info-bg)':'';
+  el.style.borderColor=active?'var(--info)':'';
+  el.style.color=active?'var(--info)':'';
+}
 function updateAttrMaxToggle(){
-  const el=document.getElementById('attrMaxToggle');if(!el)return;
   const v=STATE.attrMaxDots||5;
-  el.textContent=v===5?'5-dot max':v===10?'10-dot max':'15-dot max';
-  el.style.background=v>5?'var(--info-bg)':'';
-  el.style.borderColor=v>5?'var(--info)':'';
-  el.style.color=v>5?'var(--info)':'';
+  updateToggleButton('attrMaxToggle',v>5,v===5?'5-dot max':v===10?'10-dot max':'15-dot max');
 }
 function toggleAttrSpinner(){
   STATE.attrShowSpinner=!STATE.attrShowSpinner;
   renderAttrBlock();
 }
+// Note: spinner toggles are not wired through updateToggleButton() because
+// they alternate between two labels ("Show…"/"Hide…") rather than the
+// standard active/inactive pattern that utility expects.
 function updateAttrSpinnerToggle(){
   const el=document.getElementById('attrSpinnerToggle');if(!el)return;
   const on=STATE.attrShowSpinner||false;
@@ -3221,31 +3329,16 @@ function renderAttr3Block(){
   updateAttr3SpinnerToggle();
   updateEntityDerived();
 }
-function setEntityAttrDot(attr,val){
-  if(!STATE.entity_attrs)STATE.entity_attrs={};
-  const cur=STATE.entity_attrs[attr]||1;
-  const cap=STATE.attr3MaxDots||5;
-  STATE.entity_attrs[attr]=Math.max(1,Math.min(cap,val===cur?val-1:val));
-  renderAttr3Block();updateEntityDerived();
-}
-function adjEntityAttr(attr,delta){
-  if(!STATE.entity_attrs)STATE.entity_attrs={};
-  const cap=STATE.attr3MaxDots||5;
-  STATE.entity_attrs[attr]=Math.max(1,Math.min(cap,(STATE.entity_attrs[attr]||1)+delta));
-  renderAttr3Block();updateEntityDerived();
-}
+function setEntityAttrDot(attr,val){_setAttrDotShared('entity_attrs','attr3MaxDots',attr,val,renderAttr3Block,updateEntityDerived);}
+function adjEntityAttr(attr,delta){_adjAttrShared('entity_attrs','attr3MaxDots',attr,delta,renderAttr3Block,updateEntityDerived);}
 function toggleAttr3Max(){
   const cur=STATE.attr3MaxDots||5;
   STATE.attr3MaxDots=cur===5?10:cur===10?15:5;
   renderAttr3Block();
 }
 function updateAttr3MaxToggle(){
-  const el=document.getElementById('attr3MaxToggle');if(!el)return;
   const v=STATE.attr3MaxDots||5;
-  el.textContent=v===5?'5-dot max':v===10?'10-dot max':'15-dot max';
-  el.style.background=v>5?'var(--info-bg)':'';
-  el.style.borderColor=v>5?'var(--info)':'';
-  el.style.color=v>5?'var(--info)':'';
+  updateToggleButton('attr3MaxToggle',v>5,v===5?'5-dot max':v===10?'10-dot max':'15-dot max');
 }
 function toggleAttr3Spinner(){
   STATE.attr3ShowSpinner=!STATE.attr3ShowSpinner;
@@ -3318,6 +3411,19 @@ function updateEntityDerived(){
   // Essence display
   const ecEl=document.getElementById('v-essence-current');if(ecEl)ecEl.textContent=STATE.entity_essence_current||0;
   const emEl=document.getElementById('v-essence-max');if(emEl)emEl.textContent=STATE.entity_essence_max||10;
+  // Coverage row — same calcGearMods() data as mortal, entity-namespaced DOM IDs
+  const gm=calcGearMods();
+  const entityCovRowEl=document.getElementById('d-entity-coverage-row');
+  if(entityCovRowEl){
+    const anyEquipped=(STATE.armor||[]).some(a=>a.equipped);
+    entityCovRowEl.style.display=anyEquipped?'':'none';
+    if(anyEquipped){
+      ['head','torso','arms','legs'].forEach(loc=>{
+        const el=document.getElementById('d-entity-cov-'+loc);
+        if(el)el.textContent=`${gm.coverage[loc].g}/${gm.coverage[loc].b}`;
+      });
+    }
+  }
   renderCorpusTracker();renderEntityWpTracker();
 }
 
@@ -3390,9 +3496,18 @@ function resetDerivedOverrides(){
 }
 function calcGearMods(){
   let defPenalty=0,initMod=0,speedPenalty=0;
-  (STATE.armor||[]).forEach(a=>{if(a.equipped){defPenalty+=(a.defense_penalty||0);speedPenalty+=(a.speed_penalty||0);}});
+  const coverage={head:{g:0,b:0},torso:{g:0,b:0},arms:{g:0,b:0},legs:{g:0,b:0}};
+  (STATE.armor||[]).forEach(a=>{
+    if(!a.equipped)return;
+    defPenalty+=(a.defense_penalty||0);
+    speedPenalty+=(a.speed_penalty||0);
+    const cov=a.coverage||{};
+    ['head','torso','arms','legs'].forEach(loc=>{
+      if(cov[loc]){coverage[loc].g+=(a.armor_general||0);coverage[loc].b+=(a.armor_ballistic||0);}
+    });
+  });
   (STATE.weapons||[]).forEach(w=>{if(w.equipped)initMod+=(w.initiative_mod||0);});
-  return{defPenalty,initMod,speedPenalty};
+  return{defPenalty,initMod,speedPenalty,coverage};
 }
 function updateDerived(){
   const ov=getDerivedOverrides();
@@ -3412,6 +3527,20 @@ function updateDerived(){
     if(mod!==0){calcEl.style.display='';calcEl.textContent='→'+calcs[k];calcEl.title=`Base: ${STATE[k]}  Gear: ${mod>=0?'+':''}${mod}  Total: ${calcs[k]}`;}
     else calcEl.style.display='none';
   });
+  // Coverage row — per-location armor totals; hidden when nothing is equipped
+  const covRowEl=document.getElementById('d-coverage-row');
+  if(covRowEl){
+    const anyEquipped=(STATE.armor||[]).some(a=>a.equipped);
+    covRowEl.style.display=anyEquipped?'':'none';
+    if(anyEquipped){
+      const locs=['head','torso','arms','legs'];
+      const labels={head:'Head',torso:'Torso',arms:'Arms',legs:'Legs'};
+      locs.forEach(loc=>{
+        const el=document.getElementById('d-cov-'+loc);
+        if(el)el.textContent=`${gm.coverage[loc].g}/${gm.coverage[loc].b}`;
+      });
+    }
+  }
   syncHealthTrackLength();renderHealthTrack();renderWpTracker();
   SECTION_DEFS.filter(s=>s.type==='forms-block').forEach(s=>{
     if(secVisible(s.key))renderFormsBlock(s);
@@ -3674,16 +3803,18 @@ function renderArcanaBlock(sd){
       `<span class="dot${val>=d?' filled':''}" onclick="setArcana('${sk}','${f.key}',${d})"></span>`).join('');
   });
 }
-function setArcana(sk,akey,val){
+// setNestedDot(sk, fkey, val, sectionType, renderFn) — shared logic for arcana-block
+// and renown-block: toggle-off if clicking the same dot, clamp 0–5, re-render all
+// sections of the given type that share the same state key.
+function setNestedDot(sk,fkey,val,sectionType,renderFn){
   if(!STATE[sk]||typeof STATE[sk]!=='object')STATE[sk]={};
-  const cur=STATE[sk][akey]||0;
-  STATE[sk][akey]=(val===cur)?val-1:val;
-  STATE[sk][akey]=Math.max(0,Math.min(5,STATE[sk][akey]));
-  // Re-render ALL arcana-block sections sharing this state key — there may be
-  // more than one visible (e.g. arcana + ascension-arcana both enabled)
-  SECTION_DEFS.filter(s=>s.type==='arcana-block'&&(s.state_key||s.key)===sk)
-    .forEach(s=>renderArcanaBlock(s));
+  const cur=STATE[sk][fkey]||0;
+  STATE[sk][fkey]=Math.max(0,Math.min(5,(val===cur)?val-1:val));
+  SECTION_DEFS.filter(s=>s.type===sectionType&&(s.state_key||s.key)===sk)
+    .forEach(s=>renderFn(s));
 }
+function setArcana(sk,akey,val){setNestedDot(sk,akey,val,'arcana-block',renderArcanaBlock);}
+function setRenown(sk,rkey,val){setNestedDot(sk,rkey,val,'renown-block',renderRenownBlock);}
 
 function renderRenownBlock(sd){
   // DOM IDs use sd.key (unique) to avoid collisions when multiple sections share a state_key.
@@ -3697,14 +3828,7 @@ function renderRenownBlock(sd){
       `<span class="dot${val>=d?' filled':''}" onclick="setRenown('${sk}','${f.key}',${d})"></span>`).join('');
   });
 }
-function setRenown(sk,rkey,val){
-  if(!STATE[sk]||typeof STATE[sk]!=='object')STATE[sk]={};
-  const cur=STATE[sk][rkey]||0;
-  STATE[sk][rkey]=(val===cur)?val-1:val;
-  STATE[sk][rkey]=Math.max(0,Math.min(5,STATE[sk][rkey]));
-  SECTION_DEFS.filter(s=>s.type==='renown-block'&&(s.state_key||s.key)===sk)
-    .forEach(s=>renderRenownBlock(s));
-}
+
 
 // ── Pillars block (Mummy: the Curse) ─────────────────────────────────────────
 // Each Pillar has 5 permanent dots (rating) + 5 temporary squares (spent).
@@ -3931,7 +4055,10 @@ function toggleCoverCard(id){
 }
 
 function renderGenericRatedList(sd){
-  const sk=sd.state_key||sd.key,max=sd.max_rating||5,listId=`${sd.key}-rated-list`;
+  const isMerits=sd.special_renderer==='merits';
+  const sk=sd.state_key||sd.key;
+  const max=isMerits?(STATE.meritMaxDots||5):(sd.max_rating||5);
+  const listId=isMerits?'meritList':`${sd.key}-rated-list`;
   const el=document.getElementById(listId);if(!el)return;
   el.innerHTML=(STATE[sk]||[]).map((m,i)=>{
     const rating=m.rating||0;
@@ -4010,30 +4137,12 @@ function addLineItem(sk,inputId,listId){
   if(!STATE[sk])STATE[sk]=[];STATE[sk].push(val);renderLineItems(sk,listId);document.getElementById(inputId).value='';
 }
 
-function renderMeritList(){
-  const el=document.getElementById('meritList');if(!el)return;
-  const maxD=STATE.meritMaxDots||5;
-  el.innerHTML=(STATE.merits||[]).map((m,i)=>{
-    const rating=m.rating||0;
-    const dots=Array.from({length:maxD},(_,idx)=>idx+1).map(d=>
-      `<span class="dot${rating>=d?' filled':''}" onclick="setMeritRating(${i},${d})"></span>`).join('');
-    return `<div class="item-card open">
-      <div class="item-hd" onclick="toggleCard(this)">
-        <span class="item-toggle">&#9654;</span>
-        <input class="item-name" value="${escH(m.name)}" placeholder="Merit name"
-          onclick="event.stopPropagation()" onchange="STATE.merits[${i}].name=this.value">
-        <span class="item-key-stat">${'●'.repeat(rating)||'unrated'}</span>
-        <button class="sm danger" onclick="event.stopPropagation();removeStruct('merits',${i},renderMeritList)">Remove</button>
-      </div>
-      <div class="item-body">
-        <div class="field-wrap" style="margin-bottom:5px"><span class="field-lbl">Description</span>
-          ${descField(`STATE.merits[${i}].desc=this.value`,m.desc||'')}
-        </div>
-        <div class="field-wrap"><span class="field-lbl">Rating</span><div class="dot-row">${dots}</div></div>
-      </div></div>`;
-  }).join('');
-}
-function setMeritRating(i,val){STATE.merits[i].rating=val;renderMeritList();}
+// renderMeritList — thin wrapper; all rendering done by renderGenericRatedList.
+// The merits sd object is available via SECTION_MAP once data loads; fall back
+// to a synthetic sd if called before SECTION_MAP is populated.
+function _getMeritsSd(){return SECTION_MAP['merits']||{key:'merits',state_key:'merits',max_rating:STATE.meritMaxDots||5,special_renderer:'merits',db_key:'merits'};}
+function renderMeritList(){renderGenericRatedList(_getMeritsSd());}
+function setMeritRating(i,val){setGenericRatedRating('merits',i,val,'merits');}
 function addMerit(){
   const drop=document.getElementById('meritDrop'),search=document.getElementById('meritSearch');
   const val=(drop.value&&drop.value!=='')?drop.value:search.value.trim();if(!val)return;
@@ -4048,11 +4157,10 @@ function toggleMeritMax(){
   updateMeritMaxToggle();renderMeritList();
 }
 function updateMeritMaxToggle(){
-  const el=document.getElementById('meritMaxToggle');if(!el)return;
   const ext=(STATE.meritMaxDots||5)>5;
-  el.textContent=ext?'10-dot max':'5-dot max';
-  el.style.background=ext?'var(--info-bg)':'';el.style.borderColor=ext?'var(--info)':'';el.style.color=ext?'var(--info)':'';
+  updateToggleButton('meritMaxToggle',ext,ext?'10-dot max':'5-dot max');
 }
+
 
 function renderWeaponList(){
   const el=document.getElementById('weaponList');if(!el)return;
@@ -4076,6 +4184,7 @@ function renderWeaponList(){
       </div><div class="item-body"><div class="struct-fields" style="grid-template-columns:repeat(3,1fr)">${sharedFields}${rangedFields}${notesField}</div></div></div>`;
   }).join('');
 }
+// addWeapon / addArmor / addEquip share the search-drop-push-render pattern.
 function addWeapon(){
   const drop=document.getElementById('weaponDrop'),search=document.getElementById('weaponSearch');
   const val=(drop.value&&drop.value!=='')?drop.value:search.value.trim();if(!val)return;
@@ -4084,6 +4193,23 @@ function addWeapon(){
   STATE.weapons.push(found?{...found,equipped:false}:{name:val,weapon_type:'melee',damage:0,initiative_mod:0,strength_req:0,size:0,availability:0,ranges:'',clip:0,notes:'',equipped:false});
   renderWeaponList();drop.selectedIndex=0;search.value='';refillSelect('weaponDrop',DB.weapons);
 }
+function addArmor(){
+  const drop=document.getElementById('armorDrop'),search=document.getElementById('armorSearch');
+  const val=(drop.value&&drop.value!=='')?drop.value:search.value.trim();if(!val)return;
+  if(!STATE.armor)STATE.armor=[];
+  const found=DB.armor.find(a=>a.name===val);
+  STATE.armor.push(found?{...found,equipped:false,speed_penalty:found.speed_penalty||0,coverage:found.coverage||{head:false,torso:false,arms:false,legs:false}}:{name:val,armor_general:0,armor_ballistic:0,defense_penalty:0,speed_penalty:0,strength_req:0,availability:0,notes:'',equipped:false,coverage:{head:false,torso:false,arms:false,legs:false}});
+  renderArmorList();drop.selectedIndex=0;search.value='';refillSelect('armorDrop',DB.armor);
+}
+function addEquip(){
+  const drop=document.getElementById('equipDrop'),search=document.getElementById('equipSearch');
+  const val=(drop.value&&drop.value!=='')?drop.value:search.value.trim();if(!val)return;
+  if(!STATE.equipment)STATE.equipment=[];
+  const found=DB.equipment.find(e=>e.name===val);
+  STATE.equipment.push(found?{...found}:{name:val,dice_bonus:0,durability:0,size:0,structure:0,availability:0,desc:''});
+  renderEquipList();drop.selectedIndex=0;search.value='';refillSelect('equipDrop',DB.equipment);
+}
+
 
 function renderArmorList(){
   const el=document.getElementById('armorList');if(!el)return;
@@ -4103,19 +4229,15 @@ function renderArmorList(){
         <div class="field-wrap"><span class="field-lbl">Speed penalty</span><input class="field-inp" type="number" value="${a.speed_penalty||0}" onchange="STATE.armor[${i}].speed_penalty=+this.value;updateDerived()"></div>
         <div class="field-wrap"><span class="field-lbl">Strength req</span><input class="field-inp" type="number" value="${a.strength_req||0}" onchange="STATE.armor[${i}].strength_req=+this.value"></div>
         <div class="field-wrap"><span class="field-lbl">Availability</span><div class="dot-row">${availDots}</div></div>
+        <div class="field-wrap" style="grid-column:1/-1"><span class="field-lbl">Coverage</span>
+          <div style="display:flex;gap:14px;margin-top:3px;flex-wrap:wrap">
+            ${['head','torso','arms','legs'].map(loc=>`<label class="equip-chk-wrap"><input type="checkbox" ${(a.coverage&&a.coverage[loc])?'checked':''} onchange="STATE.armor[${i}].coverage['${loc}']=this.checked;updateDerived()"> ${loc[0].toUpperCase()+loc.slice(1)}</label>`).join('')}
+          </div>
+        </div>
         <div class="field-wrap" style="grid-column:1/-1"><span class="field-lbl">Notes</span>${descField(`STATE.armor[${i}].notes=this.value`,a.notes||'')}</div>
       </div></div></div>`;
   }).join('');
 }
-function addArmor(){
-  const drop=document.getElementById('armorDrop'),search=document.getElementById('armorSearch');
-  const val=(drop.value&&drop.value!=='')?drop.value:search.value.trim();if(!val)return;
-  if(!STATE.armor)STATE.armor=[];
-  const found=DB.armor.find(a=>a.name===val);
-  STATE.armor.push(found?{...found,equipped:false,speed_penalty:found.speed_penalty||0}:{name:val,armor_general:0,armor_ballistic:0,defense_penalty:0,speed_penalty:0,strength_req:0,availability:0,notes:'',equipped:false});
-  renderArmorList();drop.selectedIndex=0;search.value='';refillSelect('armorDrop',DB.armor);
-}
-
 function renderEquipList(){
   const el=document.getElementById('equipList');if(!el)return;
   el.innerHTML=(STATE.equipment||[]).map((e,i)=>{
@@ -4138,15 +4260,6 @@ function renderEquipList(){
       </div></div></div>`;
   }).join('');
 }
-function addEquip(){
-  const drop=document.getElementById('equipDrop'),search=document.getElementById('equipSearch');
-  const val=(drop.value&&drop.value!=='')?drop.value:search.value.trim();if(!val)return;
-  if(!STATE.equipment)STATE.equipment=[];
-  const found=DB.equipment.find(e=>e.name===val);
-  STATE.equipment.push(found?{...found}:{name:val,dice_bonus:0,durability:0,size:0,structure:0,availability:0,desc:''});
-  renderEquipList();drop.selectedIndex=0;search.value='';refillSelect('equipDrop',DB.equipment);
-}
-
 function setAvailability(key,i,val,renderFn){STATE[key][i].availability=val;renderFn();}
 function removeStruct(key,i,renderFn){STATE[key].splice(i,1);renderFn();updateDerived();}
 function toggleCard(el){el.closest('.item-card').classList.toggle('open');}
@@ -4201,8 +4314,10 @@ function closeHelpOnBackdrop(e){
   if(e.target===document.getElementById('helpBackdrop'))closeHelp();
 }
 // ── End help modal ────────────────────────────────────────────────────────────
-// escH — escapes a string for safe insertion into HTML. Must be called on all
-// user-supplied values before inserting into innerHTML.
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+// escH — escapes a string for safe HTML insertion. Call on every user-supplied
+// value before inserting into innerHTML to prevent XSS.
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // mdH — lightweight markdown renderer for description fields.
@@ -4249,16 +4364,13 @@ function hideDescEdit(taEl){
   displayEl.style.display='block';
   if(hint)hint.style.display='block';
 }
-// Build the display-div + hidden-textarea pair for card description fields.
-// stateExpr: JS expression string that assigns the value (run via onchange).
-// val: current string value.
-// rows: textarea rows (default 3).
-// descField — builds the click-to-edit description UI used on all card fields
-// and textarea sections. Shows rendered markdown by default; clicking reveals
-// the textarea; blurring saves and re-renders the display.
-// stateExpr: JS assignment expression string, e.g. "STATE.merits[0].desc=this.value"
-// val: current raw markdown string (stored in STATE, never HTML-escaped here)
-// rows: textarea row count (default 3)
+// descField(stateExpr, val, rows) — builds the click-to-edit description pair:
+// a rendered-markdown .desc-display div (shown by default) and a hidden
+// .desc-ta-wrap containing a textarea. Clicking the display calls showDescEdit();
+// blurring the textarea calls hideDescEdit(), re-renders markdown, and saves.
+// stateExpr — JS assignment string executed onchange, e.g. "STATE.merits[0].desc=this.value"
+// val       — current raw markdown string from STATE (not HTML-escaped at this point)
+// rows      — textarea row count (default 3)
 function descField(stateExpr,val,rows){
   rows=rows||3;
   const isEmpty=!(val||'').trim();
@@ -4300,8 +4412,12 @@ function initTaResize(e,handle){
 }
 // ── End textarea mobile resize ─────────────────────────────────────────────
 
-// copyText — serialises the current character to a plain-text summary and
-// copies it to the clipboard. Useful for pasting into chat or a text editor.
+// ── Clipboard export ──────────────────────────────────────────────────────────
+// copyText() — serialises the active character to a plain-text block and
+// copies it to the clipboard. Covers attributes, skills, derived traits, gear,
+// and all visible list sections. Entity sheets get corpus/essence instead of
+// health/willpower. Note: entity-specific sections (Numina, Manifestations,
+// etc.) are not yet included — see PROJECT_INSTRUCTIONS "Entity-aware copyText".
 function copyText(){
   const a=k=>getAttr(k),sk=k=>getSkill(k),gm=calcGearMods();
   const attrStr=Object.entries(ATTRIBUTES).map(([cat,attrs])=>
@@ -4360,7 +4476,7 @@ function copyText(){
     +(showMortalAttrs?`\n\nATTRIBUTES\n${attrStr}`:'')
     +(entityAttrStr)
     +(showMortalSkills?`\n\nSKILLS\n${skillStr||'  None'}`:'')
-    +(showMortalDerived?`\n\nDERIVED TRAITS\n  Health: ${healthStr}\n  Willpower: ${getWpMax()} (${getWpMax()-(STATE.willpower_spent||0)} remaining)\n  Defense: ${STATE.defense||0}${gm.defPenalty?` (→${STATE.defense+gm.defPenalty} with gear)`:''}\n  Initiative: ${STATE.initiative||0}${gm.initMod?` (→${STATE.initiative+gm.initMod} with gear)`:''}\n  Speed: ${STATE.speed||0}${gm.speedPenalty?` (→${STATE.speed+gm.speedPenalty} with gear)`:''}\n  Size: ${STATE.size||5}${moralityStr}`:'')
+    +(showMortalDerived?`\n\nDERIVED TRAITS\n  Health: ${healthStr}\n  Willpower: ${getWpMax()} (${getWpMax()-(STATE.willpower_spent||0)} remaining)\n  Defense: ${STATE.defense||0}${gm.defPenalty?` (→${STATE.defense+gm.defPenalty} with gear)`:''}\n  Initiative: ${STATE.initiative||0}${gm.initMod?` (→${STATE.initiative+gm.initMod} with gear)`:''}\n  Speed: ${STATE.speed||0}${gm.speedPenalty?` (→${STATE.speed+gm.speedPenalty} with gear)`:''}\n  Size: ${STATE.size||5}${moralityStr}${(STATE.armor||[]).some(a=>a.equipped)?(()=>{const locs=["head","torso","arms","legs"];const covStr=locs.map(loc=>{const c=gm.coverage[loc];return loc[0].toUpperCase()+loc.slice(1)+" "+c.g+"/"+c.b;}).join(" | ");return "\\n  Armor: "+covStr;})():''}`:'')
     +(entityDerivedStr)
     +(showMerits?`\n\nMERITS\n${(STATE.merits||[]).map(m=>`  ${m.name} ${'●'.repeat(m.rating||0)||'(unrated)'}${m.desc?': '+m.desc:''}`).join('\n')||'  None'}`:'')
     +(showWeapons?`\n\nWEAPONS\n${(STATE.weapons||[]).map(w=>w.weapon_type==='ranged'?`  ${w.name}${w.equipped?' [Equipped]':''}\n    Dmg +${w.damage||0} | Ranges: ${w.ranges||'—'} | Clip: ${w.clip||0} | Init ${w.initiative_mod>=0?'+':''}${w.initiative_mod||0} | Str ${w.strength_req||0} | Sz ${w.size||0}`:`  ${w.name}${w.equipped?' [Equipped]':''}\n    Dmg +${w.damage||0} | Init ${w.initiative_mod>=0?'+':''}${w.initiative_mod||0} | Str ${w.strength_req||0} | Sz ${w.size||0}`).join('\n')||'  None'}`:'')
@@ -4555,9 +4671,13 @@ if(window.matchMedia('(pointer:coarse)').matches)document.body.classList.add('to
 loadDB();loadSaves();
 
 // ── Auto-save event delegation ────────────────────────────────────────────────
-// Catches all input/change/click mutations on the sheet and debounces autoSave.
-// Scoped to #editorCol so sidebar and toolbar interactions don't trigger it.
-// Excludes file inputs to avoid triggering on import dialogs.
+// Catches all input/change/click events bubbling up from #editorCol and
+// debounces autoSave(). This covers all inline oninput/onchange/onclick
+// handlers on the sheet without them needing to call autoSave() individually.
+// Scoped to #editorCol so sidebar and toolbar interactions do not trigger it.
+// File inputs are excluded to avoid firing on the import-file dialog.
+// JS-driven mutations that bypass the DOM (e.g. dot clicks that call setState)
+// should call autoSave() directly — setState() does this automatically.
 document.addEventListener('DOMContentLoaded',()=>{
   const col=document.getElementById('editorCol');
   if(!col)return;
@@ -4767,12 +4887,16 @@ function renderPillarsBlockCompact(sd){
     const sqs=Array.from({length:5},(_,i)=>
       `<span class="tsquare${i<filled?' on':''}" style="width:9px;height:9px;border-width:1px"></span>`
     ).join('');
-    const note=pf.note?`<span class="print-skill-spec">${escH(pf.note)}</span>`:'';
-    return `<div class="print-arcana-row">
-      <span class="print-arcana-name">${escH(f.label)}</span>
-      <span style="display:flex;gap:2px;flex-shrink:0">${dots}</span>
-      <span style="display:flex;gap:2px;flex-shrink:0;margin-left:3px">${sqs}</span>
-      ${note}
+    const note=pf.note?`<span class="print-pillars-note">${escH(pf.note)}</span>`:'';
+    return `<div class="print-pillars-row">
+      <div class="print-pillars-left">
+        <span class="print-pillars-lbl">${escH(f.label)}</span>
+        ${note}
+      </div>
+      <div class="print-pillars-tracks">
+        <span style="display:flex;gap:2px">${dots}</span>
+        <span style="display:flex;gap:2px">${sqs}</span>
+      </div>
     </div>`;
   }).join('');
 }
@@ -4854,11 +4978,14 @@ function renderGearCompact(){
   const aEl=document.getElementById('armorList');
   if(aEl) aEl.innerHTML=(STATE.armor||[]).map(a=>{
     const stats=`Armor ${a.armor_general||0}/${a.armor_ballistic||0} | Def ${a.defense_penalty>=0?'+':''}${a.defense_penalty||0} | Spd ${a.speed_penalty>=0?'+':''}${a.speed_penalty||0} | Str ${a.strength_req||0}`;
+    const cov=a.coverage||{};
+    const covStr=['head','torso','arms','legs'].filter(l=>cov[l]).map(l=>l[0].toUpperCase()+l.slice(1)).join(', ');
+    const covPart=covStr?` | Covers: ${covStr}`:'';
     const equipped=a.equipped?` <span class="print-gear-equipped">Equipped</span>`:'';
     const notes=a.notes?`<div class="print-item-desc">${mdH(a.notes)}</div>`:'';
     return `<div class="print-item-row"><div class="print-item-hd">
       <span class="print-item-name">${escH(a.name)}</span>
-      <span class="print-gear-stats">${stats}${equipped}</span>
+      <span class="print-gear-stats">${stats}${covPart}${equipped}</span>
     </div>${notes}</div>`;
   }).join('');
 
