@@ -44,13 +44,13 @@ Mortals+ is a browser-based character builder and live play aid for Chronicles o
 - **Skills** — 24 skills across Mental, Physical, Social (rated 0–5), with rote checkbox and specialty field. Skill names are editable inline
 - **Health track** — typed damage (Bashing / Lethal / Aggravated); click any box to cycle; auto-resizes when Stamina or Size changes
 - **Willpower** — dot and box tracker with adjustable maximum
-- **Derived traits** — Defense, Initiative, Speed; auto-calculated from stats with manual override
+- **Derived traits** — Defense, Initiative, Speed; auto-calculated from stats with manual override. When armor is equipped, an Armor row shows per-location general/ballistic ratings (Head, Torso, Arms, Legs) summed across all equipped pieces
 - **Beats / Experience** — 5 Beats auto-awards 1 XP; fully data-driven (splat-specific beat trackers can be added in `data.json` without code changes)
 - **Tilts and Conditions** — searchable library with custom entry support
 - **Aspirations** — simple line list
 - **Merits** — searchable library, 5-dot or 10-dot max toggle
 - **Weapons** — melee and ranged cards with full stat fields; Equipped toggle applies Initiative modifier to derived traits
-- **Armor** — cards with full stat fields; Equipped toggle applies Defense and Speed penalties
+- **Armor** — cards with full stat fields; Equipped toggle applies Defense and Speed penalties; per-location coverage checkboxes (Head, Torso, Arms, Legs)
 - **Equipment** — cards with dice bonus, durability, size, structure
 - **Notes** — free-text field with markdown support
 
@@ -114,7 +114,7 @@ Click **Print / Save as PDF** in the toolbar. Use your browser's **Save as PDF**
 
 - **Chrome is the recommended browser** for printing. Firefox does not reliably handle page breaks at the attributes/columns boundary
 - Before printing, sections are automatically compacted into a space-efficient layout — attributes, skills, arcana, renown, pillars, merits, ability lists, gear, covers, and the Werewolf forms table all switch to compact renderers. The live sheet is fully restored after the print dialog closes
-- Tilts and Conditions always print with at least 4 rows (filled entries plus blank ruled lines) for pencil use at the table
+- Tilts and Conditions always print with at least 3 rows (filled entries plus blank ruled lines) for pencil use at the table
 - All collapsed sections and closed item cards are automatically expanded before printing, then restored afterwards
 - Consumable tracks (health, willpower, resource tracks, dot tracks) print empty so they can be filled in pencil at the table
 - Beats trackers do not print — they are live-play tools only
