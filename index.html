@@ -498,6 +498,8 @@ button.sm{font-size:.75rem;padding:.25rem .6rem}
 .cfg-preset-row{display:flex;align-items:center;gap:6px;margin-bottom:10px;font-family:sans-serif;font-size:.78rem}
 .cfg-preset-row label{color:var(--muted);white-space:nowrap}
 .cfg-preset-row select{flex:1;font-size:.78rem;padding:.2rem .4rem}
+.cfg-section-hdr{font-size:.6rem;font-family:sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:700;margin:10px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border-light)}
+.cfg-section-hdr:first-child{margin-top:0}
 .cfg-group-hdr{font-size:.6rem;font-family:sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:700;margin-top:10px;margin-bottom:3px;padding-bottom:2px;border-bottom:1px solid var(--border-light)}
 .cfg-group-hdr:first-child{margin-top:0}
 .cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-bottom:4px}
@@ -1265,6 +1267,7 @@ body.touch-device .ta-wrap textarea{
   </div>
   <div class="sidebar-card">
     <div class="sidebar-title">Sheet configuration</div>
+    <div class="cfg-section-hdr">Visuals</div>
     <div class="cfg-preset-row">
       <label>Theme</label>
       <select id="themeSelect" onchange="applyTheme(this.value)">
@@ -1313,13 +1316,14 @@ body.touch-device .ta-wrap textarea{
       </div>
     </div>
     <div id="watermarkOpacityRow" class="cfg-preset-row" style="display:none;align-items:center;gap:6px;flex-wrap:nowrap">
-      <label style="flex-shrink:0">Opacity</label>
+      <label style="flex-shrink:0">Watermark Opacity</label>
       <input type="range" id="watermarkOpacitySlider" min="0.02" max="0.06" step="0.005"
         style="flex:1;min-width:0;accent-color:var(--accent)"
         oninput="applyWatermarkOpacity(+this.value)">
       <span id="watermarkOpacityVal" style="font-family:sans-serif;font-size:.75rem;color:var(--muted);min-width:32px;text-align:right"></span>
       <button class="sm" onclick="applyWatermarkOpacity(0.035)" style="font-size:.68rem;flex-shrink:0">Reset</button>
     </div>
+    <div class="cfg-section-hdr">Sections</div>
     <div class="cfg-preset-row">
       <label>Preset</label>
       <select id="presetSelect" onchange="applyPreset(this.value)">
@@ -1396,6 +1400,7 @@ body.touch-device .ta-wrap textarea{
 
       <!-- Sheet configuration -->
       <div class="drawer-pane" id="dpane-config">
+        <div class="cfg-section-hdr">Visuals</div>
         <div class="cfg-preset-row">
           <label>Theme</label>
           <select id="drawerThemeSelect" onchange="applyTheme(this.value)">
@@ -1444,13 +1449,14 @@ body.touch-device .ta-wrap textarea{
           </div>
         </div>
         <div id="drawerWatermarkOpacityRow" class="cfg-preset-row" style="display:none;align-items:center;gap:6px;flex-wrap:nowrap">
-          <label style="flex-shrink:0">Opacity</label>
+          <label style="flex-shrink:0">Watermark Opacity</label>
           <input type="range" id="drawerWatermarkOpacitySlider" min="0.02" max="0.06" step="0.005"
             style="flex:1;min-width:0;accent-color:var(--accent)"
             oninput="applyWatermarkOpacity(+this.value)">
           <span id="drawerWatermarkOpacityVal" style="font-family:sans-serif;font-size:.75rem;color:var(--muted);min-width:32px;text-align:right"></span>
           <button class="sm" onclick="applyWatermarkOpacity(0.035)" style="font-size:.68rem;flex-shrink:0">Reset</button>
         </div>
+        <div class="cfg-section-hdr">Sections</div>
         <div class="cfg-preset-row">
           <label>Preset</label>
           <select id="drawerPresetSelect" onchange="applyPreset(this.value)">
