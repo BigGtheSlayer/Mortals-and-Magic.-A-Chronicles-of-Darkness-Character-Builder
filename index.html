@@ -12,7 +12,7 @@
      Section index (in order):
        :root variables    — all colour tokens; only place to change for theming
        Splat themes       — per-splat [data-theme] overrides of :root variables
-       Splat watermark    — fixed skull silhouette behind sheet content
+       Splat watermark    — independent watermark element; set via applyWatermark()
        Layout & UI        — page, buttons, inputs, sheet columns, cards, etc.
        Markdown display   — .desc-display click-to-edit field pattern
        Trackers           — health boxes, willpower, dot/square/resource tracks
@@ -918,6 +918,13 @@ body.touch-device .ta-wrap textarea{
   .sec-chevron{display:none!important}
   /* Watermark: hide only when toggled off; otherwise inherits fixed position from base CSS */
   #splat-watermark.watermark-hidden{display:none!important}
+  /* Ensure watermark image blends and shows correctly in PDF/print output */
+  #splat-watermark img{
+    opacity:0.035!important;
+    mix-blend-mode:multiply!important;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
 
   /* ── Remove outer page chrome ─────────────────────────────────────────── */
   body{background:#fff;font-size:12px}
@@ -1266,14 +1273,37 @@ body.touch-device .ta-wrap textarea{
       </select>
     </div>
     <div class="cfg-preset-row">
+      <label>Watermark</label>
+      <select id="watermarkSelect" onchange="applyWatermark(this.value)">
+        <option value="none">— None —</option>
+        <option value="mortal">Mortal</option>
+        <option value="mage">Mage</option>
+        <option value="ascension">Mage (Ascension)</option>
+        <option value="vampire">Vampire</option>
+        <option value="werewolf">Werewolf</option>
+        <option value="changeling">Changeling</option>
+        <option value="hunter">Hunter</option>
+        <option value="demon">Demon</option>
+        <option value="deviant">Deviant</option>
+        <option value="promethean">Promethean</option>
+        <option value="geist">Geist</option>
+        <option value="beast">Beast</option>
+        <option value="mummy">Mummy</option>
+        <option value="custom">Custom…</option>
+      </select>
+    </div>
+    <div id="customWatermarkUpload" style="display:none;margin-bottom:6px">
+      <label class="hint" style="display:block;margin-bottom:3px">Upload image (JPG/PNG with light background works best)</label>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <input type="file" accept="image/*" onchange="loadCustomWatermark(this)" style="font-size:.75rem;font-family:sans-serif;flex:1;min-width:0">
+        <button class="sm danger" onclick="clearCustomWatermark()" style="font-size:.72rem;white-space:nowrap">Clear</button>
+      </div>
+    </div>
+    <div class="cfg-preset-row">
       <label>Preset</label>
       <select id="presetSelect" onchange="applyPreset(this.value)">
         <option value="">— Custom —</option>
       </select>
-    </div>
-    <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:6px;font-family:sans-serif;font-size:.78rem;color:var(--muted)">
-      <input type="checkbox" id="watermarkToggle" checked onchange="toggleWatermark(this.checked)" style="cursor:pointer">
-      <label for="watermarkToggle" style="cursor:pointer">Toggle image</label>
     </div>
     <div class="hint" style="margin-bottom:6px">Toggle sections on or off. Data is preserved when hidden.</div>
     <div class="hint" style="margin-bottom:6px">Drag section titles on the sheet to reorder or move between columns.</div>
@@ -1366,14 +1396,37 @@ body.touch-device .ta-wrap textarea{
           </select>
         </div>
         <div class="cfg-preset-row">
+          <label>Watermark</label>
+          <select id="drawerWatermarkSelect" onchange="applyWatermark(this.value)">
+            <option value="none">— None —</option>
+            <option value="mortal">Mortal</option>
+            <option value="mage">Mage</option>
+            <option value="ascension">Mage (Ascension)</option>
+            <option value="vampire">Vampire</option>
+            <option value="werewolf">Werewolf</option>
+            <option value="changeling">Changeling</option>
+            <option value="hunter">Hunter</option>
+            <option value="demon">Demon</option>
+            <option value="deviant">Deviant</option>
+            <option value="promethean">Promethean</option>
+            <option value="geist">Geist</option>
+            <option value="beast">Beast</option>
+            <option value="mummy">Mummy</option>
+            <option value="custom">Custom…</option>
+          </select>
+        </div>
+        <div id="drawerCustomWatermarkUpload" style="display:none;margin-bottom:6px">
+          <label class="hint" style="display:block;margin-bottom:3px">Upload image (JPG/PNG with light background works best)</label>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <input type="file" accept="image/*" onchange="loadCustomWatermark(this)" style="font-size:.75rem;font-family:sans-serif;flex:1;min-width:0">
+            <button class="sm danger" onclick="clearCustomWatermark()" style="font-size:.72rem;white-space:nowrap">Clear</button>
+          </div>
+        </div>
+        <div class="cfg-preset-row">
           <label>Preset</label>
           <select id="drawerPresetSelect" onchange="applyPreset(this.value)">
             <option value="">— Custom —</option>
           </select>
-        </div>
-        <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:6px;font-family:sans-serif;font-size:.78rem;color:var(--muted)">
-          <input type="checkbox" id="drawerWatermarkToggle" checked onchange="toggleWatermark(this.checked)" style="cursor:pointer">
-          <label for="drawerWatermarkToggle" style="cursor:pointer">Toggle image</label>
         </div>
         <div class="hint" style="margin-bottom:6px">Toggle sections on or off. Data is preserved when hidden.</div>
         <div class="hint" style="margin-bottom:6px">Drag section titles on the sheet to reorder or move between columns.</div>
@@ -1431,7 +1484,7 @@ body.touch-device .ta-wrap textarea{
        Zone layout            — ZONES map, rebuildZones(), drag-drop ordering
        Collapsible sections   — collapse/expand with localStorage persistence
        Drag and drop          — mouse + touch drag to reorder/move sections
-       Theme & watermark      — applyTheme(), toggleWatermark()
+       Theme & watermark      — applyTheme(), applyWatermark(), loadCustomWatermark()
        Config panel           — buildCfgPanel(), section visibility toggles
        Section visibility     — getSecConfig(), secVisible(), toggleSec()
        Tablet drawer          — openDrawer(), switchDrawerTab(), etc.
@@ -1545,7 +1598,7 @@ async function loadDB(){
   buildCfgPanel();
   // Auto-open help modal for first-time visitors
   if(!localStorage.getItem('mortalsplus_help_seen')){
-    localStorage.setItem('mortalsplus_help_seen','1');
+    try{localStorage.setItem('mortalsplus_help_seen','1');}catch(e){/* quota full — skip marking seen */}
     openHelp();
   }
 }
@@ -1847,52 +1900,106 @@ function updateLayoutLockButton(){
   });
 }
 
-// applyTheme — sets data-theme attribute on <body>, which activates one of the
-// CSS variable overrides at the top of the stylesheet. Also syncs both theme
-// selects (desktop sidebar + drawer) and silently persists if already saved.
+// applyTheme — sets data-theme attribute on <body>, activating one of the
+// CSS variable overrides at the top of the stylesheet. Syncs both theme
+// selects (desktop sidebar + drawer). Watermark is now independent — see applyWatermark().
 function applyTheme(theme){
   theme=theme||'neutral';
   STATE.theme=theme;
   document.body.setAttribute('data-theme',theme);
-  // Swap splat watermark skull — each theme maps to its own asset; fall back to mortal
-  const WATERMARK_MAP={ 
-    mage:'assets/skull-mage.jpg',
-    ascension:'assets/prime.jpg',
-    vampire:'assets/skull-vampire.jpg',
-    beast:'assets/skull-beast.jpg',
-    changeling:'assets/skull-changeling.jpg',
-    deviant:'assets/skull-deviant.jpg',
-    geist:'assets/skull-geist.jpg',
-    hunter:'assets/skull-hunter.jpg',
-    mummy:'assets/skull-mummy.jpg',
-    promethean:'assets/skull-promethean.jpg',
-    werewolf:'assets/skull-werewolf.jpg',
-    demon:'assets/skull-demon.jpg'
-  };
-  const wm=document.getElementById('splatWatermarkImg');
-  if(wm) wm.src=WATERMARK_MAP[theme]||'assets/skull-mortal.jpg';
-  // Keep both selectors in sync
   const d=document.getElementById('themeSelect');
   const dr=document.getElementById('drawerThemeSelect');
   if(d)d.value=theme;
   if(dr)dr.value=theme;
-  // Silently persist if a character is already saved
   autoSave();
 }
 
-// toggleWatermark — shows or hides the splat watermark. Persists to STATE so
-// the preference survives save/load. Keeps both checkboxes in sync.
-function toggleWatermark(visible){
-  STATE.watermarkVisible = visible;
-  const wm = document.getElementById('splat-watermark');
-  if(wm) wm.classList.toggle('watermark-hidden', !visible);
-  // Keep both checkboxes in sync
-  const d  = document.getElementById('watermarkToggle');
-  const dr = document.getElementById('drawerWatermarkToggle');
-  if(d)  d.checked  = visible;
-  if(dr) dr.checked = visible;
-  // Silently persist if a character is already saved
+// WATERMARK_ASSETS — maps watermark option values to their asset paths.
+const WATERMARK_ASSETS={
+  mortal:'assets/skull-mortal.jpg',
+  mage:'assets/skull-mage.jpg',
+  ascension:'assets/prime.jpg',
+  vampire:'assets/skull-vampire.jpg',
+  beast:'assets/skull-beast.jpg',
+  changeling:'assets/skull-changeling.jpg',
+  deviant:'assets/skull-deviant.jpg',
+  geist:'assets/skull-geist.jpg',
+  hunter:'assets/skull-hunter.jpg',
+  mummy:'assets/skull-mummy.jpg',
+  promethean:'assets/skull-promethean.jpg',
+  werewolf:'assets/skull-werewolf.jpg',
+  demon:'assets/skull-demon.jpg',
+  neutral:'assets/skull-mortal.jpg',
+  entity:'assets/skull-mortal.jpg',
+};
+
+// applyWatermark — sets the watermark image independently of theme.
+// value: one of the WATERMARK_ASSETS keys, 'custom', or 'none'.
+// Syncs both watermark selects (desktop + drawer).
+function applyWatermark(value){
+  value=value||'mortal';
+  STATE.watermark=value;
+  const wmEl=document.getElementById('splat-watermark');
+  const imgEl=document.getElementById('splatWatermarkImg');
+  if(!wmEl||!imgEl)return;
+  const customData=value==='custom'?(localStorage.getItem(LS_CUSTOM_WATERMARK)||null):null;
+  if(value==='none'||(value==='custom'&&!customData)){
+    wmEl.classList.add('watermark-hidden');
+  } else {
+    wmEl.classList.remove('watermark-hidden');
+    if(value==='custom'){
+      imgEl.src=customData;
+    } else {
+      imgEl.src=WATERMARK_ASSETS[value]||'assets/skull-mortal.jpg';
+    }
+  }
+  const d=document.getElementById('watermarkSelect');
+  const dr=document.getElementById('drawerWatermarkSelect');
+  if(d)d.value=value;
+  if(dr)dr.value=value;
+  // Show/hide custom upload controls
+  const cu=document.getElementById('customWatermarkUpload');
+  const cud=document.getElementById('drawerCustomWatermarkUpload');
+  if(cu)cu.style.display=value==='custom'?'block':'none';
+  if(cud)cud.style.display=value==='custom'?'block':'none';
   autoSave();
+}
+
+// loadCustomWatermark — handles file input for custom watermark upload.
+// Reads the file as a base64 data URL and stores it in localStorage under
+// LS_CUSTOM_WATERMARK (browser-level, not per-character). STATE.watermark is
+// set to 'custom' so the character references the slot; the image data itself
+// never enters STATE or exports.
+function loadCustomWatermark(input){
+  const file=input.files&&input.files[0];
+  if(!file)return;
+  if(file.size>300000){
+    showStatus('Warning: large image may approach storage limits. Consider a smaller file.',4000);
+  }
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      localStorage.setItem(LS_CUSTOM_WATERMARK,e.target.result);
+    }catch(err){
+      if(_isQuotaError(err)){showStatus(LS_STORAGE_FULL_MSG,4000);return;}
+    }
+    STATE.watermark='custom';
+    applyWatermark('custom');
+  };
+  reader.readAsDataURL(file);
+}
+
+// clearCustomWatermark — removes the browser-level custom watermark and
+// reverts any character currently using it to 'none'.
+function clearCustomWatermark(){
+  try{localStorage.removeItem(LS_CUSTOM_WATERMARK);}catch(e){}
+  if(STATE.watermark==='custom') applyWatermark('none');
+}
+
+// toggleWatermark — DEPRECATED in v27. Stub kept for safety; watermark is now
+// controlled independently via applyWatermark(value).
+function toggleWatermark(visible){
+  if(!visible) applyWatermark('none');
 }
 
 
@@ -2211,7 +2318,7 @@ function _baseCharacterFields(attrs,skills){
     willpower_spent:0,willpower_max_override:null,
     defense:Math.min(dexterity,wits)+athletics,initiative:dexterity+composure,speed:strength+dexterity+5,
     derivedOverrides:{},
-    meritMaxDots:5,sectionConfig:{},...base,layoutLocked:true,theme:'neutral',
+    meritMaxDots:5,sectionConfig:{},...base,layoutLocked:true,theme:'neutral',watermark:'mortal',
     // Ephemeral Entity fields — zeroed for mortal characters
     entity_attrs:{power:1,finesse:1,resistance:1},
     entity_size:5,entity_rank_num:1,entity_type:'',entity_rank:'',entity_concept:'',entity_virtue:'',entity_vice:'',
@@ -2483,6 +2590,12 @@ function patchState(){
   if(STATE.attrShowSpinner===undefined)STATE.attrShowSpinner=false;
   if(STATE.layoutLocked===undefined)STATE.layoutLocked=true;
   if(!STATE.theme)STATE.theme='neutral';
+  // v27: decouple watermark from theme. Migrate legacy watermarkVisible to new watermark field.
+  if(STATE.watermark===undefined){
+    STATE.watermark = (STATE.watermarkVisible===false) ? 'none' : 'mortal';
+  }
+  // v27.1: customWatermarkData moved to browser localStorage — strip from any old saves that have it
+  if('customWatermarkData' in STATE) delete STATE.customWatermarkData;
   if(!STATE.sectionConfig)STATE.sectionConfig={};
   (STATE.weapons||[]).forEach(w=>{if(w.equipped===undefined)w.equipped=false;});
   (STATE.armor||[]).forEach(a=>{
@@ -2525,7 +2638,7 @@ function renderEditor(){
   applySectionConfig();
   updateLayoutLockButton();
   applyTheme(STATE.theme||'neutral');
-  toggleWatermark(STATE.watermarkVisible !== false);
+  applyWatermark(STATE.watermark||'mortal');
   requestAnimationFrame(()=>{
     initDragAndDrop();
     initCollapsibleSections();
@@ -4517,9 +4630,15 @@ function copyText(){
 // There is no server — all data is local to the browser.
 const LS_PREFIX='mortals_plus_save_';
 const LS_INDEX='mortals_plus_index';
+const LS_CUSTOM_WATERMARK='mortals_plus_custom_watermark';
+const LS_STORAGE_FULL_MSG='Storage full — export characters to free up space.';
+
+function _isQuotaError(e){return e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED');}
 
 function lsSaveIndex(saves){
-  try{localStorage.setItem(LS_INDEX,JSON.stringify(saves));}catch(e){showStatus('Storage full — consider exporting old characters.');}
+  try{localStorage.setItem(LS_INDEX,JSON.stringify(saves));}catch(e){
+    if(_isQuotaError(e))showStatus(LS_STORAGE_FULL_MSG,4000);
+  }
 }
 function lsGetIndex(){
   try{const s=localStorage.getItem(LS_INDEX);return s?JSON.parse(s):[];}catch(e){return[];}
@@ -4531,6 +4650,7 @@ function saveCharacter(){
   currentSaveId=STATE.id;
   try{
     localStorage.setItem(LS_PREFIX+STATE.id,JSON.stringify(STATE));
+    _autoSaveWarnActive=false; // Clear any lingering storage-full warning flag
     const idx=lsGetIndex();
     const existing=idx.findIndex(s=>s.id===STATE.id);
     const entry={id:STATE.id,name:STATE.name||'Unnamed'};
@@ -4538,26 +4658,39 @@ function saveCharacter(){
     idx.sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
     lsSaveIndex(idx);
     showStatus('Saved.');loadSaves();
-  }catch(e){showStatus('Save failed: '+e.message);}
+  }catch(e){
+    if(_isQuotaError(e))showStatus(LS_STORAGE_FULL_MSG,4000);
+    else showStatus('Save failed — unexpected error.');
+  }
 }
 
 // autoSave — debounced silent save. Only fires for sheets that already have a
 // currentSaveId (i.e. have been manually saved at least once). New unsaved
 // sheets are never auto-saved. Waits 1.5s after the last change before writing
 // so rapid edits (typing, clicking dots) are batched into a single write.
+// _autoSaveWarnActive prevents repeated storage-full toasts while the quota
+// remains exceeded; cleared on any successful save.
 let _autoSaveTimer=null;
+let _autoSaveWarnActive=false;
 function autoSave(){
   if(!currentSaveId||!STATE.id)return;
   clearTimeout(_autoSaveTimer);
   _autoSaveTimer=setTimeout(()=>{
     try{
       localStorage.setItem(LS_PREFIX+STATE.id,JSON.stringify(STATE));
+      _autoSaveWarnActive=false;
       const idx=lsGetIndex();
       const existing=idx.findIndex(s=>s.id===STATE.id);
       const entry={id:STATE.id,name:STATE.name||'Unnamed'};
       if(existing>=0)idx[existing]=entry;
       lsSaveIndex(idx);
-    }catch(e){showStatus('Auto-save failed: '+e.message);}
+    }catch(e){
+      if(_isQuotaError(e)){
+        if(!_autoSaveWarnActive){_autoSaveWarnActive=true;showStatus(LS_STORAGE_FULL_MSG,4000);}
+      } else {
+        showStatus('Auto-save failed — unexpected error.');
+      }
+    }
   },1500);
 }
 function loadSaves(){
@@ -4684,9 +4817,10 @@ function downloadJSON(obj,filename){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
 }
-function showStatus(msg){
+function showStatus(msg,duration){
   const el=document.getElementById('statusBar');el.textContent=msg;el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),2500);
+  clearTimeout(el._hideTimer);
+  el._hideTimer=setTimeout(()=>el.classList.remove('show'),duration||2500);
 }
 
 if(window.matchMedia('(pointer:coarse)').matches)document.body.classList.add('touch-device');
