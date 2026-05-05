@@ -24,6 +24,7 @@ Everything in Mortals+ that can be customised lives in one file: **`data.json`**
 10. [Adding a new splat](#10-adding-a-new-splat)
 11. [Section definition reference](#11-section-definition-reference)
 12. [What you cannot change in data.json](#12-what-you-cannot-change-in-datajson)
+13. [Advanced customisation — forking and system adaptation](#13-advanced-customisation--forking-and-system-adaptation)
 
 ---
 
@@ -530,6 +531,7 @@ No theme required — half-splats use the Neutral theme by default. No code chan
 | `armor` | Armor cards with full armor fields, including per-location coverage checkboxes (Head, Torso, Arms, Legs). Equipped pieces contribute to the Armor row in Other Traits. Special renderer. |
 | `equipment` | Equipment cards with full equipment fields. Special renderer. |
 | `textarea` | Multi-line free text with markdown support. Shows rendered text by default; click to edit. |
+| `pool-list` | Simple list of named dice pools with integer values. Each row has a name input and a numeric value input. Used for Minor NPC dice pool sections. State: `[{name, value}]`. |
 
 ---
 
@@ -572,3 +574,174 @@ No theme required — half-splats use the Neutral theme by default. No code chan
 **Presets must have a `category` field.** Without it, the preset will appear under no group in the dropdown. Use an existing category string or introduce a new one — either works without code changes.
 
 **Sharing library additions.** Use **Data library → Export library** to share your content. Others can **Import library → Merge** to add your entries without overwriting theirs.
+
+---
+
+## 13. Advanced customisation — forking and system adaptation
+
+Everything in sections 1–12 can be done without touching `index.html`. This section is for developers who want to go further — adapting the app to a different game system, replacing core mechanics, or forking it as the basis for a new tool.
+
+The items below are hardcoded in `index.html` and cannot be changed through `data.json` alone. They are grouped into two tiers: **mechanical** (things that directly affect game rules) and **structural/cosmetic** (things that affect the app's identity and UI). All line references are approximate — search for the function or constant name to find them.
+
+---
+
+### Tier 1 — Mechanical hardcoding
+
+These are the things most likely to require change when adapting to a different RPG system.
+
+#### The 9 mortal attributes
+
+**Where:** `const ATTRIBUTES` and `const ATTR_LABELS` near the top of the `<script>` block.
+
+```js
+const ATTRIBUTES = {
+  mental:   ['intelligence', 'wits', 'resolve'],
+  physical: ['strength', 'dexterity', 'stamina'],
+  social:   ['presence', 'manipulation', 'composure']
+};
+const ATTR_LABELS = { intelligence: 'Intelligence', wits: 'Wits', ... };
+```
+
+`ATTRIBUTES` defines both the three categories and the three attributes per category. The category keys (`mental`, `physical`, `social`) appear as column headers in the rendered block. To rename, add, or remove attributes, change both constants.
+
+**Ripple effects:** Changing attribute keys breaks any saved characters that reference the old keys. The compact print renderer (`renderAttrBlockCompact`) iterates `ATTRIBUTES` directly and needs no changes if you only rename labels. The derived stat formulas (below) reference specific attribute keys by name — update those too.
+
+**Row labels** (`Power`, `Finesse`, `Resistance`) appear twice: once in `renderAttrBlock()` and again in `renderAttrBlockCompact()`. Search for `ROW_LABELS` to find both. These are the labels for the three attribute rows (corresponding to the three attributes in each category), not the category names.
+
+---
+
+#### Mortal derived stat formulas
+
+**Where:** Five `calcBase*` functions grouped together, just above `updateDerived()`.
+
+| Function | Formula | Attribute keys used |
+|---|---|---|
+| `calcBaseDefense` | lower of Wits and Dexterity + Athletics skill | `wits`, `dexterity` + `athletics` skill key |
+| `calcBaseInitiative` | Dexterity + Composure | `dexterity`, `composure` |
+| `calcBaseSpeed` | Strength + Dexterity + 5 | `strength`, `dexterity` |
+| `calcBaseHealth` | Stamina + Size | `stamina` |
+| `calcBaseWillpower` | Resolve + Composure | `resolve`, `composure` |
+
+To change a formula, edit the corresponding function. The `+5` in Speed is a hardcoded species factor — replace it if your system uses a different base. The `athletics` key in Defense is the only skill key the app references directly; if you rename or remove the Athletics skill, update `calcBaseDefense` to match.
+
+`updateDerived()` calls all five functions and writes their results to STATE and the DOM. It also handles gear modifiers (armor defense penalty, weapon initiative modifier, speed penalty) via `calcGearMods()`. If your system doesn't use these modifiers, `calcGearMods()` can be simplified or removed.
+
+---
+
+#### Mortal health track — damage types
+
+**Where:** `const DAMAGE_CYCLE`, `cycleHealth()`, `renderHealthTrack()`, `healthSVG()`.
+
+```js
+const DAMAGE_CYCLE = { '': 'b', 'b': 'l', 'l': 'a', 'a': '' };
+```
+
+The health track cycles through four states: empty, bashing (`b`), lethal (`l`), aggravated (`a`). `healthSVG()` renders each state as a different SVG mark. `renderHealthTrack()` counts damage boxes and derives the wound penalty.
+
+To change to a simpler damage model (e.g. a single damage type), replace `DAMAGE_CYCLE` with fewer states, update `healthSVG()` to return the appropriate SVG for each state, and simplify the wound penalty calculation in `renderHealthTrack()`.
+
+This damage model also appears in `copyText()` — search for `health_track` there to update the text export as well.
+
+---
+
+#### The 3 entity attributes
+
+**Where:** `const ENTITY_ATTRS` near the top of the `<script>` block.
+
+```js
+const ENTITY_ATTRS = [
+  { key: 'power',      label: 'Power' },
+  { key: 'finesse',    label: 'Finesse' },
+  { key: 'resistance', label: 'Resistance' }
+];
+```
+
+Unlike mortal attributes, entity attributes have no category structure — they are a flat list of three. To rename them, change `label`. To change the keys, also update `patchState()` (which initialises `STATE.entity_attrs`), `_baseCharacterFields()`, and the entity derived formulas below.
+
+---
+
+#### Entity derived stat formulas
+
+**Where:** Six `calcBase*` functions grouped just above `updateEntityDerived()`.
+
+| Function | Formula |
+|---|---|
+| `calcBaseCorpus` | Resistance + Size |
+| `calcBaseEntityWp` | Resistance + Finesse |
+| `calcBaseEntityDefense` | Rank 1: higher of Power/Finesse; Rank 2+: lower of Power/Finesse |
+| `calcBaseEntityInitiative` | Finesse + Resistance |
+| `calcBaseEntitySpeed` | Power + Finesse + 5 |
+
+The rank-dependent Defense formula is the only place in the app that branches on `STATE.entity_rank_num`. If your system doesn't use entity ranks, replace that branch with a single formula.
+
+---
+
+#### `copyText()` — plain-text export
+
+**Where:** The `copyText()` function near the bottom of the `<script>` block, in the Utilities section.
+
+`copyText()` produces a plain-text character summary for clipboard export. It is not a general renderer — it explicitly references `STATE.merits`, `STATE.weapons`, `STATE.armor`, `STATE.equipment`, mortal attribute keys, the damage type characters (`b`, `l`, `a`), and the specific derived stat names. If you change attribute names, add new core sections, or alter the damage model, update `copyText()` to match.
+
+Entity sheets are partially covered — Corpus, Willpower, Essence, and entity attributes are included, but entity-specific sections (Numina, Manifestations, etc.) are not yet rendered in `copyText()`. This is a known gap noted in the project documentation.
+
+---
+
+### Tier 2 — Structural and cosmetic hardcoding
+
+These items don't affect game mechanics but will need updating when adapting the app's identity for a fork.
+
+#### App title and subtitle
+
+**Where:** The `<h1>` and `.app-sub` paragraph in the HTML body, and `document.title` in the `<head>`.
+
+The title (`Mortals+`) and subtitle (`Chronicles of Darkness — character sheet builder`) are plain HTML. The `afterprint` handler in the print/restore block also restores `document.title` to a hardcoded string — search for `afterprint` and update that string to match.
+
+---
+
+#### Theme and watermark selects
+
+**Where:** Two `<select>` elements in the HTML — `#themeSelect` in the desktop sidebar and `#drawerThemeSelect` in the tablet drawer. Same duplication for `#watermarkSelect` / `#drawerWatermarkSelect`.
+
+The theme and watermark options are hardcoded `<option>` elements in the HTML, not data-driven. Adding a new theme requires four changes:
+
+1. Add a `[data-theme="yourtheme"]` CSS block overriding the `:root` variables (follow the pattern of existing themes at the top of the `<style>` block).
+2. Add an entry to `WATERMARK_ASSETS` in JS, mapping the theme name to an asset path.
+3. Add an `<option>` to both theme selects in HTML (`#themeSelect` and `#drawerThemeSelect`).
+4. Optionally add the theme name to both watermark selects and provide an asset file.
+
+The CSS block comment at the top of `:root` also lists this as a checklist.
+
+---
+
+#### The generate bar
+
+**Where:** The `.gen-bar` `<div>` in the HTML body.
+
+The two character generation groups ("Mortal" and "Ephemeral Entity") are hardcoded HTML. Each calls a specific JS function (`generateMortal()`, `generateEphemeral()`, `blank()`, `blankEntity()`). Adding a third character type requires adding a new `.gen-group` div in the HTML and a new generation function in JS. The generation functions themselves (`generateMortal`, `generateEphemeral`) are fully self-contained and can be used as templates.
+
+---
+
+#### Armor coverage locations
+
+**Where:** The string array `['head','torso','arms','legs']` appears in several places: `calcGearMods()`, `patchState()`, `renderArmorList()` (inside the armor card builder), `updateDerived()`, `updateEntityDerived()`, `renderGearCompact()`, and `copyText()`. Search for `'head','torso','arms','legs'` to find all occurrences.
+
+These four locations are hardcoded throughout the gear system. Changing them (e.g. adding a `neck` location or removing `arms`) requires updating every occurrence, as well as the coverage checkbox HTML inside `renderArmorList()`.
+
+---
+
+### Summary table
+
+| Item | Tier | Location in index.html |
+|---|---|---|
+| Mortal attribute names and categories | Mechanical | `const ATTRIBUTES`, `const ATTR_LABELS` |
+| Attribute row labels (Power/Finesse/Resistance) | Mechanical | `renderAttrBlock()`, `renderAttrBlockCompact()` |
+| Mortal derived stat formulas | Mechanical | `calcBaseDefense()` through `calcBaseWillpower()` |
+| Health damage types (bashing/lethal/aggravated) | Mechanical | `DAMAGE_CYCLE`, `cycleHealth()`, `healthSVG()` |
+| Entity attribute names | Mechanical | `const ENTITY_ATTRS` |
+| Entity derived stat formulas | Mechanical | `calcBaseCorpus()` through `calcBaseEntitySpeed()` |
+| `copyText()` mortal-specific fields | Mechanical | `copyText()` |
+| App title and subtitle | Cosmetic | `<h1>`, `.app-sub`, `afterprint` handler |
+| Theme and watermark select options | Cosmetic | `#themeSelect`, `#drawerThemeSelect`, `#watermarkSelect`, `#drawerWatermarkSelect` |
+| Generate bar buttons | Structural | `.gen-bar` in HTML body |
+| Armor coverage locations | Mechanical/Structural | Multiple — search `'head','torso','arms','legs'` |
+
