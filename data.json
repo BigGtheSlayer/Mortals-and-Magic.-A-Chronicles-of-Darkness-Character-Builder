@@ -2258,6 +2258,31 @@
       "config_category": "Other"
     },
     {
+      "_comment": "── Minor NPC ────────────────────────────────────────────────────────────────"
+    },
+    {
+      "key": "general-dice-pools",
+      "label": "General Dice Pools",
+      "group": "Minor NPC",
+      "zone": "left-column",
+      "order": 3,
+      "type": "pool-list",
+      "state_key": "general_dice_pools",
+      "default": false,
+      "config_category": "Other"
+    },
+    {
+      "key": "combat-dice-pools",
+      "label": "Combat Dice Pools",
+      "group": "Minor NPC",
+      "zone": "left-column",
+      "order": 4,
+      "type": "pool-list",
+      "state_key": "combat_dice_pools",
+      "default": false,
+      "config_category": "Other"
+    },
+    {
       "_comment": "── Mage: the Ascension (Translation Guide) ─────────────────────────────────"
     },
     {
@@ -2434,7 +2459,9 @@
         "armor": true,
         "equipment": true,
         "notes": true,
-        "mortal-header-fields": true
+        "mortal-header-fields": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Main Splats"
     },
@@ -2462,7 +2489,9 @@
         "satiety-condition": true,
         "atavisms": true,
         "nightmares": true,
-        "family-ties": true
+        "family-ties": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       }
     },
     {
@@ -2494,7 +2523,9 @@
         "pledges": true,
         "seeming-blessing": true,
         "seeming-curse": true,
-        "kith-blessing": true
+        "kith-blessing": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Main Splats"
     },
@@ -2524,7 +2555,9 @@
         "embeds": true,
         "exploits": true,
         "cipher": true,
-        "covers": true
+        "covers": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Main Splats"
     },
@@ -2553,7 +2586,9 @@
         "variations": true,
         "scars": true,
         "origins": true,
-        "adaptations": true
+        "adaptations": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Main Splats"
     },
@@ -2579,7 +2614,9 @@
         "plasm": true,
         "keys": true,
         "haunts": true,
-        "remembrance-traits": true
+        "remembrance-traits": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Main Splats"
     },
@@ -2605,7 +2642,9 @@
         "the-code": true,
         "notes": true,
         "mortal-header-fields": true,
-        "hunter-header-fields": true
+        "hunter-header-fields": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Main Splats"
     },
@@ -2640,7 +2679,9 @@
         "praxes": true,
         "nimbus": true,
         "yantras": true,
-        "magical-tools": true
+        "magical-tools": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Main Splats"
     },
@@ -2669,7 +2710,9 @@
         "reminisce-beats-xp": true,
         "mummy-touchstones": true,
         "affinities": true,
-        "utterances": true
+        "utterances": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       }
     },
     {
@@ -2699,7 +2742,9 @@
         "refinement-condition": true,
         "fixed-alembics": true,
         "milestones": true,
-        "mastered-roles": true
+        "mastered-roles": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Main Splats"
     },
@@ -2727,7 +2772,9 @@
         "banes": true,
         "disciplines": true,
         "devotions": true,
-        "vampire-rites": true
+        "vampire-rites": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Main Splats"
     },
@@ -2757,7 +2804,9 @@
         "spirit-touchstones": true,
         "werewolf-forms": true,
         "gifts": true,
-        "rites": true
+        "rites": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Main Splats"
     },
@@ -2781,7 +2830,9 @@
         "mortal-header-fields": true,
         "vitae": true,
         "disciplines": true,
-        "ghoul-header-fields": true
+        "ghoul-header-fields": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       }
     },
     {
@@ -2805,7 +2856,9 @@
         "mana": true,
         "proximi-header-fields": true,
         "blessings": true,
-        "proximi-curse": true
+        "proximi-curse": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       }
     },
     {
@@ -2828,7 +2881,9 @@
         "mortal-header-fields": true,
         "wolf-blooded-header-fields": true,
         "tells": true,
-        "tension-pool": true
+        "tension-pool": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       }
     },
     {
@@ -2855,7 +2910,9 @@
         "manifestations": true,
         "influences": true,
         "entity-ban": true,
-        "entity-bane": true
+        "entity-bane": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Ephemeral Entities"
     },
@@ -2884,7 +2941,9 @@
         "influences": true,
         "entity-ban": true,
         "entity-bane": true,
-        "anchors": true
+        "anchors": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Ephemeral Entities"
     },
@@ -2913,7 +2972,9 @@
         "manifestations": true,
         "influences": true,
         "entity-ban": true,
-        "entity-bane": true
+        "entity-bane": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       },
       "category": "Ephemeral Entities"
     },
@@ -2937,7 +2998,9 @@
         "mortal-header-fields": false,
         "horror-header-fields": true,
         "potency": true,
-        "dread-powers": true
+        "dread-powers": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
       }
     },
     {
@@ -2967,7 +3030,31 @@
         "ascension-yantras": true,
         "ascension-magical-tools": true,
         "ascension-nimbus": true,
-        "ascension-attainments": true
+        "ascension-attainments": true,
+        "general-dice-pools": false,
+        "combat-dice-pools": false
+      }
+    },
+    {
+      "name": "Minor NPC",
+      "category": "Other",
+      "config": {
+        "mortal-header-fields": true,
+        "beats-xp": false,
+        "attributes": true,
+        "skills": false,
+        "other-traits": true,
+        "integrity": false,
+        "tilts": false,
+        "conditions": false,
+        "aspirations": false,
+        "merits": false,
+        "weapons": false,
+        "armor": false,
+        "equipment": false,
+        "notes": false,
+        "general-dice-pools": true,
+        "combat-dice-pools": true
       }
     }
   ],
