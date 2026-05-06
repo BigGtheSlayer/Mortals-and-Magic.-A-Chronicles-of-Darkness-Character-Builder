@@ -1189,6 +1189,48 @@ body.touch-device .st-mode-toggle-wrap{display:none}
 .st-col-empty{font-size:.78rem;font-family:sans-serif;color:var(--faint);text-align:center;padding:16px 8px;border:1px dashed var(--border-light);border-radius:4px}
 .st-col-picker{display:flex;align-items:center;gap:6px;font-family:sans-serif;font-size:.72rem;color:var(--muted)}
 
+/* ── Initiative tracker ───────────────────────────────────────────────────── */
+.st-main-area{display:flex;flex-direction:row;align-items:flex-start;gap:0}
+.st-main-area .st-instance-list{flex:1;min-width:0}
+.st-init-panel{background:var(--surface);border:1px solid var(--border);border-left:none;border-radius:0 6px 6px 0;width:220px;flex-shrink:0;align-self:stretch;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.st-init-panel:not(.resizing){transition:width 0s}
+.st-main-area:not(.tracker-open) .st-init-panel{display:none}
+.st-main-area:not(.tracker-open) .st-instance-list{border-radius:6px}
+.st-init-resize-handle{position:absolute;left:0;top:0;bottom:0;width:5px;cursor:col-resize;z-index:10;background:transparent;transition:background .15s}
+.st-init-resize-handle:hover,.st-init-resize-handle.dragging{background:var(--accent);opacity:.35}
+.st-init-toolbar-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.st-init-toolbar-btns{display:flex;gap:4px;flex-wrap:wrap}
+.st-init-title{font-family:sans-serif;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);flex-shrink:0}
+.st-init-round{display:flex;align-items:center;gap:4px;font-family:sans-serif;font-size:.78rem;color:var(--text);margin-left:auto}
+.st-init-round-val{font-weight:700;min-width:18px;text-align:center}
+.st-init-btn{font-family:sans-serif;font-size:.7rem;padding:2px 7px;border:1px solid var(--border);border-radius:3px;background:var(--chip);color:var(--text);cursor:pointer;white-space:nowrap;transition:background .12s}
+.st-init-btn:hover{background:var(--border)}
+.st-init-btn.accent{background:var(--accent);color:#f5f0e8;border-color:var(--accent)}
+.st-init-btn.accent:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.st-init-list{flex:1;overflow-y:auto;width:100%}
+.st-init-row{display:flex;align-items:center;gap:4px;padding:5px 8px;border-bottom:1px solid var(--border-light);font-family:sans-serif;font-size:.75rem;transition:background .1s}
+.st-init-row:last-child{border-bottom:none}
+.st-init-row.acted{opacity:.45}
+.st-init-row.acted .st-init-name{text-decoration:line-through}
+.st-init-rank{min-width:14px;text-align:right;font-size:.65rem;color:var(--faint);flex-shrink:0}
+.st-init-acted-chk{width:13px;height:13px;cursor:pointer;accent-color:var(--accent);flex-shrink:0}
+.st-init-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:.73rem}
+.st-init-base{font-size:.68rem;color:var(--faint);flex-shrink:0;min-width:20px;text-align:right}
+.st-init-plus{font-size:.68rem;color:var(--faint);flex-shrink:0}
+.st-init-roll-inp{width:38px;text-align:center;font-size:.78rem;padding:2px 3px;border:1px solid var(--border);border-radius:3px;background:var(--bg);color:var(--text);-moz-appearance:textfield}
+.st-init-roll-inp::-webkit-inner-spin-button,.st-init-roll-inp::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.st-init-total{min-width:22px;text-align:center;font-weight:700;font-size:.82rem;color:var(--text);flex-shrink:0}
+.st-init-total.unrolled{color:var(--faint);font-weight:400}
+.st-init-remove{background:none;border:none;color:var(--faint);cursor:pointer;font-size:.72rem;padding:0 1px;line-height:1;flex-shrink:0}
+.st-init-remove:hover{color:var(--danger)}
+.st-init-divider{height:1px;background:var(--border);margin:0}
+.st-init-add-row{display:flex;flex-direction:column;gap:4px;padding:7px 8px;border-top:1px solid var(--border);flex-shrink:0}
+.st-init-add-row input{width:100%;font-size:.75rem;padding:2px 5px;box-sizing:border-box}
+.st-init-add-row .st-init-add-fields{display:flex;gap:4px}
+.st-init-add-row .st-init-add-fields input[type=text]{flex:1}
+.st-init-add-row .st-init-add-fields input[type=number]{width:44px;flex:0 0 auto}
+/* ── End initiative tracker ──────────────────────────────────────────────── */
+
 /* Instance card drag and drop */
 .st-card{border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface)}
 .st-card-dragging{opacity:.4;cursor:grabbing}
@@ -1396,17 +1438,55 @@ body.touch-device .st-mode-toggle-wrap{display:none}
   <div id="stPanel" style="display:none">
     <div class="st-panel-header no-print">
       <span class="st-panel-title">⚔ Storyteller Mode</span>
-      <span class="st-col-picker">
-        <span>Columns:</span>
-        <button class="spin" style="width:18px;height:18px;font-size:13px" onclick="stSetCols(_stCols-1)">−</button>
-        <span id="st-cols-val" style="font-weight:700;min-width:16px;text-align:center;font-family:sans-serif;font-size:.82rem;color:var(--text)">1</span>
-        <button class="spin" style="width:18px;height:18px;font-size:13px" onclick="stSetCols(_stCols+1)">+</button>
+      <span style="display:flex;align-items:center;gap:10px">
+        <button class="sm" style="font-size:.8rem;padding:4px 12px;font-weight:700;background:var(--accent);color:#f5f0e8;border-color:var(--accent)" onclick="openStHelp()" title="How to use Storyteller Mode">? How to use</button>
+        <button class="sm" style="font-size:.8rem;padding:4px 12px;font-weight:700;background:var(--accent);color:#f5f0e8;border-color:var(--accent)" onclick="stToggleInitTracker()" id="stInitTrackerBtn" title="Toggle Initiative Tracker">⚡ Initiative</button>
+        <span class="st-col-picker">
+          <span>Columns:</span>
+          <button class="spin" style="width:18px;height:18px;font-size:13px" onclick="stSetCols(_stCols-1)">−</button>
+          <span id="st-cols-val" style="font-weight:700;min-width:16px;text-align:center;font-family:sans-serif;font-size:.82rem;color:var(--text)">1</span>
+          <button class="spin" style="width:18px;height:18px;font-size:13px" onclick="stSetCols(_stCols+1)">+</button>
+        </span>
       </span>
     </div>
-    <div id="stInstanceList" class="st-instance-list"></div>
-    <div id="stEmptyState" class="empty-state" style="display:none">
-      No instances in this scene.<br>Use <strong>Add to Scene</strong> in the sidebar to spawn characters.
+    <!-- ── Initiative tracker + instance list (flex row) ─────────────────── -->
+    <div id="stMainArea" class="st-main-area">
+      <div style="flex:1;min-width:0">
+        <div id="stEmptyState" class="empty-state" style="display:none">
+          No instances in this scene.<br>Use <strong>Add to Scene</strong> in the sidebar to spawn characters.
+        </div>
+        <div id="stInstanceList" class="st-instance-list"></div>
+      </div>
+      <!-- Initiative tracker — right column, shown when tracker-open on parent -->
+      <div id="stInitPanel" class="st-init-panel no-print">
+        <div class="st-init-resize-handle" id="stInitResizeHandle" title="Drag to resize"></div>
+        <div class="st-init-toolbar">
+          <div class="st-init-toolbar-top">
+            <span class="st-init-title">⚡ Initiative</span>
+            <span class="st-init-round">
+              Round
+              <button class="spin" style="width:16px;height:16px;font-size:11px" onclick="stInitAdjRound(-1)">−</button>
+              <span class="st-init-round-val" id="stInitRound">1</span>
+              <button class="spin" style="width:16px;height:16px;font-size:11px" onclick="stInitAdjRound(1)">+</button>
+            </span>
+          </div>
+          <div class="st-init-toolbar-btns">
+            <button class="st-init-btn accent" onclick="stInitRollAll()">🎲 Roll all</button>
+            <button class="st-init-btn" onclick="stInitNewRound()">Next round</button>
+            <button class="st-init-btn" onclick="stInitReset()">Reset</button>
+          </div>
+        </div>
+        <div id="stInitList" class="st-init-list"></div>
+        <div class="st-init-add-row">
+          <div class="st-init-add-fields">
+            <input id="stInitAddName" type="text" placeholder="Ad-hoc name…" onkeydown="if(event.key==='Enter')stInitAddAdhoc()">
+            <input id="stInitAddVal" type="number" min="1" max="30" placeholder="Init" onkeydown="if(event.key==='Enter')stInitAddAdhoc()">
+          </div>
+          <button class="st-init-btn accent" style="width:100%" onclick="stInitAddAdhoc()">+ Add entry</button>
+        </div>
+      </div>
     </div>
+    <!-- ── End initiative tracker + instance list ─────────────────────────── -->
   </div>
   <!-- ── End Storyteller Mode panel ─────────────────────────────────────── -->
 
@@ -4765,6 +4845,281 @@ function closeHelpOnBackdrop(e){
 }
 // ── End help modal ────────────────────────────────────────────────────────────
 
+// ── Storyteller Mode help modal ───────────────────────────────────────────────
+const ST_HELP_SECTIONS=[
+  {
+    title:'What is Storyteller Mode?',
+    content:`Storyteller Mode is a live scene runner for the Storyteller — a workspace for tracking multiple characters during play.\n\nThe panel shows all characters currently in your scene as compact cards. Each card displays health, willpower, resources, derived stats, armour coverage, and any equipped gear, conditions, tilts, and notes at a glance — everything you need to run a scene without switching between sheets.`
+  },
+  {
+    title:'Adding characters to a scene',
+    content:`Use **Add to Scene** in the sidebar to bring saved characters into the scene. Each entry you add becomes an **instance** — an independent copy tied to the saved character as a read-only source.\n\nInstances are separate from the main character sheet. Anything you change on an instance (health damage, conditions, equipped gear, notes) exists only in the scene and never affects the original saved sheet. You can spawn multiple instances of the same character — useful for groups of identical NPCs.`
+  },
+  {
+    title:'Equipping items and pinning sections',
+    content:`Click the **▼ arrow** on any card to expand its body. From there you can:\n\n**Equip gear** — Weapons, Armour, and Equipment all have checkboxes. Ticking a checkbox marks that item as equipped; it then appears in the compact card header so you can see it at a glance without the body open.\n\n**Pin sections** — Sections like Arcana, dice pool lists, and individual abilities and merits each have a **☆ pin button** in their header. Pinning a section adds it to the card header in a compact form. Use this to surface the information you reach for most during play — a mage's highest Arcana, a fighter's key combat pools, a character's signature merit.`
+  },
+  {
+    title:'Columns and moving cards',
+    content:`Use the **− Columns +** control in the toolbar to add or remove columns. Up to five columns are supported.\n\nTo move a character card between columns, drag it by its title bar and drop it into any column — including the grey **Drop cards here** placeholder that appears in empty columns. The layout is saved automatically and restored when you return to Storyteller Mode.`
+  }
+];
+
+function openStHelp(){
+  document.getElementById('stHelpContent').innerHTML=ST_HELP_SECTIONS.map(s=>
+    `<div class="help-section">
+      <div class="help-section-title">${escH(s.title)}</div>
+      <div class="help-section-body">${mdH(s.content)}</div>
+    </div>`
+  ).join('');
+  document.getElementById('stHelpBackdrop').classList.add('open');
+}
+function closeStHelp(){
+  document.getElementById('stHelpBackdrop').classList.remove('open');
+}
+// ── End Storyteller Mode help modal ──────────────────────────────────────────
+
+// ── Initiative tracker ────────────────────────────────────────────────────────
+// State is split across two localStorage keys:
+//   LS_INIT       — { open: bool, round: int }
+//   LS_INIT_ADHOC — [{ id, name, init_val, acted }]  (non-instance entries)
+// Per-instance roll data lives on inst.init_roll (int, 0 = unrolled) and
+// inst.init_acted (bool), stored via _stMutate.
+
+function _stInitState(){
+  try{return JSON.parse(localStorage.getItem(LS_INIT))||{};}catch(e){return{};}
+}
+function _stSaveInitState(s){
+  try{localStorage.setItem(LS_INIT,JSON.stringify(s));}catch(e){}
+}
+function _stInitAdhoc(){
+  try{return JSON.parse(localStorage.getItem(LS_INIT_ADHOC))||[];}catch(e){return[];}
+}
+function _stSaveInitAdhoc(a){
+  try{localStorage.setItem(LS_INIT_ADHOC,JSON.stringify(a));}catch(e){}
+}
+
+function stToggleInitTracker(){
+  const s=_stInitState();
+  s.open=!s.open;
+  _stSaveInitState(s);
+  const area=document.getElementById('stMainArea');
+  if(area)area.classList.toggle('tracker-open',s.open);
+  stRenderInitTracker();
+}
+
+function stRenderInitTracker(){
+  const s=_stInitState();
+  const area=document.getElementById('stMainArea');
+  if(area)area.classList.toggle('tracker-open',!!s.open);
+  if(!s.open)return;
+
+  // Apply saved width
+  const panel=document.getElementById('stInitPanel');
+  if(panel&&s.width)panel.style.width=s.width+'px';
+
+  // Wire resize handle (idempotent)
+  stInitInitResize();
+  if(!s.open)return;
+
+  // Update round counter
+  const roundEl=document.getElementById('stInitRound');
+  if(roundEl)roundEl.textContent=s.round||1;
+
+  // Build combined list: instances + ad-hoc entries
+  const scene=_stGetScene();
+  const adhoc=_stInitAdhoc();
+
+  // Calculate total for each instance; display_name already includes #N for duplicates
+  const instEntries=scene.map(inst=>{
+    const src=_stReadChar(inst.source_id);
+    if(!src)return null;
+    const cfg=src.sectionConfig||{};
+    const isEntity=SECTION_DEFS.some(sd=>sd.type==='derived-traits-entity'&&cfg[sd.key]!==false);
+    const d=_stCalcInstanceDerived(inst,src,isEntity);
+    const base=d.initiative; // fully modified: includes equipped weapon init mods via calcGearMods
+    const roll=inst.init_roll||0;
+    const total=roll?base+roll:null;
+    const displayName=inst.display_name||src.name||'Unknown';
+    return{type:'inst',iid:inst.id,name:displayName,base,roll,total,acted:!!inst.init_acted};
+  }).filter(Boolean);
+
+  const adhocEntries=adhoc.map(a=>({
+    type:'adhoc',id:a.id,name:a.name,base:0,roll:0,total:a.init_val||0,acted:!!a.acted
+  }));
+
+  // Sort: unrolled at bottom, then by total descending
+  const all=[...instEntries,...adhocEntries].sort((a,b)=>{
+    if(a.total===null&&b.total===null)return 0;
+    if(a.total===null)return 1;
+    if(b.total===null)return-1;
+    return b.total-a.total;
+  });
+
+  const listEl=document.getElementById('stInitList');
+  if(!listEl)return;
+
+  if(!all.length){
+    listEl.innerHTML=`<div style="padding:8px 10px;font-family:sans-serif;font-size:.75rem;color:var(--faint)">No characters in scene yet.</div>`;
+    return;
+  }
+
+  listEl.innerHTML=all.map((entry,rank)=>{
+    const actedClass=entry.acted?'acted':'';
+    const totalClass=entry.total===null?'unrolled':'';
+    const totalDisplay=entry.total!==null?entry.total:'—';
+    const rankDisplay=entry.total!==null?`${rank+1}.`:'';
+
+    if(entry.type==='inst'){
+      const rollVal=entry.roll||'';
+      return `<div class="st-init-row ${actedClass}" id="stInitRow-${entry.iid}">
+        <span class="st-init-rank">${rankDisplay}</span>
+        <input type="checkbox" class="st-init-acted-chk" ${entry.acted?'checked':''} title="Acted this round"
+          onchange="stInitSetActed('inst','${entry.iid}',this.checked)">
+        <span class="st-init-name" title="${escH(entry.name)}">${escH(entry.name)}</span>
+        <span class="st-init-base" title="Modified Initiative">${entry.base}</span>
+        <span class="st-init-plus">+</span>
+        <input type="number" class="st-init-roll-inp" min="1" max="10" value="${rollVal}" placeholder="d10"
+          title="d10 roll"
+          onchange="stInitSetRoll('${entry.iid}',this.value)"
+          oninput="stInitSetRoll('${entry.iid}',this.value)">
+        <span class="st-init-total ${totalClass}">${totalDisplay}</span>
+        <span style="min-width:14px"></span>
+      </div>`;
+    } else {
+      return `<div class="st-init-row ${actedClass}" id="stInitRow-adhoc-${entry.id}">
+        <span class="st-init-rank">${rankDisplay}</span>
+        <input type="checkbox" class="st-init-acted-chk" ${entry.acted?'checked':''} title="Acted this round"
+          onchange="stInitSetActed('adhoc','${entry.id}',this.checked)">
+        <span class="st-init-name" title="${escH(entry.name)}">${escH(entry.name)}</span>
+        <span class="st-init-base" style="color:var(--text);font-weight:600">${entry.total}</span>
+        <span class="st-init-plus" style="visibility:hidden">+</span>
+        <span style="width:30px"></span>
+        <span class="st-init-total" style="visibility:hidden">—</span>
+        <button class="st-init-remove" title="Remove" onclick="stInitRemoveAdhoc('${entry.id}')">✕</button>
+      </div>`;
+    }
+  }).join('');
+}
+
+function stInitSetRoll(iid,val){
+  const n=Math.max(1,Math.min(10,parseInt(val,10)||0));
+  _stMutate(iid,inst=>{inst.init_roll=n||0;});
+  stRenderInitTracker();
+}
+
+function stInitSetActed(type,id,checked){
+  if(type==='inst'){
+    _stMutate(id,inst=>{inst.init_acted=checked;});
+  } else {
+    const adhoc=_stInitAdhoc();
+    const a=adhoc.find(x=>x.id===id);
+    if(a)a.acted=checked;
+    _stSaveInitAdhoc(adhoc);
+  }
+  stRenderInitTracker();
+}
+
+function stInitRollAll(){
+  const scene=_stGetScene();
+  scene.forEach(inst=>{
+    if(!inst.init_roll){
+      _stMutate(inst.id,i=>{i.init_roll=Math.ceil(Math.random()*10);});
+    }
+  });
+  stRenderInitTracker();
+}
+
+function stInitNewRound(){
+  const s=_stInitState();
+  s.round=(s.round||1)+1;
+  _stSaveInitState(s);
+  // Clear acted flags on all instances
+  _stGetScene().forEach(inst=>{
+    if(inst.init_acted)_stMutate(inst.id,i=>{i.init_acted=false;});
+  });
+  // Clear acted flags on ad-hoc entries
+  const adhoc=_stInitAdhoc().map(a=>({...a,acted:false}));
+  _stSaveInitAdhoc(adhoc);
+  stRenderInitTracker();
+}
+
+function stInitAdjRound(delta){
+  const s=_stInitState();
+  s.round=Math.max(1,(s.round||1)+delta);
+  _stSaveInitState(s);
+  stRenderInitTracker();
+}
+
+function stInitReset(){
+  // Clear rolls and acted on all instances
+  _stGetScene().forEach(inst=>{
+    _stMutate(inst.id,i=>{i.init_roll=0;i.init_acted=false;});
+  });
+  // Clear ad-hoc
+  _stSaveInitAdhoc([]);
+  // Reset round to 1
+  const s=_stInitState();
+  s.round=1;
+  _stSaveInitState(s);
+  stRenderInitTracker();
+}
+
+function stInitAddAdhoc(){
+  const nameEl=document.getElementById('stInitAddName');
+  const valEl=document.getElementById('stInitAddVal');
+  const name=(nameEl.value||'').trim();
+  const val=parseInt(valEl.value,10)||0;
+  if(!name)return;
+  const adhoc=_stInitAdhoc();
+  adhoc.push({id:'adhoc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name,init_val:val,acted:false});
+  _stSaveInitAdhoc(adhoc);
+  nameEl.value='';valEl.value='';
+  stRenderInitTracker();
+}
+
+function stInitRemoveAdhoc(id){
+  _stSaveInitAdhoc(_stInitAdhoc().filter(a=>a.id!==id));
+  stRenderInitTracker();
+}
+
+// ── Initiative tracker resize handle ─────────────────────────────────────────
+let _stInitResizeWired=false;
+function stInitInitResize(){
+  if(_stInitResizeWired)return;
+  const handle=document.getElementById('stInitResizeHandle');
+  const panel=document.getElementById('stInitPanel');
+  if(!handle||!panel)return;
+  _stInitResizeWired=true;
+  const MIN_W=180,MAX_W=480;
+  handle.addEventListener('mousedown',e=>{
+    e.preventDefault();
+    const startX=e.clientX;
+    const startW=panel.offsetWidth;
+    handle.classList.add('dragging');
+    panel.classList.add('resizing');
+    function onMove(e){
+      // Handle is on the LEFT edge; dragging left = wider (panel grows leftward)
+      const delta=startX-e.clientX;
+      const newW=Math.max(MIN_W,Math.min(MAX_W,startW+delta));
+      panel.style.width=newW+'px';
+    }
+    function onUp(){
+      handle.classList.remove('dragging');
+      panel.classList.remove('resizing');
+      // Persist width
+      const s=_stInitState();
+      s.width=panel.offsetWidth;
+      _stSaveInitState(s);
+      document.removeEventListener('mousemove',onMove);
+      document.removeEventListener('mouseup',onUp);
+    }
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
+}
+// ── End initiative tracker resize handle ──────────────────────────────────────
+
 // ── Utilities ─────────────────────────────────────────────────────────────────
 // escH — escapes a string for safe HTML insertion. Call on every user-supplied
 // value before inserting into innerHTML to prevent XSS.
@@ -4947,6 +5302,8 @@ const LS_PREFIX='mortals_plus_save_';
 const LS_INDEX='mortals_plus_index';
 const LS_CUSTOM_WATERMARK='mortals_plus_custom_watermark';
 const LS_SCENE='mortals_plus_scene';
+const LS_INIT='mortals_plus_st_init';
+const LS_INIT_ADHOC='mortals_plus_st_init_adhoc';
 const LS_STORAGE_FULL_MSG='Storage full — export characters to free up space.';
 
 // ── Theme accent colours for save list badges ─────────────────────────────────
@@ -5377,7 +5734,8 @@ function toggleStoryteller(){
   const stSide=document.getElementById('stSidebarContent');
   if(normal)normal.style.display=_stModeActive?'none':'';
   if(stSide)stSide.style.display=_stModeActive?'block':'none';
-  if(_stModeActive){_stLoadCols();stRenderPanel();stRenderAddToScene();stSetCols(_stCols);}
+  if(_stModeActive){_stLoadCols();stRenderPanel();stRenderAddToScene();stSetCols(_stCols);stRenderInitTracker();}
+  else{_stInitResizeWired=false;}
 }
 
 // ── New scene ─────────────────────────────────────────────────────────────────
@@ -5385,7 +5743,7 @@ function stNewScene(){
   const scene=_stGetScene();
   if(scene.length&&!confirm('Clear the current scene and start a new one?'))return;
   _stSaveScene([]);
-  stRenderPanel();stRenderAddToScene();
+  stRenderPanel();stRenderAddToScene();stRenderInitTracker();
   showStatus('New scene started.');
 }
 
@@ -5429,7 +5787,7 @@ function stAddToScene(sourceId,countVal){
     scene.push(inst);
   }
   _stSaveScene(scene);
-  stRenderPanel();stRenderAddToScene();
+  stRenderPanel();stRenderAddToScene();stRenderInitTracker();
   showStatus(`Added ${count} instance${count>1?'s':''} to scene.`);
 }
 
@@ -5496,7 +5854,7 @@ function _stGetEnabledResourceTracks(inst,src){
 // ── Instance mutations ────────────────────────────────────────────────────────
 function stDeleteInstance(iid){
   const scene=_stGetScene().filter(i=>i.id!==iid);
-  _stSaveScene(scene);stRenderPanel();
+  _stSaveScene(scene);stRenderPanel();stRenderInitTracker();
 }
 function stRenameInstance(iid,val){
   const scene=_stGetScene();
@@ -7090,7 +7448,7 @@ function _restoreListSections(){
 </script>
 
 <!-- ── Help modal ────────────────────────────────────────────────────────── -->
-<div class="help-backdrop" id="helpBackdrop" onclick="closeHelpOnBackdrop(event)">
+<div class="help-backdrop" id="helpBackdrop" onclick="if(event.target===this)closeHelp()">
   <div class="help-panel" id="helpPanel">
     <button class="help-close" onclick="closeHelp()" title="Close">✕</button>
     <div class="help-title">Mortals+ — How to use</div>
@@ -7098,5 +7456,15 @@ function _restoreListSections(){
   </div>
 </div>
 <!-- ── End help modal ────────────────────────────────────────────────────── -->
+
+<!-- ── Storyteller Mode help modal ──────────────────────────────────────── -->
+<div class="help-backdrop" id="stHelpBackdrop" onclick="if(event.target===this)closeStHelp()">
+  <div class="help-panel">
+    <button class="help-close" onclick="closeStHelp()" title="Close">✕</button>
+    <div class="help-title">⚔ Storyteller Mode — How to use</div>
+    <div id="stHelpContent"></div>
+  </div>
+</div>
+<!-- ── End Storyteller Mode help modal ───────────────────────────────────── -->
 </body>
 </html>
