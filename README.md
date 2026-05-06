@@ -23,7 +23,7 @@ Mortals+ is a browser-based character builder and live play aid for Chronicles o
 - Werewolf: The Forsaken
 - Ephemeral Entities (Spirits, Ghosts, Angels, Demons, Goetia, Supernal Beings)
 
-† These splats have no default library entries (Atavisms, Nightmares, Transmutations, Utterances, etc.). The sheet structure is complete but the ability dropdowns will show only a placeholder entry until you add content from the rulebook. See [CUSTOMISATION_GUIDE.md](CUSTOMISATION_GUIDE.md) for the format.
+† These splats have no default library entries (Atavisms, Nightmares, Transmutations, Utterances, etc.). The sheet structure is complete but the ability dropdowns will show only a placeholder entry until you add content from the rulebook. Use the in-app **Library Editor** or see [CUSTOMISATION_GUIDE.md](CUSTOMISATION_GUIDE.md) for the format.
 
 **Half-splats**
 - Ghoul
@@ -81,6 +81,7 @@ Apply a preset from the **Sheet Configuration** panel to enable all sections for
 
 - **Mage (Ascension)** — Uses the Mage: the Ascension Translation Guide. Replaces Awakening sections with Ascension equivalents: Spheres (10 Arcana, same dots), Arete (Gnosis), Practices (Yantras), Foci (Magical Tools), Resonance (Nimbus), Sphere Attainments. Adds a Quintessence & Paradox wheel: a circular 20-square track where Quintessence fills clockwise and Paradox counter-clockwise; increasing Paradox decrements Quintessence automatically. Avatar Essence/Affiliation/Sect identity header. Wisdom, Praxes, Obsessions, and Inured Spells off by default.
 - **Horror** — For Chronicles of Darkness antagonists. Standard mortal sheet with Horror Identity (Type, Concept), Potency (dot-track), and Dread Powers (named-list)
+- **Minor NPC** — Lightweight GM stat block. Enables Name/Concept/Virtue/Vice, Attributes, Other Traits, and two dice pool sections (General and Combat). All other sections hidden. Intended for quick NPC builds.
 
 ### Generation
 
@@ -132,7 +133,84 @@ Characters are saved in your **browser's local storage** — no account or serve
 
 - Saves are local to your device and browser
 - To move a character between browsers or devices, use **Export sheet** (downloads a `.json` file) and **Import sheet** on the destination browser
-- Clearing browser data will delete your saves — export important characters
+- Clearing browser data will delete your saves — export important characters regularly
+
+### Organising saved characters
+
+The Saves panel supports two organisational tools:
+
+- **Tags** — attach freeform labels to any character (e.g. `PC`, `NPC`, `active`). The filter bar searches by both name and tag. Tags are added and removed directly on each save-item row.
+- **Folders** — group characters into named folders for broader organisation (e.g. by chronicle or faction). Folders are collapsible and appear in the Saves panel, the tablet drawer, and the Storyteller Mode "Add to Scene" sidebar. Characters not assigned to a folder appear in an ungrouped section at the bottom. Create folders via the input at the bottom of the Saves panel; rename or delete via the buttons that appear on hover.
+
+Tags and folders are complementary — use folders for broad grouping and tags for cross-cutting labels that span folders.
+
+---
+
+## Storyteller Mode
+
+Storyteller Mode is a desktop-only GM overlay for running live scenes with multiple characters. Access it via the **⚔ Storyteller Mode** button in the sidebar. It is hidden on touch devices.
+
+The scene workspace shows all active characters as compact cards. Each card displays:
+
+- **Health / Corpus track** — click boxes to deal damage, same as the main sheet
+- **Willpower track** — spend and recover dots during play
+- **Resource tracks** — all enabled resource sections (Vitae, Essence, Mana, etc.) rendered automatically for any splat
+- **Derived stats** — Defense, Initiative, Speed, with wound penalty highlighted when the last three health boxes are filled
+- **Armor coverage** — aggregate Head/Torso/Arms/Legs ratings from all equipped armor pieces
+- **Equipped gear, conditions, tilts, pinned traits, and instance notes** — all visible at a glance in the card header
+
+Expand a card with the **▶ arrow** to access the full character reference, equip or unequip gear, add conditions and tilts, pin abilities to the card header, and edit instance notes.
+
+Changes made in Storyteller Mode (damage, conditions, equipped gear, notes) exist only in the scene and **never affect the original saved character sheet**.
+
+### Initiative tracker
+
+The scene panel includes a built-in **Initiative Tracker**, accessible via the **Init** button in the Storyteller Mode toolbar. The tracker:
+
+- Lists all scene instances ordered by Initiative value (highest first)
+- Supports ad-hoc entries for minor NPCs not in the scene proper
+- Tracks acted/unacted status per character per round with a single click
+- Shows a round counter; advance with **Next Round** (resets all acted markers)
+- Rolls Initiative for all unrolled instances at once via **Roll All**
+- Persists across scene reloads
+
+### Adding characters and managing the scene
+
+Use **Add to Scene** in the sidebar to bring saved characters into play. Characters are shown grouped by folder if folders are set up. Each character you add becomes an independent **instance** — you can add multiple instances of the same character for groups of identical NPCs.
+
+Use the **− Columns +** control in the toolbar to organise cards across up to five columns. Drag cards by their title bar to move them between columns. Use **New Scene** to clear the scene and start fresh (with confirmation).
+
+---
+
+## Data library editor
+
+The **Library Editor** (accessible via the Data Library panel in the sidebar or drawer) lets you extend the built-in ability lists with your own entries — merits from a supplement, homebrew abilities, weapons from the rulebook, and so on.
+
+### How it works
+
+The library editor maintains a **supplement** layer stored in your browser alongside your characters. At startup, supplement entries are merged with the base library — entries with the same name as a base entry **override** the base entry rather than duplicating it. The base library (`data.json`) is never modified; clearing your supplement always restores the original entries.
+
+### Adding and editing entries
+
+Select a section type from the dropdown (Merits, Disciplines, Weapons, etc.). The editor shows your supplement entries first, then the full base library below. For each section type, the editor presents the appropriate fields:
+
+- **Weapons** — name, type (melee/ranged/thrown), damage, initiative modifier, strength requirement, size, availability, ranges, clip, notes
+- **Armor** — name, general/ballistic armor, defense/speed penalty, strength requirement, availability, coverage checkboxes, notes
+- **Equipment** — name, dice bonus, durability, size, structure, availability, description
+- **Rated ability lists** (Merits, Disciplines, Gifts, etc.) — name, rating, description
+- **Named ability lists** (Tilts, Conditions, Contracts, etc.) — name, description
+
+Use **Override** on any base library entry to pre-fill the add form with that entry's values — edit what you need and save to create a supplement entry that replaces the base.
+
+Use the **search bar** to filter entries by name across both supplement and base sections. Use the **A–Z / Recent** sort toggle to sort your supplement entries alphabetically or by most recently added.
+
+### Adding sheet entries to the library
+
+Any item on a character sheet that isn't already in the library shows a small **+ lib** button in its header row. Clicking it saves that entry to your supplement immediately — useful for weapons, armor, merits, or abilities you've typed in from a rulebook. The button disappears once the entry is in the library.
+
+### Backup and sharing
+
+Use **Export** in the library editor to download your supplement as a `supplement.json` file. Use **Import** to merge entries from a file (existing same-name entries are kept; duplicates are skipped). Export regularly — clearing your browser data will erase your supplement.
 
 ---
 

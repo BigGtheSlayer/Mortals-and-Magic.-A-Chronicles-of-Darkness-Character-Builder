@@ -32,6 +32,10 @@ Everything in Mortals+ that can be customised lives in one file: **`data.json`**
 
 The app ships with a starter library of merits, weapons, tilts, and splat abilities. The starter library is intentionally small — it exists to show the format, not to be comprehensive. Add your own entries freely.
 
+**The easiest way to add entries is the in-app Library Editor.** Open the sidebar or drawer, go to **Data Library**, and click **✎ Edit library**. Select a section type, click **+ New entry**, fill in the fields, and save. Your entries are stored in your browser and merged with the base library automatically. Use **Export** in the editor to save a backup as `supplement.json`.
+
+The formats below document the field shapes used by both the in-app editor and `data.json` directly. Editing `data.json` directly is useful when adding many entries at once or sharing a full content set with others — changes to `data.json` become the base library for all users of your fork.
+
 Content arrays are grouped by splat in `data.json`. Find the relevant splat section using the `_comment` markers (e.g. `── Vampire: the Requiem ──`) to locate the right array quickly. Placeholder entries in empty arrays document the correct field format — replace them with real entries.
 
 ### Merits
@@ -573,7 +577,7 @@ No theme required — half-splats use the Neutral theme by default. No code chan
 
 **Presets must have a `category` field.** Without it, the preset will appear under no group in the dropdown. Use an existing category string or introduce a new one — either works without code changes.
 
-**Sharing library additions.** Use **Data library → Export library** to share your content. Others can **Import library → Merge** to add your entries without overwriting theirs.
+**Sharing library additions.** Use the **Library Editor → Export** button to save your supplement entries as `supplement.json`. Others can import it via **Library Editor → Import**, which merges your entries into their supplement without overwriting existing entries. To share changes made directly in `data.json` (base library edits), distribute the modified `data.json` file as usual.
 
 ---
 
