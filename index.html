@@ -1177,6 +1177,28 @@ body.touch-device .st-mode-toggle-wrap{display:none}
 .si-tag:hover{background:var(--border);color:var(--text)}
 .si-tag-add{background:transparent;border:1px dashed var(--border);color:var(--faint);font-weight:700}
 .si-tag-add:hover{background:var(--chip);color:var(--text);border-color:var(--muted)}
+.lib-add-btn{font-size:.6rem!important;padding:1px 5px!important;opacity:.45;border-color:transparent!important;background:transparent!important;color:var(--muted)!important;transition:opacity .15s}
+.lib-add-btn:hover{opacity:1!important;background:var(--chip)!important;border-color:var(--border)!important}
+/* ── Folder styles ── */
+.si-folder{margin-bottom:6px}
+.si-folder-hdr{display:flex;align-items:center;gap:5px;padding:4px 6px;border-radius:4px;cursor:pointer;font-family:sans-serif;font-size:.75rem;font-weight:700;color:var(--muted);user-select:none;border:1px solid transparent}
+.si-folder-hdr:hover{background:var(--chip);border-color:var(--border-light)}
+.si-folder-chevron{font-size:.6rem;color:var(--faint);transition:transform .15s;flex-shrink:0}
+.si-folder-chevron.open{transform:rotate(90deg)}
+.si-folder-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.si-folder-count{font-size:.62rem;color:var(--faint);font-weight:400;flex-shrink:0}
+.si-folder-actions{display:none;gap:3px;flex-shrink:0}
+.si-folder-hdr:hover .si-folder-actions{display:flex}
+.si-folder-btn{font-size:.6rem;padding:1px 5px;border-radius:3px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-family:sans-serif;white-space:nowrap}
+.si-folder-btn:hover{background:var(--chip);color:var(--text)}
+.si-folder-btn.danger:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+.si-folder-body{padding-left:10px;display:flex;flex-direction:column;gap:4px}
+.si-folder-body.collapsed{display:none}
+.si-ungrouped{display:flex;flex-direction:column;gap:4px}
+.si-folder-new{display:flex;gap:5px;margin-top:4px}
+.si-folder-new input{flex:1;font-family:sans-serif;font-size:.72rem;padding:.2rem .4rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)}
+.si-folder-new button{font-size:.72rem;padding:.2rem .5rem}
+.si-move-select{font-size:.65rem;font-family:sans-serif;padding:1px 3px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--muted);cursor:pointer;max-width:80px}
 
 /* ── v29: Storyteller Mode panel ──────────────────────────────────────────── */
 .st-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--accent)}
@@ -1594,19 +1616,9 @@ body.touch-device .st-mode-toggle-wrap{display:none}
     <div class="sidebar-title">Data library</div>
     <div class="io-section">
       <div class="io-row">
-        <button onclick="exportData()">&#8615; Export library</button>
-        <button onclick="document.getElementById('importDataFile').click()">&#8613; Import library</button>
+        <button onclick="openLibEditor()">&#9998; Edit library</button>
       </div>
-      <input type="file" id="importDataFile" accept=".json" style="display:none" onchange="previewDataImport(this)">
-      <div id="dataImportPreview" style="display:none">
-        <div class="io-preview" id="dataImportSummary"></div>
-        <div class="io-actions">
-          <button class="primary" onclick="commitDataImport('merge')">Merge</button>
-          <button onclick="commitDataImport('replace')">Replace</button>
-          <button class="danger" onclick="cancelDataImport()">Cancel</button>
-        </div>
-      </div>
-      <div class="hint">Merge adds new entries; Replace overwrites the full library.</div>
+      <div class="hint">Add, edit, and override library entries. Export your supplement regularly as a backup.</div>
     </div>
   </div>
   </div><!-- /#normalSidebarContent -->
@@ -1742,19 +1754,9 @@ body.touch-device .st-mode-toggle-wrap{display:none}
       <div class="drawer-pane" id="dpane-library">
         <div class="io-section">
           <div class="io-row">
-            <button onclick="exportData()">&#8615; Export library</button>
-            <button onclick="document.getElementById('importDataFileDrawer').click()">&#8613; Import library</button>
+            <button onclick="openLibEditor()">&#9998; Edit library</button>
           </div>
-          <input type="file" id="importDataFileDrawer" accept=".json" style="display:none" onchange="previewDataImport(this)">
-          <div id="drawerDataImportPreview" style="display:none">
-            <div class="io-preview" id="drawerDataImportSummary"></div>
-            <div class="io-actions">
-              <button class="primary" onclick="commitDataImport('merge')">Merge</button>
-              <button onclick="commitDataImport('replace')">Replace</button>
-              <button class="danger" onclick="cancelDataImport()">Cancel</button>
-            </div>
-          </div>
-          <div class="hint">Merge adds new entries; Replace overwrites the full library.</div>
+          <div class="hint">Add, edit, and override library entries. Export your supplement regularly as a backup.</div>
         </div>
       </div>
 
@@ -1796,7 +1798,7 @@ body.touch-device .st-mode-toggle-wrap{display:none}
        Help modal             — openHelp(), closeHelp(), renderHelp()
        Utilities              — escH(), mdH(), descField(), taWrap(), copyText()
        localStorage           — saveCharacter(), loadCharacter(), autoSave()
-       Data import/export     — exportSheet(), importSheet(), exportData(), previewDataImport()
+       Data import/export     — exportSheet(), importSheet(), supplement editor (openLibEditor)
        Auto-save delegation   — #editorCol event listener
        Compact print renderers — beforeprint replacements for attrs/skills/lists/gear
        Print expand/restore   — beforeprint/afterprint event handlers
@@ -1853,6 +1855,22 @@ async function loadDB(){
     SEC_DEFAULTS[sd.key]=sd.default||false;SECTION_MAP[sd.key]=sd;
     if(sd.db_key&&!(sd.db_key in DB))DB[sd.db_key]=d[sd.db_key]||[];
   });
+  // ── Merge supplemental library from localStorage ─────────────────────────
+  // Supplement entries override base entries of the same name.
+  const rawSupp=_getSupplementRaw();
+  Object.keys(rawSupp).forEach(k=>{
+    if(Array.isArray(rawSupp[k])&&rawSupp[k].length){
+      if(!DB[k])DB[k]=[];
+      const suppNames=new Set(rawSupp[k].map(e=>e.name));
+      DB[k]=DB[k].filter(e=>!suppNames.has(e.name));
+      DB[k]=[...DB[k],...rawSupp[k]];
+    }
+  });
+  // Re-sort after merge (preserve_order lists are excluded)
+  SECTION_DEFS.filter(s=>s.db_key&&!preserve.has(s.db_key)).forEach(s=>{
+    if(Array.isArray(DB[s.db_key]))DB[s.db_key].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+  });
+
   window._DB_RAW=d;
   SKILLS={};SKILL_LABELS={};ALL_SKILLS=[];
   (d.skill_definitions||[]).forEach(sd=>{
@@ -2547,6 +2565,7 @@ function switchDrawerTab(tab){
 
 function _refreshDrawerSaveList(){
   const rawList=lsGetIndex().map(_patchIndexEntry);
+  const folders=lsGetFolders();
   const f=_saveListFilter;
   const list=f?rawList.filter(s=>{
     const nameMatch=(s.name||'').toLowerCase().includes(f);
@@ -2563,22 +2582,39 @@ function _refreshDrawerSaveList(){
     el.innerHTML='<span style="font-size:.8rem;color:var(--faint);font-family:sans-serif">No characters match your filter.</span>';
     return;
   }
-  el.innerHTML=list.map(s=>{
-    const accent=_themeAccent(s.theme||'neutral');
-    const timeStr=_formatRelativeTime(s.last_modified);
+  const _drawerItem=s=>{
     const tagPills=(s.tags||[]).map(t=>`<span class="si-tag">${escH(t)}</span>`).join('');
     return `<div class="save-item ${s.id===currentSaveId?'active':''}" onclick="loadCharacter('${s.id}');closeDrawer()">
-      <span class="si-theme-dot" style="background:${accent}"></span>
       <span class="si-body">
         <span class="si-name-row">
           <span class="si-name">${escH(s.name||'Unnamed')}</span>
-          <span class="si-time">${escH(timeStr)}</span>
         </span>
         ${tagPills?`<span class="si-tags">${tagPills}</span>`:''}
       </span>
       <button class="sm danger" onclick="event.stopPropagation();deleteSave('${s.id}')">Del</button>
     </div>`;
+  };
+  if(f){
+    el.innerHTML=list.map(_drawerItem).join('');
+    return;
+  }
+  // Folder grouping
+  const folderSections=folders.map(folder=>{
+    const chars=list.filter(s=>s.folder===folder.id);
+    if(!chars.length)return'';
+    const chevClass='si-folder-chevron'+(folder.collapsed?'':' open');
+    const bodyClass='si-folder-body'+(folder.collapsed?' collapsed':'');
+    return `<div class="si-folder">
+      <div class="si-folder-hdr" onclick="toggleFolderCollapsed('${folder.id}')">
+        <span class="${chevClass}">▶</span>
+        <span class="si-folder-name">${escH(folder.name)}</span>
+        <span class="si-folder-count">${chars.length}</span>
+      </div>
+      <div class="${bodyClass}">${chars.map(_drawerItem).join('')}</div>
+    </div>`;
   }).join('');
+  const ungrouped=list.filter(s=>!s.folder||!folders.find(fd=>fd.id===s.folder));
+  el.innerHTML=folderSections+(ungrouped.length?`<div class="si-ungrouped">${ungrouped.map(_drawerItem).join('')}</div>`:'');
 }
 // ── End tablet drawer ─────────────────────────────────────────────────────────
 
@@ -2693,7 +2729,7 @@ function _baseCharacterFields(attrs,skills){
     entity_defense:0,entity_initiative:0,entity_speed:0,
     attr3MaxDots:5,attr3ShowSpinner:false,
     numina:[],manifestations:[],influences:[],anchors:[],
-    entity_ban:'',entity_bane:''};
+    entity_ban:'',entity_bane:'',folder:null};
 }
 // ── Character generation ──────────────────────────────────────────────────────
 // _rr(lo, hi) — inclusive random integer, used for rank stat ranges.
@@ -2962,6 +2998,8 @@ function patchState(){
   if('customWatermarkData' in STATE) delete STATE.customWatermarkData;
   // v28: watermark opacity — default 0.035 for existing characters
   if(STATE.watermark_opacity==null)STATE.watermark_opacity=0.035;
+  // v30: folder membership — null means ungrouped
+  if(!('folder' in STATE))STATE.folder=null;
   if(!STATE.sectionConfig)STATE.sectionConfig={};
   (STATE.weapons||[]).forEach(w=>{if(w.equipped===undefined)w.equipped=false;});
   (STATE.armor||[]).forEach(a=>{
@@ -4572,6 +4610,7 @@ function renderGenericRatedList(sd){
         <input class="item-name" value="${escH(m.name||'')}" placeholder="Name"
           onclick="event.stopPropagation()" onchange="STATE['${sk}'][${i}].name=this.value">
         <span class="item-key-stat">${'●'.repeat(rating)||'unrated'}</span>
+        ${_libAddToLibBtn(sd.db_key,m)}
         <button class="sm danger" onclick="event.stopPropagation();removeGenericRated('${sk}',${i},'${sd.key}')">Remove</button>
       </div>
       <div class="item-body">
@@ -4600,12 +4639,14 @@ function addGenericRated(sk,sId,dId,listId,max,dbList,sdKey){
 
 function renderNamedList(sk,listId){
   const el=document.getElementById(listId);if(!el)return;
+  const sd=SECTION_DEFS.find(s=>(s.state_key||s.key)===sk&&s.type==='named-list');
   el.innerHTML=(STATE[sk]||[]).map((item,i)=>`
     <div class="item-card open">
       <div class="item-hd" onclick="toggleCard(this)">
         <span class="item-toggle">&#9654;</span>
         <input class="item-name" value="${escH(item.name||'')}" placeholder="Name"
           onclick="event.stopPropagation()" onchange="STATE['${sk}'][${i}].name=this.value">
+        ${sd?_libAddToLibBtn(sd.db_key,item):''}
         <button class="sm danger" onclick="event.stopPropagation();removeNamedItem('${sk}',${i},'${listId}')">Remove</button>
       </div>
       <div class="item-body">
@@ -4710,6 +4751,7 @@ function renderWeaponList(){
         <option value="melee" ${!isRanged?'selected':''}>Melee</option>
         <option value="ranged" ${isRanged?'selected':''}>Ranged</option>
       </select>
+      ${_libAddToLibBtn('weapons',w)}
       <button class="sm danger" onclick="event.stopPropagation();removeStruct('weapons',${i},renderWeaponList)">Remove</button>
       </div><div class="item-body"><div class="struct-fields" style="grid-template-columns:repeat(3,1fr)">${sharedFields}${rangedFields}${notesField}</div></div></div>`;
   }).join('');
@@ -4751,6 +4793,7 @@ function renderArmorList(){
       <span class="item-toggle">&#9654;</span>
       <input class="item-name" value="${escH(a.name)}" placeholder="Armor name" onclick="event.stopPropagation()" onchange="STATE.armor[${i}].name=this.value">
       <span class="item-key-stat">${summary}</span>${equippedChk}
+      ${_libAddToLibBtn('armor',a)}
       <button class="sm danger" onclick="event.stopPropagation();removeStruct('armor',${i},renderArmorList)">Remove</button>
       </div><div class="item-body"><div class="struct-fields" style="grid-template-columns:repeat(3,1fr)">
         <div class="field-wrap"><span class="field-lbl">Armor (general)</span><input class="field-inp" type="number" value="${a.armor_general||0}" onchange="STATE.armor[${i}].armor_general=+this.value"></div>
@@ -4777,6 +4820,7 @@ function renderEquipList(){
       <span class="item-toggle">&#9654;</span>
       <input class="item-name" value="${escH(e.name)}" placeholder="Item name" onclick="event.stopPropagation()" onchange="STATE.equipment[${i}].name=this.value">
       <span class="item-key-stat">${summary}</span>
+      ${_libAddToLibBtn('equipment',e)}
       <button class="sm danger" onclick="event.stopPropagation();removeStruct('equipment',${i},renderEquipList)">Remove</button>
       </div><div class="item-body"><div class="struct-fields" style="grid-template-columns:repeat(3,1fr);margin-bottom:5px">
         <div class="field-wrap"><span class="field-lbl">Dice bonus</span><input class="field-inp" type="number" value="${e.dice_bonus||0}" onchange="STATE.equipment[${i}].dice_bonus=+this.value"></div>
@@ -4853,7 +4897,11 @@ const ST_HELP_SECTIONS=[
   },
   {
     title:'Adding characters to a scene',
-    content:`Use **Add to Scene** in the sidebar to bring saved characters into the scene. Each entry you add becomes an **instance** — an independent copy tied to the saved character as a read-only source.\n\nInstances are separate from the main character sheet. Anything you change on an instance (health damage, conditions, equipped gear, notes) exists only in the scene and never affects the original saved sheet. You can spawn multiple instances of the same character — useful for groups of identical NPCs.`
+    content:`Use **Add to Scene** in the sidebar to bring saved characters into the scene. Characters are shown grouped by folder if you have folders set up. Each entry you add becomes an **instance** — an independent copy tied to the saved character as a read-only source.\n\nInstances are separate from the main character sheet. Anything you change on an instance (health damage, conditions, equipped gear, notes) exists only in the scene and never affects the original saved sheet. You can spawn multiple instances of the same character — useful for groups of identical NPCs.`
+  },
+  {
+    title:'Initiative tracker',
+    content:`Click **Init** in the Storyteller Mode toolbar to open the Initiative Tracker.\n\nAll characters in the scene appear in the tracker, ordered by Initiative value (highest first). Use **Roll All** to roll Initiative for any unrolled characters at once, or set values manually by clicking the Initiative number on any entry.\n\nClick a character's row to mark them as **acted** for the current round. Once everyone has acted, click **Next Round** to advance the round counter and reset all acted markers.\n\nFor minor NPCs not in the main scene, use **+ Add entry** to create ad-hoc tracker entries with a name and Initiative value.\n\nThe tracker state — rolls, round count, acted markers — persists across scene reloads.`
   },
   {
     title:'Equipping items and pinning sections',
@@ -5305,6 +5353,9 @@ const LS_SCENE='mortals_plus_scene';
 const LS_INIT='mortals_plus_st_init';
 const LS_INIT_ADHOC='mortals_plus_st_init_adhoc';
 const LS_STORAGE_FULL_MSG='Storage full — export characters to free up space.';
+const LS_FOLDERS='mortals_plus_folders';
+const LS_SUPPLEMENT='mortals_plus_supplement';
+const LS_LIB_SORT='mortals_plus_lib_sort';
 
 // ── Theme accent colours for save list badges ─────────────────────────────────
 // Maps theme keys to their accent CSS variable value for inline badge display.
@@ -5317,12 +5368,62 @@ const THEME_ACCENTS={
 function _themeAccent(theme){return THEME_ACCENTS[theme]||THEME_ACCENTS.neutral;}
 
 // ── Save index migration ───────────────────────────────────────────────────────
-// Patches any existing index entries missing the v29 fields.
+// Patches any existing index entries missing the v29/v30 fields.
 function _patchIndexEntry(entry){
   if(!entry.theme)entry.theme='neutral';
   if(!entry.tags)entry.tags=[];
   if(!entry.last_modified)entry.last_modified=0;
+  if(!('folder' in entry))entry.folder=null;
   return entry;
+}
+
+// ── Folder management ─────────────────────────────────────────────────────────
+// Folders are stored as [{id, name, collapsed}] in LS_FOLDERS.
+// Characters reference a folder by id via the index entry's `folder` field.
+function lsGetFolders(){
+  try{const s=localStorage.getItem(LS_FOLDERS);return s?JSON.parse(s):[];}catch(e){return[];}
+}
+function lsSaveFolders(folders){
+  try{localStorage.setItem(LS_FOLDERS,JSON.stringify(folders));}catch(e){
+    if(_isQuotaError(e))showStatus(LS_STORAGE_FULL_MSG,4000);
+  }
+}
+function createFolder(name){
+  name=(name||'').trim();if(!name)return;
+  const folders=lsGetFolders();
+  if(folders.some(f=>f.name.toLowerCase()===name.toLowerCase())){showStatus('A folder with that name already exists.');return;}
+  folders.push({id:_uuid(),name,collapsed:false});
+  lsSaveFolders(folders);loadSaves();
+}
+function renameFolder(fid,name){
+  name=(name||'').trim();if(!name)return;
+  const folders=lsGetFolders();
+  const f=folders.find(f=>f.id===fid);if(!f)return;
+  if(folders.some(f2=>f2.id!==fid&&f2.name.toLowerCase()===name.toLowerCase())){showStatus('A folder with that name already exists.');return;}
+  f.name=name;lsSaveFolders(folders);loadSaves();
+}
+function deleteFolder(fid){
+  const idx=lsGetIndex();
+  const hasChars=idx.some(s=>s.folder===fid);
+  if(hasChars&&!confirm('This folder contains characters. Delete folder and ungroup its characters?'))return;
+  idx.forEach(s=>{if(s.folder===fid)s.folder=null;});
+  lsSaveIndex(idx);
+  const folders=lsGetFolders().filter(f=>f.id!==fid);
+  lsSaveFolders(folders);loadSaves();
+}
+function toggleFolderCollapsed(fid){
+  const folders=lsGetFolders();
+  const f=folders.find(f=>f.id===fid);if(!f)return;
+  f.collapsed=!f.collapsed;lsSaveFolders(folders);
+  loadSaves();
+  if(_stModeActive)stRenderAddToScene();
+}
+function setCharFolder(id,fid){
+  const idx=lsGetIndex();
+  const entry=idx.find(s=>s.id===id);if(!entry)return;
+  _patchIndexEntry(entry);
+  entry.folder=fid||null;
+  lsSaveIndex(idx);loadSaves();
 }
 
 // ── Tag management ────────────────────────────────────────────────────────────
@@ -5383,7 +5484,7 @@ function saveCharacter(){
     _autoSaveWarnActive=false;
     const idx=lsGetIndex();
     const existing=idx.findIndex(s=>s.id===STATE.id);
-    const entry={id:STATE.id,name:STATE.name||'Unnamed',theme:STATE.theme||'neutral',tags:existing>=0?(idx[existing].tags||[]):[],last_modified:Date.now()};
+    const entry={id:STATE.id,name:STATE.name||'Unnamed',theme:STATE.theme||'neutral',tags:existing>=0?(idx[existing].tags||[]):[],last_modified:Date.now(),folder:existing>=0?(idx[existing].folder||null):(STATE.folder||null)};
     if(existing>=0)idx[existing]=entry;else idx.push(entry);
     idx.sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
     lsSaveIndex(idx);
@@ -5411,7 +5512,7 @@ function autoSave(){
       _autoSaveWarnActive=false;
       const idx=lsGetIndex();
       const existing=idx.findIndex(s=>s.id===STATE.id);
-      const entry={id:STATE.id,name:STATE.name||'Unnamed',theme:STATE.theme||'neutral',tags:existing>=0?(idx[existing].tags||[]):[],last_modified:Date.now()};
+      const entry={id:STATE.id,name:STATE.name||'Unnamed',theme:STATE.theme||'neutral',tags:existing>=0?(idx[existing].tags||[]):[],last_modified:Date.now(),folder:existing>=0?(idx[existing].folder||null):(STATE.folder||null)};
       if(existing>=0)idx[existing]=entry;
       lsSaveIndex(idx);
     }catch(e){
@@ -5423,8 +5524,30 @@ function autoSave(){
     }
   },1500);
 }
+// _buildSaveItemHTML — renders a single character save-item row for the desktop sidebar
+function _buildSaveItemHTML(s,folders){
+  const tagPills=(s.tags||[]).map(t=>
+    `<span class="si-tag" onclick="event.stopPropagation();removeTagFromSave('${s.id}','${escH(t)}')" title="Remove tag">${escH(t)} ✕</span>`
+  ).join('');
+  const addTagInput=`<span class="si-tag si-tag-add" onclick="event.stopPropagation();_showTagInput('${s.id}',this)" title="Add tag">+</span>`;
+  // Folder move select — only shown when folders exist
+  const folderOpts=folders.length?`<option value="">— Ungrouped —</option>`+folders.map(f=>
+    `<option value="${escH(f.id)}"${s.folder===f.id?' selected':''}>${escH(f.name)}</option>`
+  ).join(''):'';
+  const folderMove=folders.length?`<select class="si-move-select" title="Move to folder" onclick="event.stopPropagation()" onchange="setCharFolder('${s.id}',this.value||null)">${folderOpts}</select>`:'';
+  return `<div class="save-item ${s.id===currentSaveId?'active':''}" onclick="loadCharacter('${s.id}')">
+    <span class="si-body">
+      <span class="si-name-row">
+        <span class="si-name">${escH(s.name||'Unnamed')}</span>
+      </span>
+      <span class="si-tags">${tagPills}${addTagInput}${folderMove}</span>
+    </span>
+    <button class="sm danger" onclick="event.stopPropagation();deleteSave('${s.id}')" title="Delete">Del</button>
+  </div>`;
+}
 function loadSaves(){
   const rawList=lsGetIndex().map(_patchIndexEntry);
+  const folders=lsGetFolders();
   const f=_saveListFilter;
   const list=f?rawList.filter(s=>{
     const nameMatch=(s.name||'').toLowerCase().includes(f);
@@ -5449,35 +5572,45 @@ function loadSaves(){
     </div>
   </div>`;
 
-  // ── Search/filter bar — now static HTML, no longer rendered here ─────────
-
-  // ── Save items ────────────────────────────────────────────────────────────
-  const allTags=_getAllTags();
+  // ── Save items with folder grouping ───────────────────────────────────────
   let itemsHTML='';
   if(!rawList.length){
     itemsHTML='<span style="font-size:.8rem;color:var(--faint);font-family:sans-serif">No saved characters yet.</span>';
   } else if(!list.length){
     itemsHTML='<span style="font-size:.8rem;color:var(--faint);font-family:sans-serif">No characters match your filter.</span>';
   } else {
-    itemsHTML=list.map(s=>{
-      const accent=_themeAccent(s.theme||'neutral');
-      const timeStr=_formatRelativeTime(s.last_modified);
-      const tagPills=(s.tags||[]).map(t=>
-        `<span class="si-tag" onclick="event.stopPropagation();removeTagFromSave('${s.id}','${escH(t)}')" title="Remove tag">${escH(t)} ✕</span>`
-      ).join('');
-      const addTagInput=`<span class="si-tag si-tag-add" onclick="event.stopPropagation();_showTagInput('${s.id}',this)" title="Add tag">+</span>`;
-      return `<div class="save-item ${s.id===currentSaveId?'active':''}" onclick="loadCharacter('${s.id}')">
-        <span class="si-theme-dot" style="background:${accent}" title="${escH(s.theme||'neutral')}"></span>
-        <span class="si-body">
-          <span class="si-name-row">
-            <span class="si-name">${escH(s.name||'Unnamed')}</span>
-            <span class="si-time">${escH(timeStr)}</span>
-          </span>
-          <span class="si-tags">${tagPills}${addTagInput}</span>
-        </span>
-        <button class="sm danger" onclick="event.stopPropagation();deleteSave('${s.id}')" title="Delete">Del</button>
+    // When filtering, show flat list (folders not useful when searching)
+    if(f){
+      itemsHTML=list.map(s=>_buildSaveItemHTML(s,folders)).join('');
+    } else {
+      // Group by folder; ungrouped at bottom
+      const folderSections=folders.map(folder=>{
+        const chars=list.filter(s=>s.folder===folder.id);
+        if(!chars.length)return'';
+        const chevClass='si-folder-chevron'+(folder.collapsed?'':' open');
+        const bodyClass='si-folder-body'+(folder.collapsed?' collapsed':'');
+        return `<div class="si-folder">
+          <div class="si-folder-hdr" onclick="toggleFolderCollapsed('${folder.id}')">
+            <span class="${chevClass}">▶</span>
+            <span class="si-folder-name">${escH(folder.name)}</span>
+            <span class="si-folder-count">${chars.length}</span>
+            <span class="si-folder-actions" onclick="event.stopPropagation()">
+              <button class="si-folder-btn" onclick="_renameFolderPrompt('${folder.id}','${escH(folder.name).replace(/'/g,"\'")}')" title="Rename">✏</button>
+              <button class="si-folder-btn danger" onclick="deleteFolder('${folder.id}')" title="Delete folder">🗑</button>
+            </span>
+          </div>
+          <div class="${bodyClass}">${chars.map(s=>_buildSaveItemHTML(s,folders)).join('')}</div>
+        </div>`;
+      }).join('');
+      const ungrouped=list.filter(s=>!s.folder||!folders.find(f=>f.id===s.folder));
+      const ungroupedHTML=ungrouped.length?`<div class="si-ungrouped">${ungrouped.map(s=>_buildSaveItemHTML(s,folders)).join('')}</div>`:'';
+      // New folder input
+      const newFolderHTML=`<div class="si-folder-new">
+        <input id="newFolderInp" placeholder="New folder name…" onkeydown="if(event.key==='Enter'){createFolder(this.value);this.value='';}" style="font-family:sans-serif;font-size:.72rem;padding:.2rem .4rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);flex:1">
+        <button class="sm" onclick="createFolder(document.getElementById('newFolderInp').value);document.getElementById('newFolderInp').value=''">+ Folder</button>
       </div>`;
-    }).join('');
+      itemsHTML=folderSections+ungroupedHTML+newFolderHTML;
+    }
   }
 
   const fullHTML=storageHTML+`<div class="save-list">${itemsHTML}</div>`;
@@ -5488,6 +5621,10 @@ function loadSaves(){
 
   // Also refresh drawer save list
   _refreshDrawerSaveList();
+}
+function _renameFolderPrompt(fid,currentName){
+  const name=prompt('Rename folder:',currentName);
+  if(name&&name.trim())renameFolder(fid,name.trim());
 }
 
 // _showTagInput — inline tag add UX: replaces the + span with a small input
@@ -5553,82 +5690,519 @@ function importSheet(input){
   };
   reader.readAsText(file);input.value='';
 }
-function exportData(){
-  const raw=window._DB_RAW||{};
-  const out={};
-  getDataKeys().forEach(k=>{out[k]=DB[k]||[];});
-  ['section_definitions','sheet_presets','skill_definitions','mortal_names'].forEach(k=>{if(raw[k])out[k]=raw[k];});
-  downloadJSON(out,'data.json');
-}
-let _pendingDataImport=null;
 function getDataKeys(){
-  return [...new Set(SECTION_DEFS.filter(s=>s.db_key).map(s=>s.db_key))];
+  return [...new Set(SECTION_DEFS.filter(s=>s.db_key&&s.type!=='forms-block').map(s=>s.db_key))];
 }
-function previewDataImport(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const incoming=JSON.parse(e.target.result);
-      const DATA_KEYS=getDataKeys();
-      if(!DATA_KEYS.some(k=>Array.isArray(incoming[k]))){showStatus('Not a valid library file.');return;}
-      _pendingDataImport=incoming;
-      const lines=DATA_KEYS.map(k=>{
-        const inc=incoming[k]||[],cur=DB[k]||[];
-        const curNames=new Set(cur.map(x=>x.name));
-        const newEntries=inc.filter(x=>!curNames.has(x.name));
-        return inc.length>0?`<b>${k}</b>: ${inc.length} in file, <b>${newEntries.length} new</b>`:null;
-      }).filter(Boolean);
-      const summaryHTML=lines.join('<br>');
-      // Show preview in whichever panel is relevant
-      document.getElementById('dataImportSummary').innerHTML=summaryHTML;
-      document.getElementById('dataImportPreview').style.display='';
-      document.getElementById('drawerDataImportSummary').innerHTML=summaryHTML;
-      document.getElementById('drawerDataImportPreview').style.display='';
-    }catch{showStatus('Import failed — invalid JSON file.');}
-  };
-  reader.readAsText(file);input.value='';
+function downloadJSON(obj,filename){
+  const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
 }
-function commitDataImport(mode){
-  if(!_pendingDataImport)return;
-  const DATA_KEYS=getDataKeys();
-  const preserve=new Set(SECTION_DEFS.filter(s=>s.db_key&&s.preserve_order).map(s=>s.db_key));
-  if(mode==='replace'){
-    DATA_KEYS.forEach(k=>{if(Array.isArray(_pendingDataImport[k]))DB[k]=_pendingDataImport[k];});
-    DATA_KEYS.filter(k=>!preserve.has(k)).forEach(k=>{if(Array.isArray(DB[k]))DB[k].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));});
-    const total=DATA_KEYS.reduce((n,k)=>n+(DB[k]||[]).length,0);
-    showStatus(`Library replaced (${total} total entries).`);
-  }else{
-    let added=0,skipped=0;
-    DATA_KEYS.forEach(k=>{
-      const inc=_pendingDataImport[k]||[],cur=DB[k]||[];
-      const curNames=new Set(cur.map(x=>x.name));
-      inc.forEach(e=>{if(!curNames.has(e.name)){cur.push(e);curNames.add(e.name);added++;}else skipped++;});
-      DB[k]=cur;
-    });
-    DATA_KEYS.filter(k=>!preserve.has(k)).forEach(k=>{if(Array.isArray(DB[k]))DB[k].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));});
-    showStatus(`Merged: ${added} added, ${skipped} skipped.`);
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SUPPLEMENTAL DATA LIBRARY — v30
+// User-created entries stored in localStorage under LS_SUPPLEMENT.
+// Merged into DB arrays at loadDB() time, before alphabetical sort.
+// Never modifies data.json. Base library always recoverable via reset.
+// ══════════════════════════════════════════════════════════════════════════════
+
+function _getSupplementRaw(){
+  try{const s=localStorage.getItem(LS_SUPPLEMENT);return s?JSON.parse(s):{};}catch(e){return{};}
+}
+function _saveSupplementRaw(obj){
+  try{localStorage.setItem(LS_SUPPLEMENT,JSON.stringify(obj));}catch(e){
+    if(_isQuotaError(e))showStatus(LS_STORAGE_FULL_MSG,4000);
+    else showStatus('Supplement save failed.');
   }
-  cancelDataImport();
+}
+// _suppGetArray — returns the supplement entries for a given db_key
+function _suppGetArray(dbKey){
+  const raw=_getSupplementRaw();
+  return raw[dbKey]||[];
+}
+// _suppSaveArray — writes the entries for a db_key back to localStorage
+function _suppSaveArray(dbKey,arr){
+  const raw=_getSupplementRaw();
+  raw[dbKey]=arr;
+  _saveSupplementRaw(raw);
+}
+// _reloadDBFromSupplement — re-merges supplement into DB and refreshes all dropdowns
+function _reloadDBFromSupplement(){
+  // Reset DB arrays to base data.json values
+  const d=window._DB_RAW||{};
+  const preserve=new Set(SECTION_DEFS.filter(s=>s.db_key&&s.preserve_order).map(s=>s.db_key));
+  SECTION_DEFS.forEach(sd=>{
+    if(sd.db_key)DB[sd.db_key]=Array.isArray(d[sd.db_key])?[...d[sd.db_key]]:[];
+  });
+  // Merge supplement — supplement entries override base entries of the same name
+  const rawSupp=_getSupplementRaw();
+  Object.keys(rawSupp).forEach(k=>{
+    if(Array.isArray(rawSupp[k])&&rawSupp[k].length){
+      if(!DB[k])DB[k]=[];
+      const suppNames=new Set(rawSupp[k].map(e=>e.name));
+      // Remove base entries whose name is overridden by supplement
+      DB[k]=DB[k].filter(e=>!suppNames.has(e.name));
+      DB[k]=[...DB[k],...rawSupp[k]];
+    }
+  });
+  // Re-sort
+  SECTION_DEFS.filter(s=>s.db_key&&!preserve.has(s.db_key)).forEach(s=>{
+    if(Array.isArray(DB[s.db_key]))DB[s.db_key].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+  });
+  // Refresh dropdowns
   SECTION_DEFS.forEach(sd=>{
     if(sd.db_key&&secVisible(sd.key)){
       if(sd.type==='rated-list'&&sd.special_renderer==='merits')refillSelect('meritDrop',DB.merits);
       else if(sd.db_key)refillSelect(`${sd.key}-drop`,DB[sd.db_key]);
     }
   });
-  refillSelect('weaponDrop',DB.weapons||[]);refillSelect('armorDrop',DB.armor||[]);refillSelect('equipDrop',DB.equipment||[]);
+  refillSelect('weaponDrop',DB.weapons||[]);
+  refillSelect('armorDrop',DB.armor||[]);
+  refillSelect('equipDrop',DB.equipment||[]);
 }
-function cancelDataImport(){
-  _pendingDataImport=null;
-  document.getElementById('dataImportPreview').style.display='none';
-  document.getElementById('dataImportSummary').innerHTML='';
-  document.getElementById('drawerDataImportPreview').style.display='none';
-  document.getElementById('drawerDataImportSummary').innerHTML='';
+
+// ── Add-to-library from sheet ─────────────────────────────────────────────────
+// Called when the user clicks "+ lib" on a sheet entry that isn't in DB.
+function addSheetEntryToLib(dbKey,entryJson){
+  let entry;
+  try{entry=JSON.parse(decodeURIComponent(entryJson));}catch(e){showStatus('Could not add entry to library.');return;}
+  // Strip sheet-only fields that don't belong in the library
+  const stripped={...entry};
+  delete stripped.equipped;
+  stripped._added=Date.now();
+  // Don't add if already present (race condition guard)
+  if(DB[dbKey]&&DB[dbKey].some(e=>e.name===stripped.name)){showStatus('Already in library.');return;}
+  const arr=_suppGetArray(dbKey);
+  arr.push(stripped);
+  _suppSaveArray(dbKey,arr);
+  _reloadDBFromSupplement();
+  showStatus(`"${stripped.name}" added to library.`);
+  // Re-render whichever section this belongs to
+  const sd=SECTION_DEFS.find(s=>s.db_key===dbKey);
+  if(sd){
+    if(sd.type==='rated-list')renderGenericRatedList(sd);
+    else if(sd.type==='named-list'){const listId=`${sd.key}-named-list`;renderNamedList(sd.state_key||sd.key,listId);}
+    else if(dbKey==='weapons')renderWeaponList();
+    else if(dbKey==='armor')renderArmorList();
+    else if(dbKey==='equipment')renderEquipList();
+  }
 }
-function downloadJSON(obj,filename){
-  const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
+// _libAddToLibBtn — returns "+ lib" button HTML if entry name not in DB[dbKey], else ''
+// Uses encodeURIComponent(JSON.stringify(entry)) to safely pass the entry without
+// embedding raw JSON in an onclick attribute.
+function _libAddToLibBtn(dbKey,entry){
+  if(!dbKey)return'';
+  // Check merged DB (covers both base and supplement)
+  if(DB[dbKey]&&DB[dbKey].some(e=>e.name===(entry.name||'')))return'';
+  const encoded=encodeURIComponent(JSON.stringify(entry));
+  return`<button class="sm lib-add-btn" title="Add to library" onclick="event.stopPropagation();addSheetEntryToLib('${escH(dbKey)}','${encoded}')">+ lib</button>`;
+}
+let _libEditorKey=null; // currently selected db_key in editor
+let _libEditorFilter='';  // current search filter string
+function _libSortPref(){
+  try{return localStorage.getItem(LS_LIB_SORT)||'alpha';}catch(e){return'alpha';}
+}
+function _libSetSortPref(v){
+  try{localStorage.setItem(LS_LIB_SORT,v);}catch(e){}
+}
+
+function openLibEditor(){
+  let modal=document.getElementById('libEditorModal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='libEditorModal';
+    modal.style.cssText='position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.55);display:flex;align-items:stretch;justify-content:center;padding:0;overflow:hidden';
+    modal.innerHTML=`<div style="background:var(--surface);border-left:1px solid var(--border);border-right:1px solid var(--border);width:100%;max-width:700px;display:flex;flex-direction:column;font-family:sans-serif;height:100vh;overflow:hidden">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0">
+        <span style="font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Library Editor</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button onclick="exportSupplement()">&#8615; Export</button>
+          <button onclick="document.getElementById('importSuppFile').click()">&#8613; Import</button>
+          <input type="file" id="importSuppFile" accept=".json" style="display:none" onchange="importSupplement(this)">
+          <button class="sm danger" onclick="closeLibEditor()">✕ Close</button>
+        </div>
+      </div>
+      <!-- Section type selector -->
+      <div style="padding:10px 16px;border-bottom:1px solid var(--border-light);flex-shrink:0;display:flex;gap:8px;align-items:center">
+        <select id="libEditorKeySelect" style="flex:1;font-size:.78rem;padding:.3rem .5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)" onchange="libEditorSelectKey(this.value)">
+          <option value="">— Select a library section —</option>
+        </select>
+        <button class="primary" id="libEditorAddBtn" style="display:none" onclick="libEditorShowAddForm()">+ New entry</button>
+      </div>
+      <!-- Search + sort toolbar — shown once a section is selected -->
+      <div id="libEditorToolbar" style="display:none;padding:6px 16px;border-bottom:1px solid var(--border-light);flex-shrink:0;display:none;gap:8px;align-items:center">
+        <input id="libEditorSearch" type="text" placeholder="Search entries…" style="flex:1;font-size:.78rem;padding:.25rem .5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)" oninput="_libEditorFilter=this.value;_libEditorRenderList(_libEditorKey)">
+        <span style="font-size:.7rem;color:var(--faint);flex-shrink:0">Sort:</span>
+        <button id="libSortAlpha" class="sm" style="font-size:.68rem;padding:2px 7px" onclick="_libSetSortPref('alpha');_libEditorRenderList(_libEditorKey);_libUpdateSortBtns()">A–Z</button>
+        <button id="libSortRecent" class="sm" style="font-size:.68rem;padding:2px 7px" onclick="_libSetSortPref('recent');_libEditorRenderList(_libEditorKey);_libUpdateSortBtns()">Recent</button>
+      </div>
+      <div id="libEditorDupWarning" style="display:none;font-size:.72rem;color:var(--accent);padding:6px 16px;border-bottom:1px solid var(--accent);background:rgba(40,72,128,.08);flex-shrink:0"></div>
+      <!-- Scrollable body: list + form -->
+      <div style="flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:.7rem;color:var(--faint);line-height:1.5">
+          Base library entries can be overridden by adding a supplement entry with the same name.
+          <strong style="color:var(--text)">Export your supplement regularly</strong> — browser data loss will erase it.
+        </div>
+        <div id="libEditorList" style="display:flex;flex-direction:column;gap:5px"></div>
+        <div id="libEditorAddForm" style="display:none"></div>
+      </div>
+      <!-- Footer -->
+      <div style="padding:8px 16px;border-top:1px solid var(--border-light);flex-shrink:0;display:flex;justify-content:flex-end">
+        <button class="danger sm" id="libEditorResetBtn" style="display:none" onclick="libEditorResetSupplement()">⚠ Reset all supplemental data</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    _libEditorPopulateSelect();
+  }
+  modal.style.display='flex';
+  _libEditorPopulateSelect();
+  if(_libEditorKey)libEditorSelectKey(_libEditorKey);
+}
+function closeLibEditor(){
+  const modal=document.getElementById('libEditorModal');
+  if(modal)modal.style.display='none';
+}
+function _libEditorPopulateSelect(){
+  const sel=document.getElementById('libEditorKeySelect');if(!sel)return;
+  const keys=getDataKeys().slice().sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML='<option value="">— Select a library section —</option>'+keys.map(k=>`<option value="${escH(k)}"${k===_libEditorKey?' selected':''}>${escH(k)}</option>`).join('');
+}
+
+// ── Field schema — full field definitions for every db_key ────────────────────
+// Each field: { key, label, type, options?, min?, max?, rows?, nested? }
+// type: 'text' | 'number' | 'textarea' | 'select' | 'checkboxes'
+const LIB_FIELD_SCHEMAS={
+  // Generic shapes (inferred from section type if db_key not listed below)
+  _named:    [{key:'name',label:'Name',type:'text'},{key:'desc',label:'Description',type:'textarea',rows:5}],
+  _rated:    [{key:'name',label:'Name',type:'text'},{key:'rating',label:'Rating',type:'number',min:0,max:10},{key:'desc',label:'Description',type:'textarea',rows:5}],
+  // Specific schemas
+  weapons:[
+    {key:'name',label:'Name',type:'text'},
+    {key:'weapon_type',label:'Type',type:'select',options:['melee','ranged','thrown']},
+    {key:'damage',label:'Damage',type:'number',min:-5,max:10},
+    {key:'initiative_mod',label:'Initiative Mod',type:'number',min:-10,max:10},
+    {key:'strength_req',label:'Strength Req',type:'number',min:1,max:10},
+    {key:'size',label:'Size',type:'number',min:1,max:10},
+    {key:'availability',label:'Availability',type:'number',min:1,max:10},
+    {key:'ranges',label:'Ranges (short/med/long)',type:'text'},
+    {key:'clip',label:'Clip',type:'number',min:0,max:100},
+    {key:'notes',label:'Notes',type:'textarea',rows:3},
+  ],
+  armor:[
+    {key:'name',label:'Name',type:'text'},
+    {key:'armor_general',label:'Armor (General)',type:'number',min:0,max:10},
+    {key:'armor_ballistic',label:'Armor (Ballistic)',type:'number',min:0,max:10},
+    {key:'defense_penalty',label:'Defense Penalty',type:'number',min:0,max:10},
+    {key:'strength_req',label:'Strength Req',type:'number',min:1,max:10},
+    {key:'availability',label:'Availability',type:'number',min:1,max:10},
+    {key:'notes',label:'Notes',type:'textarea',rows:3},
+    {key:'coverage',label:'Coverage',type:'checkboxes',options:['head','torso','arms','legs']},
+  ],
+  equipment:[
+    {key:'name',label:'Name',type:'text'},
+    {key:'dice_bonus',label:'Dice Bonus',type:'number',min:0,max:10},
+    {key:'durability',label:'Durability',type:'number',min:0,max:10},
+    {key:'size',label:'Size',type:'number',min:1,max:10},
+    {key:'structure',label:'Structure',type:'number',min:1,max:20},
+    {key:'availability',label:'Availability',type:'number',min:1,max:10},
+    {key:'desc',label:'Description',type:'textarea',rows:4},
+  ],
+};
+// _libSchema(key) — returns the field schema for a db_key
+function _libSchema(key){
+  if(LIB_FIELD_SCHEMAS[key])return LIB_FIELD_SCHEMAS[key];
+  // Infer from first DB entry or section type
+  const sample=(window._DB_RAW&&window._DB_RAW[key]&&window._DB_RAW[key][0])||null;
+  if(sample&&'rating' in sample)return LIB_FIELD_SCHEMAS._rated;
+  const sd=SECTION_DEFS.find(s=>s.db_key===key);
+  if(sd&&sd.type==='rated-list')return LIB_FIELD_SCHEMAS._rated;
+  return LIB_FIELD_SCHEMAS._named;
+}
+// _libDefaultEntry(key) — blank entry with all fields at zero/empty
+function _libDefaultEntry(key){
+  const out={};
+  _libSchema(key).forEach(f=>{
+    if(f.type==='number')out[f.key]=f.min!=null?Math.max(0,f.min):0;
+    else if(f.type==='checkboxes')out[f.key]=Object.fromEntries((f.options||[]).map(o=>[o,false]));
+    else out[f.key]='';
+  });
+  return out;
+}
+
+// ── List rendering ────────────────────────────────────────────────────────────
+function _libUpdateSortBtns(){
+  const pref=_libSortPref();
+  const a=document.getElementById('libSortAlpha');
+  const r=document.getElementById('libSortRecent');
+  if(a)a.style.fontWeight=pref==='alpha'?'700':'400';
+  if(r)r.style.fontWeight=pref==='recent'?'700':'400';
+}
+function libEditorSelectKey(key){
+  _libEditorKey=key||null;
+  _libEditorFilter='';
+  const toolbar=document.getElementById('libEditorToolbar');
+  const searchInp=document.getElementById('libEditorSearch');
+  const addBtn=document.getElementById('libEditorAddBtn');
+  const resetBtn=document.getElementById('libEditorResetBtn');
+  const addForm=document.getElementById('libEditorAddForm');
+  const dupWarn=document.getElementById('libEditorDupWarning');
+  if(addForm){addForm.style.display='none';addForm.innerHTML='';}
+  if(searchInp)searchInp.value='';
+  if(!key){
+    const listEl=document.getElementById('libEditorList');
+    if(listEl)listEl.innerHTML='<span style="font-size:.8rem;color:var(--faint)">Select a section type above to browse and edit entries.</span>';
+    if(addBtn)addBtn.style.display='none';
+    if(resetBtn)resetBtn.style.display='none';
+    if(toolbar)toolbar.style.display='none';
+    if(dupWarn)dupWarn.style.display='none';
+    return;
+  }
+  if(addBtn)addBtn.style.display='';
+  if(resetBtn)resetBtn.style.display='';
+  if(toolbar)toolbar.style.display='flex';
+  _libUpdateSortBtns();
+  _libEditorRenderList(key);
+  if(dupWarn){
+    const suppArr=_suppGetArray(key);
+    const baseNames=new Set((window._DB_RAW&&Array.isArray(window._DB_RAW[key]))?window._DB_RAW[key].map(e=>e.name):[]);
+    const dups=suppArr.filter(e=>baseNames.has(e.name)).map(e=>escH(e.name));
+    if(dups.length){
+      dupWarn.innerHTML=`✓ ${dups.length} supplement entr${dups.length>1?'ies':'y'} overriding base entries: ${dups.join(', ')}`;
+      dupWarn.style.display='';
+    }else{dupWarn.style.display='none';}
+  }
+}
+function _libEditorRenderList(key){
+  const listEl=document.getElementById('libEditorList');if(!listEl)return;
+  const baseArr=(window._DB_RAW&&Array.isArray(window._DB_RAW[key]))?window._DB_RAW[key]:[];
+  const suppArr=_suppGetArray(key);
+  const suppNames=new Set(suppArr.map(e=>e.name));
+  const f=(_libEditorFilter||'').toLowerCase().trim();
+
+  // Apply filter to both arrays
+  const filteredSupp=f?suppArr.filter(e=>(e.name||'').toLowerCase().includes(f)):suppArr;
+  const filteredBase=f?baseArr.filter(e=>(e.name||'').toLowerCase().includes(f)):baseArr;
+
+  // Sort supplement by preference
+  const pref=_libSortPref();
+  const sortedSupp=filteredSupp.slice().sort((a,b)=>{
+    if(pref==='recent'){
+      const ta=a._added||0,tb=b._added||0;
+      return tb-ta; // newest first; fall through to alpha if equal
+    }
+    return(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase());
+  });
+
+  // Populate cache for Override buttons
+  _libBaseEntryCache.length=0;
+  baseArr.forEach(e=>_libBaseEntryCache.push(e));
+
+  let html='';
+  if(!suppArr.length&&!baseArr.length){
+    listEl.innerHTML='<span style="font-size:.8rem;color:var(--faint)">No entries for this section.</span>';return;
+  }
+  if(f&&!filteredSupp.length&&!filteredBase.length){
+    listEl.innerHTML='<span style="font-size:.8rem;color:var(--faint)">No entries match your search.</span>';return;
+  }
+
+  if(sortedSupp.length){
+    html+=`<div style="font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:2px">Supplement entries</div>`;
+    // For sorted supp, we need the original index in suppArr for edit/delete
+    html+=sortedSupp.map(entry=>{
+      const idx=suppArr.indexOf(entry);
+      return _libEntryRowHTML(key,entry,idx,'supp');
+    }).join('');
+  } else if(suppArr.length&&f){
+    html+=`<div style="font-size:.62rem;color:var(--faint);margin-bottom:4px">No supplement entries match.</div>`;
+  }
+
+  if(filteredBase.length){
+    html+=`<div style="font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:${suppArr.length?'10px':'0'};margin-bottom:2px">Base library${(!f&&suppArr.length)?' (click Override on any entry to create a supplement override)':''}</div>`;
+    html+=filteredBase.map(entry=>{
+      const idx=baseArr.indexOf(entry);
+      return _libEntryRowHTML(key,entry,idx,'base',suppNames.has(entry.name));
+    }).join('');
+  } else if(baseArr.length&&f){
+    html+=`<div style="font-size:.62rem;color:var(--faint);margin-top:6px">No base entries match.</div>`;
+  }
+
+  listEl.innerHTML=html;
+}
+
+const _libBaseEntryCache=[];
+function _libEntryRowHTML(key,entry,idx,source,isOverridden){
+  const schema=_libSchema(key);
+  const summaryFields=schema.filter(f=>f.key!=='name'&&f.key!=='desc'&&f.key!=='notes'&&f.type!=='textarea'&&f.type!=='checkboxes');
+  const summaryStr=summaryFields.filter(f=>entry[f.key]!=null&&entry[f.key]!=='').map(f=>`${f.label}: ${entry[f.key]}`).join(' · ');
+  const descStr=entry.desc||entry.notes||'';
+  const isSupp=source==='supp';
+  const overrideBadge=isOverridden?`<span style="font-size:.6rem;background:var(--accent);color:#f5f0e8;border-radius:3px;padding:1px 5px;margin-left:4px">overridden</span>`:'';
+  const editBtn=isSupp
+    ?`<button class="sm" onclick="libEditorEditEntry('${escH(key)}',${idx})" style="font-size:.65rem;padding:2px 7px">Edit</button>`
+    :`<button class="sm" onclick="libEditorOverrideBase('${escH(key)}',${idx})" style="font-size:.65rem;padding:2px 7px">Override</button>`;
+  const delBtn=isSupp?`<button class="sm danger" onclick="libEditorDeleteEntry('${escH(key)}',${idx})" style="font-size:.65rem;padding:2px 7px">Del</button>`:'';
+  return `<div style="display:flex;align-items:flex-start;gap:6px;padding:7px 8px;border:1px solid ${isSupp?'var(--accent)':'var(--border-light)'};border-radius:4px;background:var(--surface);margin-bottom:4px">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:.8rem;font-weight:700;color:var(--text)">${escH(entry.name||'Unnamed')}${overrideBadge}</div>
+      ${summaryStr?`<div style="font-size:.7rem;color:var(--muted);margin-top:1px">${escH(summaryStr)}</div>`:''}
+      ${descStr?`<div style="font-size:.7rem;color:var(--faint);margin-top:1px;overflow:hidden;max-height:36px;text-overflow:ellipsis">${escH(descStr.substring(0,100))}${descStr.length>100?'…':''}</div>`:''}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
+      ${editBtn}${delBtn}
+    </div>
+  </div>`;
+}
+
+
+function _libEditorBuildForm(key,entry,isEdit,suppIdx){
+  const schema=_libSchema(key);
+  const saveCall=isEdit?`libEditorSaveEdit('${escH(key)}',${suppIdx})`:`libEditorSaveNew('${escH(key)}')`;
+  const fields=schema.map(f=>{
+    const val=entry&&entry[f.key]!=null?entry[f.key]:(f.type==='number'?(f.min!=null?Math.max(0,f.min):0):(f.type==='checkboxes'?null:''));
+    const inputStyle='flex:1;font-size:.78rem;padding:.25rem .4rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)';
+    const labelHTML=`<label style="font-size:.72rem;color:var(--muted);flex-shrink:0;width:130px">${escH(f.label)}</label>`;
+    if(f.type==='text'){
+      return `<div style="display:flex;gap:6px;align-items:center">${labelHTML}<input id="libEd_${f.key}" style="${inputStyle}" value="${escH(String(val||''))}" placeholder="${escH(f.label)}"></div>`;
+    }
+    if(f.type==='number'){
+      return `<div style="display:flex;gap:6px;align-items:center">${labelHTML}<input id="libEd_${f.key}" type="number" min="${f.min!=null?f.min:-999}" max="${f.max!=null?f.max:999}" style="width:70px;font-size:.78rem;padding:.25rem .4rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)" value="${val}"></div>`;
+    }
+    if(f.type==='select'){
+      const opts=(f.options||[]).map(o=>`<option value="${escH(o)}"${val===o?' selected':''}>${escH(o)}</option>`).join('');
+      return `<div style="display:flex;gap:6px;align-items:center">${labelHTML}<select id="libEd_${f.key}" style="font-size:.78rem;padding:.25rem .4rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">${opts}</select></div>`;
+    }
+    if(f.type==='textarea'){
+      return `<div style="display:flex;gap:6px;align-items:flex-start">${labelHTML}<textarea id="libEd_${f.key}" rows="${f.rows||4}" style="${inputStyle};resize:vertical">${escH(String(val||''))}</textarea></div>`;
+    }
+    if(f.type==='checkboxes'){
+      const cov=val||{};
+      const boxes=(f.options||[]).map(o=>`<label style="display:flex;align-items:center;gap:3px;font-size:.75rem;color:var(--text);cursor:pointer"><input type="checkbox" id="libEd_${f.key}_${o}"${cov[o]?' checked':''}> ${escH(o)}</label>`).join('');
+      return `<div style="display:flex;gap:6px;align-items:center">${labelHTML}<div style="display:flex;gap:10px;flex-wrap:wrap">${boxes}</div></div>`;
+    }
+    return '';
+  }).join('');
+  return `<div style="border:1px solid var(--accent);border-radius:4px;padding:12px;background:var(--surface);display:flex;flex-direction:column;gap:8px">
+    <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent)">${isEdit?'Edit supplement entry':'New supplement entry'}</div>
+    ${fields}
+    <div style="display:flex;gap:5px;margin-top:4px">
+      <button class="primary" onclick="${saveCall}">Save</button>
+      <button onclick="libEditorCancelForm()">Cancel</button>
+    </div>
+  </div>`;
+}
+function libEditorDeleteEntry(key,i){
+  const arr=_suppGetArray(key);
+  if(!confirm(`Delete "${arr[i]&&arr[i].name||'this entry'}"?`))return;
+  arr.splice(i,1);
+  _suppSaveArray(key,arr);
+  _reloadDBFromSupplement();
+  libEditorSelectKey(key);
+}
+function libEditorShowAddForm(){
+  const addForm=document.getElementById('libEditorAddForm');if(!addForm||!_libEditorKey)return;
+  addForm.innerHTML=_libEditorBuildForm(_libEditorKey,null,false,null);
+  addForm.style.display='';
+  addForm.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function libEditorEditEntry(key,i){
+  const arr=_suppGetArray(key);
+  const entry=arr[i];if(!entry)return;
+  const addForm=document.getElementById('libEditorAddForm');if(!addForm)return;
+  addForm.innerHTML=_libEditorBuildForm(key,entry,true,i);
+  addForm.style.display='';
+  addForm.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function libEditorOverrideBase(key,idx){
+  const entry=_libBaseEntryCache[idx];
+  if(!entry)return;
+  const addForm=document.getElementById('libEditorAddForm');if(!addForm)return;
+  addForm.innerHTML=_libEditorBuildForm(key,entry,false,null);
+  addForm.style.display='';
+  addForm.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function libEditorCancelForm(){
+  const addForm=document.getElementById('libEditorAddForm');
+  if(addForm){addForm.style.display='none';addForm.innerHTML='';}
+}
+function _libEditorReadForm(key){
+  const schema=_libSchema(key);
+  const nameEl=document.getElementById('libEd_name');
+  const name=(nameEl&&nameEl.value||'').trim();
+  if(!name){showStatus('Entry name is required.');return null;}
+  const entry={};
+  schema.forEach(f=>{
+    const el=document.getElementById(`libEd_${f.key}`);
+    if(f.type==='number'){entry[f.key]=el?parseFloat(el.value)||0:0;}
+    else if(f.type==='checkboxes'){
+      const cov={};
+      (f.options||[]).forEach(o=>{const cb=document.getElementById(`libEd_${f.key}_${o}`);cov[o]=cb?cb.checked:false;});
+      entry[f.key]=cov;
+    }
+    else{entry[f.key]=el?el.value:'';}
+  });
+  return entry;
+}
+function libEditorSaveNew(key){
+  const entry=_libEditorReadForm(key);if(!entry)return;
+  entry._added=Date.now();
+  const arr=_suppGetArray(key);
+  arr.push(entry);
+  _suppSaveArray(key,arr);
+  _reloadDBFromSupplement();
+  libEditorCancelForm();
+  libEditorSelectKey(key);
+  showStatus('Entry added.');
+}
+function libEditorSaveEdit(key,i){
+  const entry=_libEditorReadForm(key);if(!entry)return;
+  const arr=_suppGetArray(key);
+  arr[i]=entry;
+  _suppSaveArray(key,arr);
+  _reloadDBFromSupplement();
+  libEditorCancelForm();
+  libEditorSelectKey(key);
+  showStatus('Entry updated.');
+}
+function libEditorResetSupplement(){
+  if(!confirm('Delete all supplemental library entries? This cannot be undone. Export first if you want a backup.'))return;
+  try{localStorage.removeItem(LS_SUPPLEMENT);}catch(e){}
+  _reloadDBFromSupplement();
+  libEditorSelectKey(_libEditorKey);
+  showStatus('Supplemental library cleared.');
+}
+function exportSupplement(){
+  const raw=_getSupplementRaw();
+  const hasData=Object.values(raw).some(v=>Array.isArray(v)&&v.length);
+  if(!hasData){showStatus('No supplemental entries to export.');return;}
+  downloadJSON(raw,'supplement.json');
+}
+function importSupplement(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const incoming=JSON.parse(e.target.result);
+      const keys=getDataKeys();
+      if(!keys.some(k=>Array.isArray(incoming[k]))){showStatus('Not a valid supplement file.');return;}
+      const existing=_getSupplementRaw();
+      let added=0,skipped=0;
+      keys.forEach(k=>{
+        if(!Array.isArray(incoming[k]))return;
+        const cur=existing[k]||[];
+        const curNames=new Set(cur.map(x=>x.name));
+        incoming[k].forEach(entry=>{
+          if(!curNames.has(entry.name)){cur.push(entry);curNames.add(entry.name);added++;}else skipped++;
+        });
+        existing[k]=cur;
+      });
+      _saveSupplementRaw(existing);
+      _reloadDBFromSupplement();
+      if(_libEditorKey)libEditorSelectKey(_libEditorKey);
+      showStatus(`Supplement imported: ${added} added, ${skipped} skipped.`);
+    }catch{showStatus('Import failed — invalid JSON file.');}
+  };
+  reader.readAsText(file);input.value='';
 }
 function showStatus(msg,duration){
   const el=document.getElementById('statusBar');el.textContent=msg;el.classList.add('show');
@@ -6941,24 +7515,21 @@ function stRenderPanel(){
 // ── Render Add to Scene sidebar ───────────────────────────────────────────────
 function stRenderAddToScene(){
   const panel=document.getElementById('stAddToScenePanel');if(!panel)return;
-  const idx=lsGetIndex().map(_patchIndexEntry);
-  if(!idx.length){
+  const allIdx=lsGetIndex().map(_patchIndexEntry);
+  const folders=lsGetFolders();
+  if(!allIdx.length){
     panel.innerHTML='<span style="font-size:.8rem;color:var(--faint);font-family:sans-serif">No saved characters. Build and save a character first, then return to Storyteller Mode.</span>';
     return;
   }
-  // Search filter (reuse _saveListFilter)
-  panel.innerHTML=`<div style="margin-bottom:8px">
+  const filterBar=`<div style="margin-bottom:8px">
     <input placeholder="Filter…" style="width:100%;font-family:sans-serif;font-size:.75rem;padding:.25rem .4rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)"
       value="${escH(_saveListFilter)}" oninput="setSaveFilter(this.value);stRenderAddToScene()">
-  </div>`+idx.filter(s=>{
-    const f=_saveListFilter;
-    if(!f)return true;
-    return(s.name||'').toLowerCase().includes(f)||(s.tags||[]).some(t=>t.toLowerCase().includes(f));
-  }).map(s=>{
-    const accent=_themeAccent(s.theme||'neutral');
+  </div>`;
+  const f=_saveListFilter;
+  const list=f?allIdx.filter(s=>(s.name||'').toLowerCase().includes(f)||(s.tags||[]).some(t=>t.toLowerCase().includes(f))):allIdx;
+  const _stAddItem=s=>{
     const tagPills=(s.tags||[]).map(t=>`<span class="si-tag" style="pointer-events:none">${escH(t)}</span>`).join('');
     return `<div class="st-add-item">
-      <span class="si-theme-dot" style="background:${accent};width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>
       <div class="st-add-item-body">
         <div class="st-add-item-name">${escH(s.name||'Unnamed')}</div>
         ${tagPills?`<div class="st-add-item-tags">${tagPills}</div>`:''}
@@ -6966,7 +7537,28 @@ function stRenderAddToScene(){
       <input type="text" inputmode="numeric" pattern="[0-9]*" class="st-add-count" id="st-count-${s.id}" value="1" title="Count">
       <button class="sm primary st-add-btn" onclick="stAddToScene('${s.id}',document.getElementById('st-count-${s.id}').value)">Add</button>
     </div>`;
+  };
+  if(f){
+    panel.innerHTML=filterBar+list.map(_stAddItem).join('');
+    return;
+  }
+  // Folder grouping
+  const folderSections=folders.map(folder=>{
+    const chars=list.filter(s=>s.folder===folder.id);
+    if(!chars.length)return'';
+    const chevClass='si-folder-chevron'+(folder.collapsed?'':' open');
+    const bodyClass='si-folder-body'+(folder.collapsed?' collapsed':'');
+    return `<div class="si-folder">
+      <div class="si-folder-hdr" onclick="toggleFolderCollapsed('${folder.id}')">
+        <span class="${chevClass}">▶</span>
+        <span class="si-folder-name">${escH(folder.name)}</span>
+        <span class="si-folder-count">${chars.length}</span>
+      </div>
+      <div class="${bodyClass}">${chars.map(_stAddItem).join('')}</div>
+    </div>`;
   }).join('');
+  const ungrouped=list.filter(s=>!s.folder||!folders.find(fd=>fd.id===s.folder));
+  panel.innerHTML=filterBar+folderSections+(ungrouped.length?`<div class="si-ungrouped">${ungrouped.map(_stAddItem).join('')}</div>`:'');
 }
 // ── End Storyteller Mode ──────────────────────────────────────────────────────
 
