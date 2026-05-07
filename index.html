@@ -5729,13 +5729,17 @@ function loadCharacter(id){
   }catch(e){showStatus('Load failed: '+e.message);}
 }
 function deleteSave(id){
+  const idx=lsGetIndex();
+  const entry=idx.find(s=>s.id===id);
+  const name=entry?entry.name||'Unnamed':'this character';
+  if(!confirm(`Delete "${name}"? This cannot be undone.`))return;
   // Warn if this character has active scene instances
   const scene=_stGetScene();
   const hasInstances=scene.some(inst=>inst.source_id===id);
   if(hasInstances&&!confirm('This character has active instances in the current Storyteller scene. Delete anyway?'))return;
   localStorage.removeItem(LS_PREFIX+id);
-  const idx=lsGetIndex().filter(s=>s.id!==id);
-  lsSaveIndex(idx);
+  const newIdx=idx.filter(s=>s.id!==id);
+  lsSaveIndex(newIdx);
   if(id===currentSaveId){currentSaveId=null;}
   loadSaves();
 }
