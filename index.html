@@ -3,12 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mortals+ — Chronicles of Darkness Character Sheet Builder</title>
-<meta name="description" content="A free browser-based character sheet builder for Chronicles of Darkness (2nd Edition). Supports all splats — Vampire, Werewolf, Mage, Changeling, and more. No account required.">
-<meta property="og:title" content="Mortals+ — Chronicles of Darkness Character Sheet Builder">
-<meta property="og:description" content="A free browser-based character sheet builder for Chronicles of Darkness (2nd Edition). Supports all splats — Vampire, Werewolf, Mage, Changeling, and more. No account required.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://chronicles-character-builder.app/">
+<title>Mortals+ — Chronicles of Darkness</title>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
      CSS — Visual appearance, layout, colour scheme, responsive breakpoints,
@@ -496,6 +491,8 @@ button.sm{font-size:.75rem;padding:.25rem .6rem}
 .sidebar-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem 1.25rem;margin-bottom:12px}
 .sidebar-title{font-size:.68rem;font-family:sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px}
 .save-list{display:flex;flex-direction:column;gap:5px;max-height:360px;overflow-y:auto}
+.save-list-resize{height:6px;cursor:ns-resize;margin-top:2px;border-radius:3px;background:var(--border-light);transition:background .15s;flex-shrink:0}
+.save-list-resize:hover,.save-list-resize.dragging{background:var(--accent);opacity:.6}
 .save-item{display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--border-light);border-radius:4px;cursor:pointer;font-family:sans-serif;font-size:.8rem}
 .save-item:hover{background:var(--chip)}
 .save-item.active{border-color:var(--accent);background:var(--chip)}
@@ -515,6 +512,9 @@ button.sm{font-size:.75rem;padding:.25rem .6rem}
 .hidden{display:none!important}
 .io-section{margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light)}
 .io-section:first-child{margin-top:0;padding-top:0;border-top:none}
+.import-result{font-size:.72rem;font-family:sans-serif;padding:5px 8px;border-radius:4px;margin-top:6px;display:none}
+.import-result.ok{display:block;color:var(--green);background:var(--green-bg);border:1px solid #b8dfc8}
+.import-result.err{display:block;color:var(--danger);background:rgba(180,40,40,.08);border:1px solid var(--danger)}
 .io-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
 .io-row button{flex:1;min-width:80px;font-size:.75rem;padding:.3rem .5rem}
 .io-preview{font-size:.72rem;font-family:sans-serif;color:var(--muted);margin-top:5px;line-height:1.5}
@@ -1180,10 +1180,17 @@ body.touch-device .st-mode-toggle-wrap{display:none}
 .si-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:1px}
 .si-tag{font-size:.62rem;font-family:sans-serif;background:var(--tag);color:var(--muted);border-radius:10px;padding:1px 6px;cursor:pointer;white-space:nowrap;border:1px solid transparent;transition:background .1s}
 .si-tag:hover{background:var(--border);color:var(--text)}
-.si-tag-add{background:transparent;border:1px dashed var(--border);color:var(--faint);font-weight:700}
+.si-tag-add{background:transparent;border:1px dashed var(--border);color:var(--faint);font-weight:700;display:none}
 .si-tag-add:hover{background:var(--chip);color:var(--text);border-color:var(--muted)}
-.lib-add-btn{font-size:.6rem!important;padding:1px 5px!important;opacity:.45;border-color:transparent!important;background:transparent!important;color:var(--muted)!important;transition:opacity .15s}
+.save-item:hover .si-tag-add{display:inline-flex}
+.si-tag-drop{z-index:2500;background:var(--surface);border:1px solid var(--border);border-radius:4px;box-shadow:0 3px 10px rgba(0,0,0,.15);min-width:100px;max-height:160px;overflow-y:auto;font-family:sans-serif;font-size:.72rem}
+.si-tag-drop-item{padding:4px 8px;cursor:pointer;color:var(--text);white-space:nowrap}
+.si-tag-drop-item:hover,.si-tag-drop-item.active{background:var(--chip)}
+.si-move-select{font-size:.65rem;font-family:sans-serif;padding:1px 3px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--muted);cursor:pointer;max-width:80px;display:none}
+.save-item:hover .si-move-select{display:inline-block}
+.lib-add-btn{font-size:.6rem!important;padding:1px 5px!important;opacity:.45;border-color:transparent!important;background:transparent!important;color:var(--muted)!important;transition:opacity .15s,background .15s,color .15s}
 .lib-add-btn:hover{opacity:1!important;background:var(--chip)!important;border-color:var(--border)!important}
+.lib-add-btn.synced{opacity:1!important;background:var(--green-bg)!important;border-color:#b8dfc8!important;color:var(--green)!important}
 /* ── Folder styles ── */
 .si-folder{margin-bottom:6px}
 .si-folder-hdr{display:flex;align-items:center;gap:5px;padding:4px 6px;border-radius:4px;cursor:pointer;font-family:sans-serif;font-size:.75rem;font-weight:700;color:var(--muted);user-select:none;border:1px solid transparent}
@@ -1203,7 +1210,6 @@ body.touch-device .st-mode-toggle-wrap{display:none}
 .si-folder-new{display:flex;gap:5px;margin-top:4px}
 .si-folder-new input{flex:1;font-family:sans-serif;font-size:.72rem;padding:.2rem .4rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)}
 .si-folder-new button{font-size:.72rem;padding:.2rem .5rem}
-.si-move-select{font-size:.65rem;font-family:sans-serif;padding:1px 3px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--muted);cursor:pointer;max-width:80px}
 
 /* ── v29: Storyteller Mode panel ──────────────────────────────────────────── */
 .st-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--accent)}
@@ -1532,6 +1538,7 @@ body.touch-device .st-mode-toggle-wrap{display:none}
       style="width:100%;font-family:sans-serif;font-size:.78rem;padding:.3rem .5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);margin-bottom:8px;display:block"
       oninput="setSaveFilter(this.value)">
     <div id="saveListWrap"></div>
+    <div class="save-list-resize" id="saveListResize" title="Drag to resize"></div>
   </div>
   <div class="sidebar-card">
     <div class="sidebar-title">Sheet configuration</div>
@@ -1560,7 +1567,7 @@ body.touch-device .st-mode-toggle-wrap{display:none}
       <label>Watermark</label>
       <select id="watermarkSelect" onchange="applyWatermark(this.value)">
         <option value="none">— None —</option>
-        <option value="mortal">Mortal</option>
+        <option value="mortal" selected>Mortal</option>
         <option value="mage">Mage</option>
         <option value="ascension">Mage (Ascension)</option>
         <option value="vampire">Vampire</option>
@@ -1614,6 +1621,7 @@ body.touch-device .st-mode-toggle-wrap{display:none}
         <button onclick="document.getElementById('importSheetFile').click()">&#8613; Import sheet</button>
       </div>
       <input type="file" id="importSheetFile" accept=".json" style="display:none" onchange="importSheet(this)">
+      <div id="sheetImportResult" class="import-result"></div>
       <div class="hint">Export saves the current sheet as JSON. Import loads a sheet file.</div>
     </div>
   </div>
@@ -1696,7 +1704,7 @@ body.touch-device .st-mode-toggle-wrap{display:none}
           <label>Watermark</label>
           <select id="drawerWatermarkSelect" onchange="applyWatermark(this.value)">
             <option value="none">— None —</option>
-            <option value="mortal">Mortal</option>
+            <option value="mortal" selected>Mortal</option>
             <option value="mage">Mage</option>
             <option value="ascension">Mage (Ascension)</option>
             <option value="vampire">Vampire</option>
@@ -4615,7 +4623,7 @@ function renderGenericRatedList(sd){
         <input class="item-name" value="${escH(m.name||'')}" placeholder="Name"
           onclick="event.stopPropagation()" onchange="STATE['${sk}'][${i}].name=this.value">
         <span class="item-key-stat">${'●'.repeat(rating)||'unrated'}</span>
-        ${_libAddToLibBtn(sd.db_key,m)}
+        ${_libSyncBtn(sd.db_key,m,sk,i)}
         <button class="sm danger" onclick="event.stopPropagation();removeGenericRated('${sk}',${i},'${sd.key}')">Remove</button>
       </div>
       <div class="item-body">
@@ -4651,7 +4659,7 @@ function renderNamedList(sk,listId){
         <span class="item-toggle">&#9654;</span>
         <input class="item-name" value="${escH(item.name||'')}" placeholder="Name"
           onclick="event.stopPropagation()" onchange="STATE['${sk}'][${i}].name=this.value">
-        ${sd?_libAddToLibBtn(sd.db_key,item):''}
+        ${sd?_libSyncBtn(sd.db_key,item,sd.state_key||sd.key,i):''}
         <button class="sm danger" onclick="event.stopPropagation();removeNamedItem('${sk}',${i},'${listId}')">Remove</button>
       </div>
       <div class="item-body">
@@ -4756,7 +4764,7 @@ function renderWeaponList(){
         <option value="melee" ${!isRanged?'selected':''}>Melee</option>
         <option value="ranged" ${isRanged?'selected':''}>Ranged</option>
       </select>
-      ${_libAddToLibBtn('weapons',w)}
+      ${_libSyncBtn('weapons',w,'weapons',i)}
       <button class="sm danger" onclick="event.stopPropagation();removeStruct('weapons',${i},renderWeaponList)">Remove</button>
       </div><div class="item-body"><div class="struct-fields" style="grid-template-columns:repeat(3,1fr)">${sharedFields}${rangedFields}${notesField}</div></div></div>`;
   }).join('');
@@ -4798,7 +4806,7 @@ function renderArmorList(){
       <span class="item-toggle">&#9654;</span>
       <input class="item-name" value="${escH(a.name)}" placeholder="Armor name" onclick="event.stopPropagation()" onchange="STATE.armor[${i}].name=this.value">
       <span class="item-key-stat">${summary}</span>${equippedChk}
-      ${_libAddToLibBtn('armor',a)}
+      ${_libSyncBtn('armor',a,'armor',i)}
       <button class="sm danger" onclick="event.stopPropagation();removeStruct('armor',${i},renderArmorList)">Remove</button>
       </div><div class="item-body"><div class="struct-fields" style="grid-template-columns:repeat(3,1fr)">
         <div class="field-wrap"><span class="field-lbl">Armor (general)</span><input class="field-inp" type="number" value="${a.armor_general||0}" onchange="STATE.armor[${i}].armor_general=+this.value"></div>
@@ -4825,7 +4833,7 @@ function renderEquipList(){
       <span class="item-toggle">&#9654;</span>
       <input class="item-name" value="${escH(e.name)}" placeholder="Item name" onclick="event.stopPropagation()" onchange="STATE.equipment[${i}].name=this.value">
       <span class="item-key-stat">${summary}</span>
-      ${_libAddToLibBtn('equipment',e)}
+      ${_libSyncBtn('equipment',e,'equipment',i)}
       <button class="sm danger" onclick="event.stopPropagation();removeStruct('equipment',${i},renderEquipList)">Remove</button>
       </div><div class="item-body"><div class="struct-fields" style="grid-template-columns:repeat(3,1fr);margin-bottom:5px">
         <div class="field-wrap"><span class="field-lbl">Dice bonus</span><input class="field-inp" type="number" value="${e.dice_bonus||0}" onchange="STATE.equipment[${i}].dice_bonus=+this.value"></div>
@@ -5361,6 +5369,7 @@ const LS_STORAGE_FULL_MSG='Storage full — export characters to free up space.'
 const LS_FOLDERS='mortals_plus_folders';
 const LS_SUPPLEMENT='mortals_plus_supplement';
 const LS_LIB_SORT='mortals_plus_lib_sort';
+const LS_SAVE_LIST_H='mortals_plus_save_list_h';
 
 // ── Theme accent colours for save list badges ─────────────────────────────────
 // Maps theme keys to their accent CSS variable value for inline badge display.
@@ -5534,7 +5543,7 @@ function _buildSaveItemHTML(s,folders){
   const tagPills=(s.tags||[]).map(t=>
     `<span class="si-tag" onclick="event.stopPropagation();removeTagFromSave('${s.id}','${escH(t)}')" title="Remove tag">${escH(t)} ✕</span>`
   ).join('');
-  const addTagInput=`<span class="si-tag si-tag-add" onclick="event.stopPropagation();_showTagInput('${s.id}',this)" title="Add tag">+</span>`;
+  const addTagInput=`<span class="si-tag si-tag-add" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();_showTagInput('${s.id}',this)" title="Add tag">+</span>`;
   // Folder move select — only shown when folders exist
   const folderOpts=folders.length?`<option value="">— Ungrouped —</option>`+folders.map(f=>
     `<option value="${escH(f.id)}"${s.folder===f.id?' selected':''}>${escH(f.name)}</option>`
@@ -5632,33 +5641,85 @@ function _renameFolderPrompt(fid,currentName){
   if(name&&name.trim())renameFolder(fid,name.trim());
 }
 
-// _showTagInput — inline tag add UX: replaces the + span with a small input
+// _showTagInput — inline tag add with custom autocomplete dropdown
+// Replaces the + span with a small input and a DOM dropdown for existing tags.
+// Dropdown is appended to body with fixed positioning to escape scroll containers.
 function _showTagInput(id,btn){
   const allTags=_getAllTags();
-  const wrap=btn.parentElement;
+
+  // Build input
   const inp=document.createElement('input');
   inp.className='si-tag-inp';
   inp.placeholder='Tag…';
-  inp.style.cssText='font-family:sans-serif;font-size:.68rem;padding:1px 4px;border:1px solid var(--border);border-radius:10px;width:60px;outline:none;background:var(--surface);color:var(--text)';
-  // Simple autocomplete datalist
-  if(allTags.length){
-    const dl=document.createElement('datalist');
-    dl.id='si-tag-datalist-'+id;
-    allTags.forEach(t=>{const o=document.createElement('option');o.value=t;dl.appendChild(o);});
-    document.body.appendChild(dl);
-    inp.setAttribute('list',dl.id);
-  }
+  inp.style.cssText='font-family:sans-serif;font-size:.68rem;padding:1px 4px;border:1px solid var(--border);border-radius:10px;width:70px;outline:none;background:var(--surface);color:var(--text)';
   btn.replaceWith(inp);
   inp.focus();
-  const commit=()=>{
-    const v=inp.value.trim();
+
+  // Build dropdown appended to body — escapes overflow:hidden/auto stacking contexts
+  const drop=document.createElement('div');
+  drop.className='si-tag-drop';
+  drop.style.display='none';
+  drop.style.position='fixed';
+  document.body.appendChild(drop);
+
+  const positionDrop=()=>{
+    const r=inp.getBoundingClientRect();
+    drop.style.top=(r.bottom+2)+'px';
+    drop.style.left=r.left+'px';
+    drop.style.minWidth=Math.max(100,r.width)+'px';
+  };
+
+  const removeDrop=()=>{if(drop.parentNode)drop.parentNode.removeChild(drop);};
+
+  const commit=(val)=>{
+    removeDrop();
+    const v=(val||inp.value).trim();
     if(v)addTagToSave(id,v);
     else loadSaves();
-    const dl=document.getElementById('si-tag-datalist-'+id);
-    if(dl)dl.remove();
   };
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commit();}if(e.key==='Escape')loadSaves();});
-  inp.addEventListener('blur',commit);
+
+  const renderDrop=(filter)=>{
+    const matches=filter
+      ?allTags.filter(t=>t.toLowerCase().startsWith(filter.toLowerCase())&&t.toLowerCase()!==filter.toLowerCase())
+      :allTags;
+    if(!matches.length){drop.style.display='none';return;}
+    drop.innerHTML=matches.map(t=>`<div class="si-tag-drop-item" data-val="${escH(t)}">${escH(t)}</div>`).join('');
+    positionDrop();
+    drop.style.display='';
+    drop.querySelectorAll('.si-tag-drop-item').forEach(item=>{
+      item.addEventListener('mousedown',e=>{
+        e.preventDefault(); // prevent input blur
+        commit(item.dataset.val);
+      });
+    });
+  };
+
+  inp.addEventListener('input',()=>renderDrop(inp.value));
+  inp.addEventListener('focus',()=>renderDrop(inp.value));
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();commit();}
+    if(e.key==='Escape'){removeDrop();loadSaves();}
+    if(e.key==='ArrowDown'){
+      const items=drop.querySelectorAll('.si-tag-drop-item');
+      if(items.length){e.preventDefault();items[0].focus();}
+    }
+  });
+  inp.addEventListener('blur',()=>{
+    setTimeout(()=>{if(document.activeElement!==inp)commit();},150);
+  });
+
+  // Keyboard navigation within dropdown
+  drop.addEventListener('keydown',e=>{
+    const items=[...drop.querySelectorAll('.si-tag-drop-item')];
+    const idx=items.indexOf(document.activeElement);
+    if(e.key==='ArrowDown'&&idx<items.length-1){e.preventDefault();items[idx+1].focus();}
+    if(e.key==='ArrowUp'){e.preventDefault();if(idx>0)items[idx-1].focus();else inp.focus();}
+    if(e.key==='Enter'&&idx>=0){e.preventDefault();commit(items[idx].dataset.val);}
+    if(e.key==='Escape'){removeDrop();loadSaves();}
+  });
+
+  // Show suggestions immediately if tags exist
+  if(allTags.length)renderDrop('');
 }
 function loadCharacter(id){
   try{
@@ -5668,13 +5729,17 @@ function loadCharacter(id){
   }catch(e){showStatus('Load failed: '+e.message);}
 }
 function deleteSave(id){
+  const idx=lsGetIndex();
+  const entry=idx.find(s=>s.id===id);
+  const name=entry?entry.name||'Unnamed':'this character';
+  if(!confirm(`Delete "${name}"? This cannot be undone.`))return;
   // Warn if this character has active scene instances
   const scene=_stGetScene();
   const hasInstances=scene.some(inst=>inst.source_id===id);
   if(hasInstances&&!confirm('This character has active instances in the current Storyteller scene. Delete anyway?'))return;
   localStorage.removeItem(LS_PREFIX+id);
-  const idx=lsGetIndex().filter(s=>s.id!==id);
-  lsSaveIndex(idx);
+  const newIdx=idx.filter(s=>s.id!==id);
+  lsSaveIndex(newIdx);
   if(id===currentSaveId){currentSaveId=null;}
   loadSaves();
 }
@@ -5684,24 +5749,57 @@ function exportSheet(){
   const filename=(STATE.name||'character').replace(/[^a-z0-9_\-\s]/gi,'').trim()||'character';
   downloadJSON(STATE,filename+'.json');
 }
+// _showImportResult — shows inline feedback on an import result element
+// elId: the id of the .import-result div; ok: true=success, false=error; msg: text to show
+function _showImportResult(elId,ok,msg){
+  const el=document.getElementById(elId);if(!el)return;
+  el.textContent=msg;
+  el.className='import-result '+(ok?'ok':'err');
+  clearTimeout(el._hideTimer);
+  // Success messages fade after 6s; errors stay until next interaction
+  if(ok)el._hideTimer=setTimeout(()=>{el.className='import-result';el.textContent='';},6000);
+}
 function importSheet(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=e=>{
     try{
       STATE=JSON.parse(e.target.result);patchState();currentSaveId=STATE.id||null;
-      showEditor();renderEditor();showStatus('Sheet imported.');
-    }catch{showStatus('Import failed — invalid JSON file.');}
+      showEditor();renderEditor();
+      showStatus('Sheet imported.');
+      _showImportResult('sheetImportResult',true,`✓ "${STATE.name||'Unnamed'}" imported successfully.`);
+    }catch{
+      showStatus('Import failed — invalid JSON file.');
+      _showImportResult('sheetImportResult',false,'✕ Import failed — not a valid sheet file.');
+    }
   };
   reader.readAsText(file);input.value='';
 }
 function getDataKeys(){
   return [...new Set(SECTION_DEFS.filter(s=>s.db_key&&s.type!=='forms-block').map(s=>s.db_key))];
 }
-function downloadJSON(obj,filename){
-  const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+async function downloadJSON(obj,filename){
+  const json=JSON.stringify(obj,null,2);
+  if(window.showSaveFilePicker){
+    try{
+      const handle=await window.showSaveFilePicker({
+        suggestedName:filename,
+        types:[{description:'JSON file',accept:{'application/json':['.json']}}]
+      });
+      const writable=await handle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      return;
+    }catch(e){
+      if(e.name==='AbortError')return; // user cancelled — do nothing
+      // fall through to legacy download on any other error
+    }
+  }
+  // Fallback for Firefox, Safari, and any unsupported browser
+  const blob=new Blob([json],{type:'application/json'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -5768,39 +5866,66 @@ function _reloadDBFromSupplement(){
 
 // ── Add-to-library from sheet ─────────────────────────────────────────────────
 // Called when the user clicks "+ lib" on a sheet entry that isn't in DB.
-function addSheetEntryToLib(dbKey,entryJson){
-  let entry;
-  try{entry=JSON.parse(decodeURIComponent(entryJson));}catch(e){showStatus('Could not add entry to library.');return;}
-  // Strip sheet-only fields that don't belong in the library
-  const stripped={...entry};
-  delete stripped.equipped;
-  stripped._added=Date.now();
-  // Don't add if already present (race condition guard)
-  if(DB[dbKey]&&DB[dbKey].some(e=>e.name===stripped.name)){showStatus('Already in library.');return;}
-  const arr=_suppGetArray(dbKey);
-  arr.push(stripped);
-  _suppSaveArray(dbKey,arr);
-  _reloadDBFromSupplement();
-  showStatus(`"${stripped.name}" added to library.`);
-  // Re-render whichever section this belongs to
+// ── Library entry comparison helpers ─────────────────────────────────────────
+// ── Lib sync button ───────────────────────────────────────────────────────────
+// Always visible on sheet entries with a db_key. One button, one behaviour:
+// writes the current entry to the supplement unconditionally — add if new,
+// update in place if already in supplement, override if only in base library.
+
+// _libRerender — re-renders the section after a lib sync operation
+function _libRerender(dbKey){
   const sd=SECTION_DEFS.find(s=>s.db_key===dbKey);
   if(sd){
     if(sd.type==='rated-list')renderGenericRatedList(sd);
     else if(sd.type==='named-list'){const listId=`${sd.key}-named-list`;renderNamedList(sd.state_key||sd.key,listId);}
-    else if(dbKey==='weapons')renderWeaponList();
-    else if(dbKey==='armor')renderArmorList();
-    else if(dbKey==='equipment')renderEquipList();
   }
+  if(dbKey==='weapons')renderWeaponList();
+  else if(dbKey==='armor')renderArmorList();
+  else if(dbKey==='equipment')renderEquipList();
 }
-// _libAddToLibBtn — returns "+ lib" button HTML if entry name not in DB[dbKey], else ''
-// Uses encodeURIComponent(JSON.stringify(entry)) to safely pass the entry without
-// embedding raw JSON in an onclick attribute.
-function _libAddToLibBtn(dbKey,entry){
-  if(!dbKey)return'';
-  // Check merged DB (covers both base and supplement)
-  if(DB[dbKey]&&DB[dbKey].some(e=>e.name===(entry.name||'')))return'';
+// libSyncFromState — reads live STATE at click time (captures inline edits after render)
+function libSyncFromState(dbKey,stateKey,idx,btn){
+  const arr=STATE[stateKey];
+  if(!arr||!arr[idx]){showStatus('Could not find entry.');return;}
+  _libSync(dbKey,arr[idx],btn);
+}
+// _libSync — unconditional write to supplement
+function _libSync(dbKey,entry,btn){
+  const stripped={...entry};
+  delete stripped.equipped;
+  if(!stripped.name){showStatus('Entry needs a name first.');return;}
+  const suppArr=_suppGetArray(dbKey);
+  const existing=suppArr.findIndex(e=>e.name===stripped.name);
+  if(existing>=0){
+    stripped._added=suppArr[existing]._added||Date.now();
+    suppArr[existing]=stripped;
+    showStatus(`"${stripped.name}" synced to library.`);
+  } else {
+    stripped._added=Date.now();
+    suppArr.push(stripped);
+    showStatus(`"${stripped.name}" added to library.`);
+  }
+  // Flash button: show confirmed state, restore label after 1s, rerender after 1.2s
+  if(btn){
+    btn.textContent='✓ synced';
+    btn.classList.add('synced');
+    setTimeout(()=>{
+      btn.textContent='sync';
+      btn.classList.remove('synced');
+    },1000);
+  }
+  _suppSaveArray(dbKey,suppArr);
+  _reloadDBFromSupplement();
+  setTimeout(()=>_libRerender(dbKey),1200);
+}
+// _libSyncBtn — returns the lib sync button HTML; always shown when dbKey is set and entry has a name
+function _libSyncBtn(dbKey,entry,stateKey,idx){
+  if(!dbKey||!entry||!entry.name)return'';
+  if(stateKey!=null&&idx!=null){
+    return`<button class="sm lib-add-btn" title="Sync to library" onclick="event.stopPropagation();libSyncFromState('${escH(dbKey)}','${escH(stateKey)}',${idx},this)">sync</button>`;
+  }
   const encoded=encodeURIComponent(JSON.stringify(entry));
-  return`<button class="sm lib-add-btn" title="Add to library" onclick="event.stopPropagation();addSheetEntryToLib('${escH(dbKey)}','${encoded}')">+ lib</button>`;
+  return`<button class="sm lib-add-btn" title="Sync to library" onclick="event.stopPropagation();_libSync('${escH(dbKey)}',JSON.parse(decodeURIComponent('${encoded}')),this)">sync</button>`;
 }
 let _libEditorKey=null; // currently selected db_key in editor
 let _libEditorFilter='';  // current search filter string
@@ -5828,6 +5953,7 @@ function openLibEditor(){
           <button class="sm danger" onclick="closeLibEditor()">✕ Close</button>
         </div>
       </div>
+      <div id="suppImportResult" class="import-result" style="margin:0 16px;border-radius:4px;flex-shrink:0"></div>
       <!-- Section type selector -->
       <div style="padding:10px 16px;border-bottom:1px solid var(--border-light);flex-shrink:0;display:flex;gap:8px;align-items:center">
         <select id="libEditorKeySelect" style="flex:1;font-size:.78rem;padding:.3rem .5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)" onchange="libEditorSelectKey(this.value)">
@@ -6045,7 +6171,7 @@ function _libEntryRowHTML(key,entry,idx,source,isOverridden){
   const overrideBadge=isOverridden?`<span style="font-size:.6rem;background:var(--accent);color:#f5f0e8;border-radius:3px;padding:1px 5px;margin-left:4px">overridden</span>`:'';
   const editBtn=isSupp
     ?`<button class="sm" onclick="libEditorEditEntry('${escH(key)}',${idx})" style="font-size:.65rem;padding:2px 7px">Edit</button>`
-    :`<button class="sm" onclick="libEditorOverrideBase('${escH(key)}',${idx})" style="font-size:.65rem;padding:2px 7px">Override</button>`;
+    :isOverridden?'':`<button class="sm" onclick="libEditorOverrideBase('${escH(key)}',${idx})" style="font-size:.65rem;padding:2px 7px">Override</button>`;
   const delBtn=isSupp?`<button class="sm danger" onclick="libEditorDeleteEntry('${escH(key)}',${idx})" style="font-size:.65rem;padding:2px 7px">Del</button>`:'';
   return `<div style="display:flex;align-items:flex-start;gap:6px;padding:7px 8px;border:1px solid ${isSupp?'var(--accent)':'var(--border-light)'};border-radius:4px;background:var(--surface);margin-bottom:4px">
     <div style="flex:1;min-width:0">
@@ -6189,7 +6315,11 @@ function importSupplement(input){
     try{
       const incoming=JSON.parse(e.target.result);
       const keys=getDataKeys();
-      if(!keys.some(k=>Array.isArray(incoming[k]))){showStatus('Not a valid supplement file.');return;}
+      if(!keys.some(k=>Array.isArray(incoming[k]))){
+        showStatus('Not a valid supplement file.');
+        _showImportResult('suppImportResult',false,'✕ Not a valid supplement file.');
+        return;
+      }
       const existing=_getSupplementRaw();
       let added=0,skipped=0;
       keys.forEach(k=>{
@@ -6204,8 +6334,13 @@ function importSupplement(input){
       _saveSupplementRaw(existing);
       _reloadDBFromSupplement();
       if(_libEditorKey)libEditorSelectKey(_libEditorKey);
+      const msg=`✓ ${added} entr${added!==1?'ies':'y'} added${skipped?`, ${skipped} skipped (already present)`:'.'}`
       showStatus(`Supplement imported: ${added} added, ${skipped} skipped.`);
-    }catch{showStatus('Import failed — invalid JSON file.');}
+      _showImportResult('suppImportResult',true,msg);
+    }catch{
+      showStatus('Import failed — invalid JSON file.');
+      _showImportResult('suppImportResult',false,'✕ Import failed — not a valid JSON file.');
+    }
   };
   reader.readAsText(file);input.value='';
 }
@@ -6214,6 +6349,53 @@ function showStatus(msg,duration){
   clearTimeout(el._hideTimer);
   el._hideTimer=setTimeout(()=>el.classList.remove('show'),duration||2500);
 }
+
+// ── Save list resize handle ───────────────────────────────────────────────────
+(function(){
+  const MIN_H=120,DEFAULT_H=360;
+  function getSaveList(){return document.querySelector('#saveListWrap .save-list');}
+  function applyHeight(h){
+    const sl=getSaveList();
+    if(sl)sl.style.maxHeight=h+'px';
+  }
+  // Restore persisted height on load
+  try{
+    const stored=localStorage.getItem(LS_SAVE_LIST_H);
+    if(stored){const h=parseInt(stored);if(h>=MIN_H)applyHeight(h);}
+  }catch(e){}
+  // Wire resize handle — desktop only
+  const handle=document.getElementById('saveListResize');
+  if(!handle)return;
+  handle.addEventListener('mousedown',e=>{
+    e.preventDefault();
+    const sl=getSaveList();if(!sl)return;
+    const startY=e.clientY;
+    const startH=sl.offsetHeight||DEFAULT_H;
+    handle.classList.add('dragging');
+    const onMove=ev=>{
+      const h=Math.max(MIN_H,startH+(ev.clientY-startY));
+      sl.style.maxHeight=h+'px';
+    };
+    const onUp=ev=>{
+      handle.classList.remove('dragging');
+      document.removeEventListener('mousemove',onMove);
+      document.removeEventListener('mouseup',onUp);
+      const h=Math.max(MIN_H,startH+(ev.clientY-startY));
+      try{localStorage.setItem(LS_SAVE_LIST_H,h);}catch(err){}
+    };
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
+  // Re-apply height after loadSaves rerenders the save-list div
+  const _origLoadSaves=loadSaves;
+  loadSaves=function(){
+    _origLoadSaves.apply(this,arguments);
+    try{
+      const stored=localStorage.getItem(LS_SAVE_LIST_H);
+      if(stored){const h=parseInt(stored);if(h>=MIN_H)applyHeight(h);}
+    }catch(e){}
+  };
+})();
 
 if(window.matchMedia('(pointer:coarse)').matches)document.body.classList.add('touch-device');
 loadDB();loadSaves();

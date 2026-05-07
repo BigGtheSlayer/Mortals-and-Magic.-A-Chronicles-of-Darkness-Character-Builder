@@ -4018,7 +4018,7 @@
     },
     {
       "title": "Data Library",
-      "content": "The **Library Editor** (Data Library → ✎ Edit library) lets you add custom entries to any section's ability list — homebrew merits, weapons from the rulebook, custom conditions, and so on.\n\nSelect a section type from the dropdown, then click **+ New entry** to add your own. You can also **Override** any base library entry to replace it with a modified version.\n\nEntries on your character sheet that aren't in the library yet show a small **+ lib** button in their header row. Click it to add that entry to your supplement immediately — no need to open the editor separately.\n\nUse **Export** in the editor to save your supplement as a backup file. Import it on any browser to restore or share your entries. Your supplement is stored in your browser — export regularly to avoid losing it if you clear your browser data."
+      "content": "The **Library Editor** (Data Library → ✎ Edit library) lets you add custom entries to any section's ability list — homebrew merits, weapons from the rulebook, custom conditions, and so on.\n\nSelect a section type from the dropdown, then click **+ New entry** to add your own. You can also **Override** any base library entry to replace it with a modified version.\n\nEntries on your character sheet that aren't in the library yet show a small **sync** button in their header row. Click it to add that entry to your supplement immediately — no need to open the editor separately.\n\nUse **Export** in the editor to save your supplement as a backup file. Import it on any browser to restore or share your entries. Your supplement is stored in your browser — export regularly to avoid losing it if you clear your browser data."
     }
   ]
 }
