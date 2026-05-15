@@ -532,11 +532,9 @@
       "group": "Changeling",
       "zone": "right-column",
       "order": 3,
-      "type": "dot-square-track",
-      "state_key": "clarity",
+      "type": "clarity-track",
+      "state_key": "clarity_track",
       "default": false,
-      "max": 12,
-      "print_empty": true,
       "config_category": "Main Splats"
     },
     {
@@ -857,12 +855,9 @@
       "group": "Deviant",
       "zone": "right-column",
       "order": 3,
-      "type": "dot-square-track",
-      "state_key": "stability",
+      "type": "stability-track",
+      "state_key": "stability_track",
       "default": false,
-      "max": 10,
-      "default_value": 7,
-      "print_empty": true,
       "config_category": "Main Splats"
     },
     {
@@ -876,17 +871,6 @@
       "default": false,
       "max": 5,
       "print_empty": true,
-      "config_category": "Main Splats"
-    },
-    {
-      "key": "flux",
-      "label": "Flux",
-      "group": "Deviant",
-      "zone": "right-column",
-      "order": 5,
-      "type": "resource-track",
-      "state_key": "flux",
-      "default": false,
       "config_category": "Main Splats"
     },
     {
@@ -2581,7 +2565,6 @@
         "deviant-header-fields": true,
         "stability": true,
         "acclimation": true,
-        "flux": true,
         "deviant-touchstones": true,
         "variations": true,
         "scars": true,
