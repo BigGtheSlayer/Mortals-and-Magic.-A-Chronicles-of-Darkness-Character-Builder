@@ -2717,7 +2717,7 @@ function _baseCharacterFields(attrs,skills){
       if(STATE.entity_rank_num==null)STATE.entity_rank_num=1;
       if(STATE.entity_essence_max==null)STATE.entity_essence_max=10;
       if(STATE.entity_essence_current==null)STATE.entity_essence_current=0;
-      if(STATE.corpus_damage==null)STATE.corpus_damage=0;
+      if(STATE.corpus_track===undefined)STATE.corpus_track=[];
       if(STATE.corpus_max_override===undefined)STATE.corpus_max_override=null;
       if(STATE.entity_wp_spent==null)STATE.entity_wp_spent=0;
       if(STATE.entity_wp_max_override===undefined)STATE.entity_wp_max_override=null;
@@ -2734,11 +2734,12 @@ function _baseCharacterFields(attrs,skills){
     defense:Math.min(dexterity,wits)+athletics,initiative:dexterity+composure,speed:strength+dexterity+5,
     derivedOverrides:{},
     meritMaxDots:5,sectionConfig:{},...base,layoutLocked:true,theme:'neutral',watermark:'mortal',watermark_opacity:0.035,
+    resource_track_maxes:{},
     // Ephemeral Entity fields — zeroed for mortal characters
     entity_attrs:{power:1,finesse:1,resistance:1},
     entity_size:5,entity_rank_num:1,entity_type:'',entity_rank:'',entity_concept:'',entity_virtue:'',entity_vice:'',
     entity_essence_max:10,entity_essence_current:0,
-    corpus_damage:0,corpus_max_override:null,
+    corpus_track:[],corpus_max_override:null,
     entity_wp_spent:0,entity_wp_max_override:null,
     entityDerivedOverrides:{},
     entity_defense:0,entity_initiative:0,entity_speed:0,
@@ -2834,7 +2835,7 @@ function generateEntity(){
   STATE.entity_rank=`Rank ${rank} — ${['','Minor','Common','Established','Greater','Mighty'][rank]||rank}`;
   STATE.entity_essence_max=ess;
   STATE.entity_essence_current=ess;
-  STATE.corpus_damage=0;
+  STATE.corpus_track=[];
   STATE.numina=numina;
   STATE.manifestations=manifestations;
   STATE.influences=influences;
@@ -2926,8 +2927,17 @@ function patchState(){
       if(STATE.entity_rank_num==null)STATE.entity_rank_num=1;
       if(STATE.entity_essence_max==null)STATE.entity_essence_max=10;
       if(STATE.entity_essence_current==null)STATE.entity_essence_current=0;
-      if(STATE.corpus_damage==null)STATE.corpus_damage=0;
       if(STATE.corpus_max_override===undefined)STATE.corpus_max_override=null;
+      // v33 migration: convert legacy corpus_damage integer to B/L/A track
+      if(STATE.corpus_track===undefined){
+        const legacyDmg=STATE.corpus_damage||0;
+        const res=(STATE.entity_attrs||{}).resistance||1,sz=STATE.entity_size||5;
+        const max=STATE.corpus_max_override!=null?STATE.corpus_max_override:(res+sz);
+        const track=Array(Math.max(1,max)).fill('');
+        for(let i=0;i<Math.min(legacyDmg,max);i++)track[max-1-i]='a';
+        STATE.corpus_track=track;
+      }
+      if(!Array.isArray(STATE.corpus_track))STATE.corpus_track=[];
       if(STATE.entity_wp_spent==null)STATE.entity_wp_spent=0;
       if(STATE.entity_wp_max_override===undefined)STATE.entity_wp_max_override=null;
       if(!STATE.entityDerivedOverrides)STATE.entityDerivedOverrides={};
@@ -2946,7 +2956,8 @@ function patchState(){
         if(!Array.isArray(STATE[sqKey])||STATE[sqKey].length!==max)STATE[sqKey]=Array(max).fill(false);
       }
       else if(t==='resource-track'){
-        const rtMax=sd.max||20;
+        if(!STATE.resource_track_maxes)STATE.resource_track_maxes={};
+        const rtMax=STATE.resource_track_maxes[sk]!=null?STATE.resource_track_maxes[sk]:(sd.max||20);
         if(!Array.isArray(STATE[sk])||STATE[sk].length!==rtMax)STATE[sk]=Array(rtMax).fill(false);
       }
       else if(t==='quinpar-wheel'){
@@ -3023,6 +3034,8 @@ function patchState(){
   if(STATE.watermark_opacity==null)STATE.watermark_opacity=0.035;
   // v30: folder membership — null means ungrouped
   if(!('folder' in STATE))STATE.folder=null;
+  // v33: per-character resource track max overrides
+  if(!STATE.resource_track_maxes||typeof STATE.resource_track_maxes!=='object')STATE.resource_track_maxes={};
   if(!STATE.sectionConfig)STATE.sectionConfig={};
   (STATE.weapons||[]).forEach(w=>{if(w.equipped===undefined)w.equipped=false;});
   (STATE.armor||[]).forEach(a=>{
@@ -3413,13 +3426,20 @@ function buildSectionHTML(sd){
 
   if(t==='resource-track'){
     const sk=sd.state_key||sd.key;
-    const rtMax=sd.max||20;
+    const rtMax=getResourceTrackMax(sd);
     const numRows=Math.ceil(rtMax/10);
     const rowDivs=Array.from({length:numRows},(_,i)=>`<div class="resource-track-grid" id="${sd.key}-rt-row${i}"></div>`).join('');
     return `<div class="sec-block ${hidden}" id="secblock-${sd.key}" style="margin-bottom:8px">
-      <div class="sec" style="margin-top:12px">${lbl}</div>
+      <div class="sec" style="margin-top:12px">
+        <span>${lbl}</span>
+        <span class="derived-spin-row" style="margin-left:6px" onclick="event.stopPropagation()">
+          <button class="spin no-print" onclick="adjResourceTrackMax('${sk}','${sd.key}',-1)">−</button>
+          <span id="${sd.key}-rt-max-lbl" class="no-print" style="font-size:.78rem;font-weight:700;min-width:16px;text-align:center">${rtMax}</span>
+          <button class="spin no-print" onclick="adjResourceTrackMax('${sk}','${sd.key}',1)">+</button>
+        </span>
+      </div>
       <div class="sec-collapsible-body">
-      ${rowDivs}
+      <div id="${sd.key}-rt-rows">${rowDivs}</div>
       </div>
     </div>`;
   }
@@ -3637,18 +3657,26 @@ function buildSectionHTML(sd){
         <span style="color:var(--muted);min-width:36px">Size</span>
         <div class="spin-row"><button class="spin" onclick="adjEntitySize(-1)">−</button><span class="av" id="v-entity-size" style="font-size:1rem">5</span><button class="spin" onclick="adjEntitySize(1)">+</button></div>
       </div>
-      <div class="tracker-wrap">
-        <div class="tracker-lbl">
+      <div class="health-track-wrap">
+        <div class="health-track-lbl">
           <span>Corpus</span>
           <span class="derived-spin-row">
             <button class="spin" onclick="adjCorpusMax(-1)">−</button>
-            <span id="corpus-max-lbl" style="font-size:.78rem;font-weight:700;min-width:16px;text-align:center;color:var(--text)"></span>
+            <span id="corpus-max-lbl" style="font-size:.78rem;font-weight:700;min-width:16px;text-align:center"></span>
             <button class="spin" onclick="adjCorpusMax(1)">+</button>
           </span>
           <span id="corpus-val-lbl" style="color:var(--muted);font-size:.65rem"></span>
+          <span id="corpus-wound-lbl" style="color:var(--info);font-size:.72rem;font-family:sans-serif;font-weight:700;display:none"></span>
         </div>
-        <div class="tracker-circles" id="corpus-circles"></div>
-        <div class="tracker-squares" id="corpus-squares"></div>
+        <div class="health-boxes" id="corpus-boxes"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="health-legend">
+            <span class="hl-item"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="1" fill="none" stroke="#999" stroke-width="1"/><line x1="1" y1="11" x2="11" y2="1" stroke="#b85c00" stroke-width="1.2"/></svg> Bashing</span>
+            <span class="hl-item"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="1" fill="none" stroke="#999" stroke-width="1"/><line x1="1" y1="11" x2="11" y2="1" stroke="#333" stroke-width="1.2"/><line x1="11" y1="11" x2="1" y2="1" stroke="#333" stroke-width="1.2"/></svg> Lethal</span>
+            <span class="hl-item"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="1" fill="none" stroke="#999" stroke-width="1"/><line x1="1" y1="11" x2="11" y2="1" stroke="#5a0000" stroke-width="1.2"/><line x1="11" y1="11" x2="1" y2="1" stroke="#5a0000" stroke-width="1.2"/><line x1="6" y1="1" x2="6" y2="11" stroke="#5a0000" stroke-width="1.2"/><line x1="1" y1="6" x2="11" y2="6" stroke="#5a0000" stroke-width="1.2"/></svg> Aggravated</span>
+          </div>
+          <button class="sm" onclick="clearCorpusTrack()" style="font-size:.62rem;color:var(--faint);padding:1px 5px">Clear</button>
+        </div>
       </div>
       <div class="tracker-wrap">
         <div class="tracker-lbl">
@@ -4013,7 +4041,8 @@ function adjEntitySize(delta){
 function adjCorpusMax(delta){
   const base=calcBaseCorpus(),cur=getCorpusMax(),nv=Math.max(1,cur+delta);
   STATE.corpus_max_override=nv===base?null:nv;
-  renderCorpusTracker();
+  _syncCorpusTrack(nv);
+  renderCorpusTracker();autoSave();
 }
 function adjEntityWpMax(delta){
   const base=calcBaseEntityWp(),cur=getEntityWpMax(),nv=Math.max(0,cur+delta);
@@ -4067,20 +4096,33 @@ function updateEntityDerived(){
 
 function renderCorpusTracker(){
   const max=Math.max(0,getCorpusMax());
-  const dmg=Math.min(max,STATE.corpus_damage||0);
-  const avail=max-dmg;
-  const c=document.getElementById('corpus-circles'),s=document.getElementById('corpus-squares');
+  _syncCorpusTrack(max);
+  const track=STATE.corpus_track||[];
+  const dmgCount=track.filter(x=>x!=='').length;
+  const el=document.getElementById('corpus-boxes');
   const lbl=document.getElementById('corpus-val-lbl'),ml=document.getElementById('corpus-max-lbl');
-  if(!c||!s)return;
+  const wlbl=document.getElementById('corpus-wound-lbl');
+  if(!el)return;
   if(ml)ml.textContent=max;
-  if(lbl)lbl.textContent=`(${avail} remaining)`;
-  c.innerHTML=Array.from({length:max},()=>'<span class="tcircle"></span>').join('');
-  s.innerHTML=Array.from({length:max},(_,i)=>`<span class="tsquare${i<avail?' on':''}" onclick="toggleCorpusDamage(${i})"></span>`).join('');
+  if(lbl)lbl.textContent=`(${max-dmgCount} undamaged)`;
+  let wp=0;for(let o=0;o<Math.min(3,max);o++){if(track[max-1-o]&&track[max-1-o]!=='')wp++;}
+  if(wlbl){if(wp>0){wlbl.textContent=`−${wp} wound`;wlbl.style.display='';}else wlbl.style.display='none';}
+  el.innerHTML=track.map((s,i)=>`<div class="hbox" onclick="cycleCorpus(${i})" title="Click to cycle: empty → bashing → lethal → aggravated → empty">${healthSVG(s)}</div>`).join('');
 }
-function toggleCorpusDamage(idx){
-  const max=getCorpusMax(),avail=max-(STATE.corpus_damage||0);
-  STATE.corpus_damage=idx<avail?max-idx:max-(idx+1);
-  STATE.corpus_damage=Math.max(0,Math.min(max,STATE.corpus_damage));renderCorpusTracker();
+function _syncCorpusTrack(max){
+  if(!Array.isArray(STATE.corpus_track))STATE.corpus_track=[];
+  while(STATE.corpus_track.length<max)STATE.corpus_track.push('');
+  if(STATE.corpus_track.length>max)STATE.corpus_track=STATE.corpus_track.slice(0,max);
+}
+function cycleCorpus(idx){
+  if(!STATE.corpus_track||idx>=STATE.corpus_track.length)return;
+  STATE.corpus_track[idx]=DAMAGE_CYCLE[STATE.corpus_track[idx]||'']||'';
+  renderCorpusTracker();autoSave();
+}
+function clearCorpusTrack(){
+  if(!STATE.corpus_track)return;
+  STATE.corpus_track=STATE.corpus_track.map(()=>'');
+  renderCorpusTracker();autoSave();
 }
 function renderEntityWpTracker(){
   const max=Math.max(0,getEntityWpMax()),spent=Math.min(max,STATE.entity_wp_spent||0),avail=max-spent;
@@ -4211,7 +4253,6 @@ function cycleHealth(idx){if(!STATE.health_track||idx>=STATE.health_track.length
 function clearHealthTrack(){if(!STATE.health_track)return;STATE.health_track=STATE.health_track.map(()=>'');renderHealthTrack();}
 
 // ── Clarity track (Changeling) ────────────────────────────────────────────────
-// Two states: mild (slash/bashing) and severe (cross/lethal). Adjustable max.
 const CLARITY_CYCLE={'':'m','m':'s','s':''};
 function getClarityMax(sd){
   const sk=sd.state_key||sd.key;
@@ -4255,7 +4296,6 @@ function cycleClarityBox(sdKey,idx){
 }
 
 // ── Stability track (Deviant) ─────────────────────────────────────────────────
-// Three states: minor (slash), medium (cross), major (aggravated). Adjustable max.
 const STABILITY_CYCLE={'':'minor','minor':'medium','medium':'major','major':''};
 function getStabilityMax(sd){
   const sk=sd.state_key||sd.key;
@@ -4300,13 +4340,11 @@ function cycleStabilityBox(sdKey,idx){
 }
 
 // ── Shared custom track helpers ───────────────────────────────────────────────
-// Sync track array length to current max (same pattern as syncHealthTrackLength).
 function _syncCustomTrack(sk,max){
   if(!Array.isArray(STATE[sk]))STATE[sk]=[];
   while(STATE[sk].length<max)STATE[sk].push('');
   if(STATE[sk].length>max)STATE[sk]=STATE[sk].slice(0,max);
 }
-// Clear all marks on a clarity or stability track.
 function clearCustomTrack(sk,sdKey){
   if(!Array.isArray(STATE[sk]))return;
   STATE[sk]=STATE[sk].map(()=>'');
@@ -4408,10 +4446,39 @@ function renderDotSquareTrack(sd){
   if(lblEl)lblEl.textContent=`(${filled} remaining)`;
 }
 
+function getResourceTrackMax(sd){
+  const sk=sd.state_key||sd.key;
+  const maxes=STATE.resource_track_maxes||{};
+  return maxes[sk]!=null?maxes[sk]:(sd.max||20);
+}
+function adjResourceTrackMax(sk,sdKey,delta){
+  if(!STATE.resource_track_maxes)STATE.resource_track_maxes={};
+  const sd=SECTION_DEFS.find(s=>s.key===sdKey);
+  if(!sd)return;
+  const base=sd.max||20;
+  const cur=getResourceTrackMax(sd);
+  // Floor: can't go below the number of currently-filled squares
+  const filled=(STATE[sk]||[]).filter(Boolean).length;
+  const nv=Math.max(filled,Math.max(1,cur+delta));
+  STATE.resource_track_maxes[sk]=nv===base?null:nv;
+  // Resize the state array
+  if(!Array.isArray(STATE[sk]))STATE[sk]=[];
+  while(STATE[sk].length<nv)STATE[sk].push(false);
+  if(STATE[sk].length>nv)STATE[sk]=STATE[sk].slice(0,nv);
+  // Rebuild row divs and re-render
+  const rowsEl=document.getElementById(`${sdKey}-rt-rows`);
+  if(rowsEl){
+    const numRows=Math.ceil(nv/10);
+    rowsEl.innerHTML=Array.from({length:numRows},(_,i)=>`<div class="resource-track-grid" id="${sdKey}-rt-row${i}"></div>`).join('');
+  }
+  const mlbl=document.getElementById(`${sdKey}-rt-max-lbl`);
+  if(mlbl)mlbl.textContent=nv;
+  renderResourceTrack(sd);autoSave();
+}
 function renderResourceTrack(sd){
   // DOM IDs use sd.key (unique) to avoid collisions when multiple sections share a state_key
   const sk=sd.state_key||sd.key;
-  const rtMax=sd.max||20;
+  const rtMax=getResourceTrackMax(sd);
   const rowSize=10;
   const numRows=Math.ceil(rtMax/rowSize);
   const vals=STATE[sk]||Array(rtMax).fill(false);
@@ -4420,16 +4487,18 @@ function renderResourceTrack(sd){
     const start=row*rowSize,end=Math.min(start+rowSize,rtMax);
     el.innerHTML=Array.from({length:end-start},(_,i)=>{
       const idx=start+i;
-      return `<div class="rsquare${vals[idx]?' on':''}" onclick="toggleResourceSquare('${sk}',${idx})"></div>`;
+      return `<div class="rsquare${vals[idx]?' on':''}" onclick="toggleResourceSquare('${sk}',${idx},'${sd.key}')"></div>`;
     }).join('');
   }
 }
-function toggleResourceSquare(sk,idx){
+function toggleResourceSquare(sk,idx,sdKey){
   const matches=SECTION_DEFS.filter(s=>s.type==='resource-track'&&(s.state_key||s.key)===sk);
-  const rtMax=(matches[0]&&matches[0].max)||20;
+  const sd=matches[0];
+  const rtMax=sd?getResourceTrackMax(sd):(sd&&sd.max)||20;
   if(!Array.isArray(STATE[sk])||STATE[sk].length!==rtMax)STATE[sk]=Array(rtMax).fill(false);
   STATE[sk][idx]=!STATE[sk][idx];
   if(matches.length)matches.forEach(s=>renderResourceTrack(s));
+  autoSave();
 }
 
 // ── Quintessence/Paradox wheel ────────────────────────────────────────────────
@@ -5508,11 +5577,13 @@ function copyText(){
   const entityDerivedStr=showEntityDerived?(()=>{
     const corpusMax=STATE.corpus_max_override!=null?STATE.corpus_max_override:
       (getEntityAttrVal('resistance')+(STATE.entity_size||5));
-    const corpusDmg=STATE.corpus_damage||0;
+    const corpusTrack=STATE.corpus_track||[];
+    const corpusDmgCount=corpusTrack.filter(x=>x!=='').length;
+    const corpusStr=corpusTrack.map(s=>!s?'□':s==='b'?'/':s==='l'?'X':'*').join(' ');
     const ewpMax=STATE.entity_wp_max_override!=null?STATE.entity_wp_max_override:
       (getEntityAttrVal('resistance')+getEntityAttrVal('finesse'));
     const ewpSpent=STATE.entity_wp_spent||0;
-    return `\nENTITY TRAITS\n  Corpus: ${corpusMax-corpusDmg} / ${corpusMax}\n  Willpower: ${ewpMax} (${ewpMax-ewpSpent} remaining)\n  Essence: ${STATE.entity_essence_current||0} / ${STATE.entity_essence_max||10}\n  Defense: ${STATE.entity_defense||0}\n  Initiative: ${STATE.entity_initiative||0}\n  Speed: ${STATE.entity_speed||0}`;
+    return `\nENTITY TRAITS\n  Corpus: ${corpusMax-corpusDmgCount} / ${corpusMax}  ${corpusStr}\n  Willpower: ${ewpMax} (${ewpMax-ewpSpent} remaining)\n  Essence: ${STATE.entity_essence_current||0} / ${STATE.entity_essence_max||10}\n  Defense: ${STATE.entity_defense||0}\n  Initiative: ${STATE.entity_initiative||0}\n  Speed: ${STATE.entity_speed||0}`;
   })():'';
   // Entity attributes block
   const entityAttrStr=showEntityAttrs?`\nATTRIBUTES (ENTITY)\n  Power: ${getEntityAttrVal('power')} | Finesse: ${getEntityAttrVal('finesse')} | Resistance: ${getEntityAttrVal('resistance')}`:'';
@@ -6762,7 +6833,8 @@ function _stGetSourceResourceTracks(src){
     if(sd.type!=='resource-track')return;
     if(cfg[sd.key]===false)return;
     const sk=sd.state_key||sd.key;
-    const max=sd.max||20;
+    const srcMaxes=src.resource_track_maxes||{};
+    const max=srcMaxes[sk]!=null?srcMaxes[sk]:(sd.max||20);
     tracks[sk]=Array.isArray(src[sk])?JSON.parse(JSON.stringify(src[sk])):Array(max).fill(false);
   });
   // Entity Essence: stored as a numeric value, not a boolean array
@@ -6777,16 +6849,18 @@ function _stGetSourceResourceTracks(src){
 function _stGetEnabledResourceTracks(inst,src){
   if(!src)return[];
   const cfg=src.sectionConfig||{};
+  const srcMaxes=src.resource_track_maxes||{};
   const result=[];
   SECTION_DEFS.forEach(sd=>{
     if(sd.type!=='resource-track')return;
     if(cfg[sd.key]===false)return;
     const sk=sd.state_key||sd.key;
+    const rtMax=srcMaxes[sk]!=null?srcMaxes[sk]:(sd.max||20);
     const tracks=inst.resource_tracks||{};
     // Fall back to legacy inst.resource_track for old instances with single track
     let track=tracks[sk];
     if(track===undefined&&sk===Object.keys(tracks)[0])track=inst.resource_track;
-    if(!Array.isArray(track))track=Array(sd.max||20).fill(false);
+    if(!Array.isArray(track))track=Array(rtMax).fill(false);
     result.push({sd,sk,track});
   });
   return result;
@@ -6871,7 +6945,9 @@ function stToggleResource(iid,sk,idx){
       }
       const src=_stReadChar(inst.source_id);
       const sd=SECTION_DEFS.find(s=>(s.state_key||s.key)===sk&&s.type==='resource-track');
-      inst.resource_tracks[sk]=Array(sd&&sd.max||20).fill(false);
+      const srcMaxes=(src&&src.resource_track_maxes)||{};
+      const rtMax=srcMaxes[sk]!=null?srcMaxes[sk]:(sd&&sd.max||20);
+      inst.resource_tracks[sk]=Array(rtMax).fill(false);
     }
     inst.resource_tracks[sk][idx]=!inst.resource_tracks[sk][idx];
   });
@@ -6961,8 +7037,7 @@ function stAdjEssence(iid,delta){
 }
 
 
-// Re-render body track boxes (called from card body onclick handlers so the
-// body display stays in sync when clicking there rather than the header).
+// Re-render body track boxes when clicked from inside the card body.
 function _stRefreshBodyTrack(iid,trackType){
   const scene=_stGetScene();
   const inst=scene.find(i=>i.id===iid);if(!inst)return;
@@ -7916,9 +7991,11 @@ function stRenderPanel(){
       return true;
     }).map(sd=>{
       const sk=sd.state_key||sd.key;
+      const srcMaxes=src.resource_track_maxes||{};
+      const rtMax=srcMaxes[sk]!=null?srcMaxes[sk]:(sd.max||20);
       const tracks=inst.resource_tracks||{};
-      let track=Array.isArray(tracks[sk])?tracks[sk]:Array(sd.max||20).fill(false);
-      const squares=track.slice(0,sd.max||20).map((on,i)=>
+      let track=Array.isArray(tracks[sk])?tracks[sk]:Array(rtMax).fill(false);
+      const squares=track.slice(0,rtMax).map((on,i)=>
         `<span class="st-rsquare${on?' on':''}" onclick="stToggleResource('${inst.id}','${sk}',${i})"></span>`
       ).join('');
       return `<div class="st-card-track-grp">
