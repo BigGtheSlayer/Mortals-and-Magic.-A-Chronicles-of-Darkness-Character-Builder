@@ -2703,6 +2703,8 @@ function _baseCharacterFields(attrs,skills){
     else if(t==='cipher-block')base[sk]=Object.fromEntries((sd.fields||[]).map(f=>[f.key,'']));
     else if(t==='covers')base[sk]=[];
     else if(t==='quinpar-wheel'){base[sk+'_quintessence']=0;base[sk+'_paradox']=0;}
+    else if(t==='clarity-track'){base[sk]=[];base[sk+'_max_override']=null;}
+    else if(t==='stability-track'){base[sk]=[];base[sk+'_max_override']=null;}
     else if(t==='attributes-3'){
       // entity_attrs initialised here; other entity fields handled by derived-traits-entity
       if(!STATE.entity_attrs)STATE.entity_attrs={};
@@ -2991,6 +2993,14 @@ function patchState(){
           if(!Array.isArray(c.merits))c.merits=[];
         });
       }
+      else if(t==='clarity-track'){
+        if(!Array.isArray(STATE[sk]))STATE[sk]=[];
+        if(STATE[sk+'_max_override']===undefined)STATE[sk+'_max_override']=null;
+      }
+      else if(t==='stability-track'){
+        if(!Array.isArray(STATE[sk]))STATE[sk]=[];
+        if(STATE[sk+'_max_override']===undefined)STATE[sk+'_max_override']=null;
+      }
     }
   });
   if(!STATE.health_track||!STATE.health_track.length)STATE.health_track=Array(getHealthMax()).fill('');
@@ -3121,6 +3131,8 @@ function renderSheetZone(zone,containerId){
     else if(t==='covers')renderCovers(sd.state_key||sd.key,`${sd.key}-list`);
     else if(t==='quinpar-wheel')renderQuinparWheel(sd.state_key||sd.key,sd.key);
     else if(t==='pool-list')renderPoolList(sd);
+    else if(t==='clarity-track')renderClarityTrack(sd);
+    else if(t==='stability-track')renderStabilityTrack(sd);
   });
 }
 
@@ -3266,6 +3278,65 @@ function buildSectionHTML(sd){
         <div class="tracker-circles" id="${sd.key}-dots">${circles}</div>
         <div class="tracker-squares" id="${sd.key}-squares">${sqs}</div>
       </div></div></div>`;
+  }
+
+  if(t==='clarity-track'){
+    const sk=sd.state_key||sd.key;
+    const track=STATE[sk]||[];
+    const max=getClarityMax(sd);
+    return `<div class="sec-block ${hidden}" id="secblock-${sd.key}">
+      <div class="sec" style="margin-top:12px">${lbl}</div>
+      <div class="sec-collapsible-body">
+      <div class="health-track-wrap">
+        <div class="health-track-lbl">
+          <span>${lbl}</span>
+          <span class="derived-spin-row">
+            <button class="spin" onclick="adjClarityMax('${sd.key}',-1)">−</button>
+            <span id="${sd.key}-max-lbl" style="font-size:.78rem;font-weight:700;min-width:16px;text-align:center">${max}</span>
+            <button class="spin" onclick="adjClarityMax('${sd.key}',1)">+</button>
+          </span>
+          <span id="${sd.key}-val-lbl" style="color:var(--muted);font-size:.65rem">(${track.filter(x=>x!=='').length} marked)</span>
+        </div>
+        <div class="health-boxes" id="${sd.key}-boxes"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="health-legend">
+            <span class="hl-item"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="1" fill="none" stroke="#999" stroke-width="1"/><line x1="1" y1="11" x2="11" y2="1" stroke="#b85c00" stroke-width="1.2"/></svg> Mild</span>
+            <span class="hl-item"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="1" fill="none" stroke="#999" stroke-width="1"/><line x1="1" y1="11" x2="11" y2="1" stroke="#1a1916" stroke-width="1.2"/><line x1="11" y1="11" x2="1" y2="1" stroke="#1a1916" stroke-width="1.2"/></svg> Severe</span>
+          </div>
+          <button class="sm" onclick="clearCustomTrack('${sk}','${sd.key}')" style="font-size:.62rem;color:var(--faint);padding:1px 5px">Clear</button>
+        </div>
+      </div>
+      </div></div>`;
+  }
+
+  if(t==='stability-track'){
+    const sk=sd.state_key||sd.key;
+    const track=STATE[sk]||[];
+    const max=getStabilityMax(sd);
+    return `<div class="sec-block ${hidden}" id="secblock-${sd.key}">
+      <div class="sec" style="margin-top:12px">${lbl}</div>
+      <div class="sec-collapsible-body">
+      <div class="health-track-wrap">
+        <div class="health-track-lbl">
+          <span>${lbl}</span>
+          <span class="derived-spin-row">
+            <button class="spin" onclick="adjStabilityMax('${sd.key}',-1)">−</button>
+            <span id="${sd.key}-max-lbl" style="font-size:.78rem;font-weight:700;min-width:16px;text-align:center">${max}</span>
+            <button class="spin" onclick="adjStabilityMax('${sd.key}',1)">+</button>
+          </span>
+          <span id="${sd.key}-val-lbl" style="color:var(--muted);font-size:.65rem">(${track.filter(x=>x!=='').length} marked)</span>
+        </div>
+        <div class="health-boxes" id="${sd.key}-boxes"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="health-legend">
+            <span class="hl-item"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="1" fill="none" stroke="#999" stroke-width="1"/><line x1="1" y1="11" x2="11" y2="1" stroke="#b85c00" stroke-width="1.2"/></svg> Minor</span>
+            <span class="hl-item"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="1" fill="none" stroke="#999" stroke-width="1"/><line x1="1" y1="11" x2="11" y2="1" stroke="#1a1916" stroke-width="1.2"/><line x1="11" y1="11" x2="1" y2="1" stroke="#1a1916" stroke-width="1.2"/></svg> Medium</span>
+            <span class="hl-item"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="1" fill="none" stroke="#999" stroke-width="1"/><line x1="1" y1="11" x2="11" y2="1" stroke="#5a0000" stroke-width="1.2"/><line x1="11" y1="11" x2="1" y2="1" stroke="#5a0000" stroke-width="1.2"/><line x1="6" y1="1" x2="6" y2="11" stroke="#5a0000" stroke-width="1.2"/><line x1="1" y1="6" x2="11" y2="6" stroke="#5a0000" stroke-width="1.2"/></svg> Major</span>
+          </div>
+          <button class="sm" onclick="clearCustomTrack('${sk}','${sd.key}')" style="font-size:.62rem;color:var(--faint);padding:1px 5px">Clear</button>
+        </div>
+      </div>
+      </div></div>`;
   }
 
   if(t==='labeled-track'){
@@ -4138,6 +4209,113 @@ function healthSVG(s){
 }
 function cycleHealth(idx){if(!STATE.health_track||idx>=STATE.health_track.length)return;STATE.health_track[idx]=DAMAGE_CYCLE[STATE.health_track[idx]||'']||'';renderHealthTrack();}
 function clearHealthTrack(){if(!STATE.health_track)return;STATE.health_track=STATE.health_track.map(()=>'');renderHealthTrack();}
+
+// ── Clarity track (Changeling) ────────────────────────────────────────────────
+// Two states: mild (slash/bashing) and severe (cross/lethal). Adjustable max.
+const CLARITY_CYCLE={'':'m','m':'s','s':''};
+function getClarityMax(sd){
+  const sk=sd.state_key||sd.key;
+  return STATE[sk+'_max_override']!=null?STATE[sk+'_max_override']:5;
+}
+function adjClarityMax(sdKey,delta){
+  const sd=SECTION_DEFS.find(s=>s.key===sdKey);if(!sd)return;
+  const sk=sd.state_key||sd.key;
+  const cur=getClarityMax(sd);
+  const nv=Math.max(1,cur+delta);
+  STATE[sk+'_max_override']=nv===5?null:nv;
+  _syncCustomTrack(sk,nv);renderClarityTrack(sd);autoSave();
+}
+function renderClarityTrack(sd){
+  const sk=sd.state_key||sd.key;
+  const max=getClarityMax(sd);
+  _syncCustomTrack(sk,max);
+  const track=STATE[sk]||[];
+  const marked=track.filter(x=>x!=='').length;
+  const el=document.getElementById(`${sd.key}-boxes`);
+  const mlbl=document.getElementById(`${sd.key}-max-lbl`);
+  const vlbl=document.getElementById(`${sd.key}-val-lbl`);
+  if(!el)return;
+  if(mlbl)mlbl.textContent=max;
+  if(vlbl)vlbl.textContent=`(${marked} marked)`;
+  el.innerHTML=track.map((s,i)=>
+    `<div class="hbox" onclick="cycleClarityBox('${sd.key}',${i})" title="Click to cycle: empty → mild → severe → empty">${_clarityBoxSVG(s)}</div>`
+  ).join('');
+}
+function _clarityBoxSVG(s){
+  if(s==='m')return`<svg viewBox="0 0 14 14"><line x1="0" y1="14" x2="14" y2="0" stroke="#b85c00" stroke-width="1.8"/></svg>`;
+  if(s==='s')return`<svg viewBox="0 0 14 14"><line x1="0" y1="14" x2="14" y2="0" stroke="#1a1916" stroke-width="1.8"/><line x1="14" y1="14" x2="0" y2="0" stroke="#1a1916" stroke-width="1.8"/></svg>`;
+  return'';
+}
+function cycleClarityBox(sdKey,idx){
+  const sd=SECTION_DEFS.find(s=>s.key===sdKey);if(!sd)return;
+  const sk=sd.state_key||sd.key;
+  if(!STATE[sk]||idx>=STATE[sk].length)return;
+  STATE[sk][idx]=CLARITY_CYCLE[STATE[sk][idx]||'']||'';
+  renderClarityTrack(sd);autoSave();
+}
+
+// ── Stability track (Deviant) ─────────────────────────────────────────────────
+// Three states: minor (slash), medium (cross), major (aggravated). Adjustable max.
+const STABILITY_CYCLE={'':'minor','minor':'medium','medium':'major','major':''};
+function getStabilityMax(sd){
+  const sk=sd.state_key||sd.key;
+  return STATE[sk+'_max_override']!=null?STATE[sk+'_max_override']:5;
+}
+function adjStabilityMax(sdKey,delta){
+  const sd=SECTION_DEFS.find(s=>s.key===sdKey);if(!sd)return;
+  const sk=sd.state_key||sd.key;
+  const cur=getStabilityMax(sd);
+  const nv=Math.max(1,cur+delta);
+  STATE[sk+'_max_override']=nv===5?null:nv;
+  _syncCustomTrack(sk,nv);renderStabilityTrack(sd);autoSave();
+}
+function renderStabilityTrack(sd){
+  const sk=sd.state_key||sd.key;
+  const max=getStabilityMax(sd);
+  _syncCustomTrack(sk,max);
+  const track=STATE[sk]||[];
+  const marked=track.filter(x=>x!=='').length;
+  const el=document.getElementById(`${sd.key}-boxes`);
+  const mlbl=document.getElementById(`${sd.key}-max-lbl`);
+  const vlbl=document.getElementById(`${sd.key}-val-lbl`);
+  if(!el)return;
+  if(mlbl)mlbl.textContent=max;
+  if(vlbl)vlbl.textContent=`(${marked} marked)`;
+  el.innerHTML=track.map((s,i)=>
+    `<div class="hbox" onclick="cycleStabilityBox('${sd.key}',${i})" title="Click to cycle: empty → minor → medium → major → empty">${_stabilityBoxSVG(s)}</div>`
+  ).join('');
+}
+function _stabilityBoxSVG(s){
+  if(s==='minor')return`<svg viewBox="0 0 14 14"><line x1="0" y1="14" x2="14" y2="0" stroke="#b85c00" stroke-width="1.8"/></svg>`;
+  if(s==='medium')return`<svg viewBox="0 0 14 14"><line x1="0" y1="14" x2="14" y2="0" stroke="#1a1916" stroke-width="1.8"/><line x1="14" y1="14" x2="0" y2="0" stroke="#1a1916" stroke-width="1.8"/></svg>`;
+  if(s==='major')return`<svg viewBox="0 0 14 14"><line x1="0" y1="14" x2="14" y2="0" stroke="#5a0000" stroke-width="1.8"/><line x1="14" y1="14" x2="0" y2="0" stroke="#5a0000" stroke-width="1.8"/><line x1="7" y1="0" x2="7" y2="14" stroke="#5a0000" stroke-width="1.8"/><line x1="0" y1="7" x2="14" y2="7" stroke="#5a0000" stroke-width="1.8"/></svg>`;
+  return'';
+}
+function cycleStabilityBox(sdKey,idx){
+  const sd=SECTION_DEFS.find(s=>s.key===sdKey);if(!sd)return;
+  const sk=sd.state_key||sd.key;
+  if(!STATE[sk]||idx>=STATE[sk].length)return;
+  STATE[sk][idx]=STABILITY_CYCLE[STATE[sk][idx]||'']||'';
+  renderStabilityTrack(sd);autoSave();
+}
+
+// ── Shared custom track helpers ───────────────────────────────────────────────
+// Sync track array length to current max (same pattern as syncHealthTrackLength).
+function _syncCustomTrack(sk,max){
+  if(!Array.isArray(STATE[sk]))STATE[sk]=[];
+  while(STATE[sk].length<max)STATE[sk].push('');
+  if(STATE[sk].length>max)STATE[sk]=STATE[sk].slice(0,max);
+}
+// Clear all marks on a clarity or stability track.
+function clearCustomTrack(sk,sdKey){
+  if(!Array.isArray(STATE[sk]))return;
+  STATE[sk]=STATE[sk].map(()=>'');
+  const sd=SECTION_DEFS.find(s=>s.key===sdKey);
+  if(!sd)return;
+  if(sd.type==='clarity-track')renderClarityTrack(sd);
+  else if(sd.type==='stability-track')renderStabilityTrack(sd);
+  autoSave();
+}
 
 function renderWpTracker(){
   const max=Math.max(0,getWpMax()),spent=Math.min(max,STATE.willpower_spent||0),avail=max-spent;
@@ -6539,6 +6717,8 @@ function stAddToScene(sourceId,countVal){
       health_track:Array(healthMax).fill(''),
       willpower_spent:0,
       resource_tracks:_stGetSourceResourceTracks(src),
+      clarity_track:_stGetCustomTrack(src,'clarity-track'),
+      stability_track:_stGetCustomTrack(src,'stability-track'),
       tilts:[],
       conditions:[],
       weapons:JSON.parse(JSON.stringify(src.weapons||[])),
@@ -6612,6 +6792,16 @@ function _stGetEnabledResourceTracks(inst,src){
   return result;
 }
 
+// Returns a fresh empty track array for a custom track section (clarity/stability),
+// sized to match the source character's max override or default 5.
+function _stGetCustomTrack(src,type){
+  const sd=SECTION_DEFS.find(s=>s.type===type);
+  if(!sd)return[];
+  const sk=sd.state_key||sd.key;
+  const max=(src&&src[sk+'_max_override']!=null)?src[sk+'_max_override']:5;
+  return Array(Math.max(1,max)).fill('');
+}
+
 // ── Instance mutations ────────────────────────────────────────────────────────
 function stDeleteInstance(iid){
   const scene=_stGetScene().filter(i=>i.id!==iid);
@@ -6639,6 +6829,22 @@ function stCycleHealth(iid,idx){
   });
   _stRefreshCardTracks(iid);
   _stRefreshDerived(iid);
+}
+function stCycleClarityBox(iid,idx){
+  _stMutate(iid,inst=>{
+    if(!inst.clarity_track)inst.clarity_track=[];
+    if(idx<inst.clarity_track.length)
+      inst.clarity_track[idx]=CLARITY_CYCLE[inst.clarity_track[idx]||'']||'';
+  });
+  _stRefreshCardTracks(iid);
+}
+function stCycleStabilityBox(iid,idx){
+  _stMutate(iid,inst=>{
+    if(!inst.stability_track)inst.stability_track=[];
+    if(idx<inst.stability_track.length)
+      inst.stability_track[idx]=STABILITY_CYCLE[inst.stability_track[idx]||'']||'';
+  });
+  _stRefreshCardTracks(iid);
 }
 function stToggleWp(iid,idx){
   _stMutate(iid,inst=>{
@@ -6755,6 +6961,23 @@ function stAdjEssence(iid,delta){
 }
 
 
+// Re-render body track boxes (called from card body onclick handlers so the
+// body display stays in sync when clicking there rather than the header).
+function _stRefreshBodyTrack(iid,trackType){
+  const scene=_stGetScene();
+  const inst=scene.find(i=>i.id===iid);if(!inst)return;
+  const el=document.getElementById(`st-body-${trackType}-${iid}`);if(!el)return;
+  if(trackType==='clarity'){
+    el.innerHTML=(inst.clarity_track||[]).map((s,i)=>
+      `<div class="st-hbox" onclick="stCycleClarityBox('${iid}',${i});_stRefreshBodyTrack('${iid}','clarity')">${_clarityBoxSVG(s)}</div>`
+    ).join('');
+  } else if(trackType==='stability'){
+    el.innerHTML=(inst.stability_track||[]).map((s,i)=>
+      `<div class="st-hbox" onclick="stCycleStabilityBox('${iid}',${i});_stRefreshBodyTrack('${iid}','stability')">${_stabilityBoxSVG(s)}</div>`
+    ).join('');
+  }
+}
+
 function _stRefreshCardTracks(iid){
   const scene=_stGetScene();
   const inst=scene.find(i=>i.id===iid);if(!inst)return;
@@ -6794,6 +7017,34 @@ function _stRefreshCardTracks(iid){
       `<span class="st-rsquare${on?' on':''}" onclick="stToggleResource('${iid}','${sk}',${i})"></span>`
     ).join('');
   });
+  // Clarity track
+  const clEl=document.getElementById(`st-clarity-${iid}`);
+  if(clEl&&src){
+    const clSd=SECTION_DEFS.find(s=>s.type==='clarity-track');
+    const cfg=src.sectionConfig||{};
+    if(clSd&&cfg[clSd.key]!==false){
+      const max=src[(clSd.state_key||clSd.key)+'_max_override']!=null?src[(clSd.state_key||clSd.key)+'_max_override']:5;
+      const clTrack=inst.clarity_track||[];
+      clEl.innerHTML=Array.from({length:max},(_,i)=>{
+        const s=clTrack[i]||'';
+        return `<div class="st-hbox" onclick="stCycleClarityBox('${iid}',${i})">${_clarityBoxSVG(s)}</div>`;
+      }).join('');
+    }
+  }
+  // Stability track
+  const stbEl=document.getElementById(`st-stability-${iid}`);
+  if(stbEl&&src){
+    const stbSd=SECTION_DEFS.find(s=>s.type==='stability-track');
+    const cfg=src.sectionConfig||{};
+    if(stbSd&&cfg[stbSd.key]!==false){
+      const max=src[(stbSd.state_key||stbSd.key)+'_max_override']!=null?src[(stbSd.state_key||stbSd.key)+'_max_override']:5;
+      const stbTrack=inst.stability_track||[];
+      stbEl.innerHTML=Array.from({length:max},(_,i)=>{
+        const s=stbTrack[i]||'';
+        return `<div class="st-hbox" onclick="stCycleStabilityBox('${iid}',${i})">${_stabilityBoxSVG(s)}</div>`;
+      }).join('');
+    }
+  }
 }
 
 // Build a labelled items group with a top-border divider for the card header.
@@ -7225,6 +7476,48 @@ function _stRenderCardBody(iid,inst,src){
     const hasAttrs9=SECTION_DEFS.some(s=>s.type==='attributes-9'&&cfg[s.key]!==false);
     const hasAttrs3=SECTION_DEFS.some(s=>s.type==='attributes-3'&&cfg[s.key]!==false);
 
+    // ── Clarity track (Changeling) ─────────────────────────────────────────
+    const clSd=SECTION_DEFS.find(s=>s.type==='clarity-track');
+    if(clSd&&cfg[clSd.key]!==false){
+      const clSk=clSd.state_key||clSd.key;
+      const clMax=src[clSk+'_max_override']!=null?src[clSk+'_max_override']:5;
+      if(!Array.isArray(inst.clarity_track)||inst.clarity_track.length!==clMax)
+        inst.clarity_track=Array(Math.max(1,clMax)).fill('');
+      const boxes=Array.from({length:clMax},(_,i)=>{
+        const s=(inst.clarity_track||[])[i]||'';
+        return `<div class="st-hbox" onclick="stCycleClarityBox('${iid}',${i});_stRefreshBodyTrack('${iid}','clarity')">${_clarityBoxSVG(s)}</div>`;
+      }).join('');
+      html+=`<div class="st-body-section">
+        <div class="st-body-hd" onclick="_stToggleBodySection(this)">
+          <span>Clarity</span><span class="st-body-chevron">▼</span>
+        </div>
+        <div class="st-body-content">
+          <div id="st-body-clarity-${iid}" style="display:flex;flex-wrap:wrap;gap:3px;padding:4px 0">${boxes}</div>
+        </div>
+      </div>`;
+    }
+
+    // ── Stability track (Deviant) ──────────────────────────────────────────
+    const stbSd=SECTION_DEFS.find(s=>s.type==='stability-track');
+    if(stbSd&&cfg[stbSd.key]!==false){
+      const stbSk=stbSd.state_key||stbSd.key;
+      const stbMax=src[stbSk+'_max_override']!=null?src[stbSk+'_max_override']:5;
+      if(!Array.isArray(inst.stability_track)||inst.stability_track.length!==stbMax)
+        inst.stability_track=Array(Math.max(1,stbMax)).fill('');
+      const boxes=Array.from({length:stbMax},(_,i)=>{
+        const s=(inst.stability_track||[])[i]||'';
+        return `<div class="st-hbox" onclick="stCycleStabilityBox('${iid}',${i});_stRefreshBodyTrack('${iid}','stability')">${_stabilityBoxSVG(s)}</div>`;
+      }).join('');
+      html+=`<div class="st-body-section">
+        <div class="st-body-hd" onclick="_stToggleBodySection(this)">
+          <span>Stability</span><span class="st-body-chevron">▼</span>
+        </div>
+        <div class="st-body-content">
+          <div id="st-body-stability-${iid}" style="display:flex;flex-wrap:wrap;gap:3px;padding:4px 0">${boxes}</div>
+        </div>
+      </div>`;
+    }
+
     if(hasAttrs9){
       const maxD=src.attrMaxDots||5;
       const _dots=(val)=>{
@@ -7555,6 +7848,52 @@ function stRenderPanel(){
       `<span class="st-tsquare${i<wpAvail?' on':''}" onclick="stToggleWp('${inst.id}',${i})"></span>`
     ).join('');
 
+    // ── Clarity track (Changeling) ─────────────────────────────────────────
+    let clarityHTML='';
+    {
+      const clSd=SECTION_DEFS.find(s=>s.type==='clarity-track');
+      if(clSd&&src&&cfg[clSd.key]!==false){
+        const clSk=clSd.state_key||clSd.key;
+        const clMax=src[clSk+'_max_override']!=null?src[clSk+'_max_override']:5;
+        if(!Array.isArray(inst.clarity_track)||inst.clarity_track.length!==clMax){
+          inst.clarity_track=Array(Math.max(1,clMax)).fill('');
+          const scene2=_stGetScene();const inst2=scene2.find(i=>i.id===inst.id);
+          if(inst2){inst2.clarity_track=inst.clarity_track;_stSaveScene(scene2);}
+        }
+        const boxes=Array.from({length:clMax},(_,i)=>{
+          const s=(inst.clarity_track||[])[i]||'';
+          return `<div class="st-hbox" onclick="stCycleClarityBox('${inst.id}',${i})">${_clarityBoxSVG(s)}</div>`;
+        }).join('');
+        clarityHTML=`<div class="st-card-track-grp">
+          <span class="st-card-track-lbl">Clarity</span>
+          <span class="st-card-track-row" id="st-clarity-${inst.id}">${boxes}</span>
+        </div>`;
+      }
+    }
+
+    // ── Stability track (Deviant) ──────────────────────────────────────────
+    let stabilityHTML='';
+    {
+      const stbSd=SECTION_DEFS.find(s=>s.type==='stability-track');
+      if(stbSd&&src&&cfg[stbSd.key]!==false){
+        const stbSk=stbSd.state_key||stbSd.key;
+        const stbMax=src[stbSk+'_max_override']!=null?src[stbSk+'_max_override']:5;
+        if(!Array.isArray(inst.stability_track)||inst.stability_track.length!==stbMax){
+          inst.stability_track=Array(Math.max(1,stbMax)).fill('');
+          const scene2=_stGetScene();const inst2=scene2.find(i=>i.id===inst.id);
+          if(inst2){inst2.stability_track=inst.stability_track;_stSaveScene(scene2);}
+        }
+        const boxes=Array.from({length:stbMax},(_,i)=>{
+          const s=(inst.stability_track||[])[i]||'';
+          return `<div class="st-hbox" onclick="stCycleStabilityBox('${inst.id}',${i})">${_stabilityBoxSVG(s)}</div>`;
+        }).join('');
+        stabilityHTML=`<div class="st-card-track-grp">
+          <span class="st-card-track-lbl">Stability</span>
+          <span class="st-card-track-row" id="st-stability-${inst.id}">${boxes}</span>
+        </div>`;
+      }
+    }
+
     // ── All enabled resource tracks (data-driven, all splats) ─────────────
     // Migrate legacy single resource_track to resource_tracks map on first render
     if(!inst.resource_tracks&&src){
@@ -7656,6 +7995,8 @@ function stRenderPanel(){
               <span class="st-card-track-lbl">Willpower</span>
               <span class="st-card-track-row" id="st-wp-${inst.id}">${wpSquares}</span>
             </div>
+            ${clarityHTML}
+            ${stabilityHTML}
             ${allResourceTrackGroups}
             ${essenceHTML}
           </div>
