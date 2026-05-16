@@ -46,10 +46,10 @@ async function loadDB(){
       if(validation.ok){
         d=fssData;
       }else{
-        showStatus('Folder data.json is invalid ('+validation.reason+') — using built-in library.',5000);
+        showWarning('Folder data.json is invalid ('+validation.reason+') — using built-in library. Check your data folder.');
       }
     }else{
-      showStatus('Could not read folder data.json — using built-in library.',4000);
+      showWarning('Could not read folder data.json — using built-in library. Check your data folder.');
     }
   }
   if(!d)d=await fetch('./data.json').then(r=>r.json());
@@ -4869,9 +4869,32 @@ function importSupplement(input){
   reader.readAsText(file);input.value='';
 }
 function showStatus(msg,duration){
-  const el=document.getElementById('statusBar');el.textContent=msg;el.classList.add('show');
-  clearTimeout(el._hideTimer);
-  el._hideTimer=setTimeout(()=>el.classList.remove('show'),duration||2500);
+  // Inline status bar — retained for backward compatibility and print context
+  const el=document.getElementById('statusBar');
+  if(el){el.textContent=msg;el.classList.add('show');clearTimeout(el._hideTimer);el._hideTimer=setTimeout(()=>el.classList.remove('show'),duration||2500);}
+  // Fixed toast — always visible regardless of scroll position
+  const toast=document.getElementById('toast');
+  if(toast){
+    toast.textContent=msg;
+    toast.classList.add('show');
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer=setTimeout(()=>toast.classList.remove('show'),duration||2500);
+  }
+}
+
+// showWarning — persistent fixed banner requiring manual dismiss.
+// Use for conditions that need user attention and may not be noticed
+// if auto-dismissed (e.g. data.json fallback, unrecoverable FSS errors).
+function showWarning(msg){
+  const banner=document.getElementById('warningBanner');
+  const msgEl=document.getElementById('warningBannerMsg');
+  if(!banner||!msgEl)return;
+  msgEl.textContent=msg;
+  banner.classList.add('show');
+}
+function dismissWarning(){
+  const banner=document.getElementById('warningBanner');
+  if(banner)banner.classList.remove('show');
 }
 
 // ── Save list resize handle ───────────────────────────────────────────────────
@@ -5036,18 +5059,20 @@ async function _fssMaybeReconnectPrompt(){
     }catch(e){}
   }
   if(!pending.length)return;
-  // Show a persistent status bar message until the user acts
-  const el=document.getElementById('statusBar');
-  if(!el)return;
-  el.textContent='Folder connection needs approval — click to reconnect.';
-  el.classList.add('show');
-  el.style.cursor='pointer';
-  el._fssReconnect=true;
-  el.onclick=async()=>{
-    if(!el._fssReconnect)return;
-    el.onclick=null;el._fssReconnect=false;el.style.cursor='';
+  // Show via the fixed toast so it's visible regardless of scroll position.
+  // Override auto-dismiss — this stays until the user clicks.
+  const toast=document.getElementById('toast');
+  if(!toast)return;
+  toast.textContent='Folder connection needs approval — click to reconnect.';
+  toast.classList.add('show');
+  clearTimeout(toast._hideTimer);
+  toast.style.cursor='pointer';
+  toast._fssReconnect=true;
+  toast.onclick=async()=>{
+    if(!toast._fssReconnect)return;
+    toast.onclick=null;toast._fssReconnect=false;toast.style.cursor='';
+    toast.classList.remove('show');
     await _fssReconnectAll(pending);
-    el.classList.remove('show');
     _fssUpdateUI();
     loadSaves();
   };
@@ -5066,10 +5091,17 @@ async function _fssReconnectAll(pending){
 }
 
 // ── Character file operations ─────────────────────────────────────────────────
+// _fssSafeFilename — sanitises a character name for use as a filename,
+// mirroring the logic used by exportSheet(). Falls back to the character id.
+function _fssSafeFilename(state){
+  const name=(state.name||'').replace(/[^a-z0-9_\-\s]/gi,'').trim();
+  return(name||state.id)+'.json';
+}
+
 async function _fssWriteChar(state){
   if(!_fssCharsHandle)return false;
   try{
-    const filename=state.id+'.json';
+    const filename=_fssSafeFilename(state);
     const fileHandle=await _fssCharsHandle.getFileHandle(filename,{create:true});
     const writable=await fileHandle.createWritable();
     await writable.write(JSON.stringify(state,null,2));
@@ -5079,12 +5111,20 @@ async function _fssWriteChar(state){
 }
 async function _fssReadChar(id){
   if(!_fssCharsHandle)return null;
+  // Scan all JSON files to find the one with matching id.
+  // Cannot derive filename from id since character names can change.
   try{
-    const fileHandle=await _fssCharsHandle.getFileHandle(id+'.json');
-    const file=await fileHandle.getFile();
-    const text=await file.text();
-    return JSON.parse(text);
-  }catch(e){return null;}
+    for await(const [name,handle] of _fssCharsHandle.entries()){
+      if(!name.endsWith('.json'))continue;
+      try{
+        const file=await handle.getFile();
+        const text=await file.text();
+        const parsed=JSON.parse(text);
+        if(parsed&&parsed.id===id)return parsed;
+      }catch(e){}
+    }
+  }catch(e){}
+  return null;
 }
 async function _fssReadAllChars(){
   if(!_fssCharsHandle)return[];
@@ -5114,7 +5154,21 @@ async function _fssReadAllChars(){
 }
 async function _fssDeleteChar(id){
   if(!_fssCharsHandle)return;
-  try{await _fssCharsHandle.removeEntry(id+'.json');}catch(e){}
+  // Find by scanning, then remove by filename
+  try{
+    for await(const [name,handle] of _fssCharsHandle.entries()){
+      if(!name.endsWith('.json'))continue;
+      try{
+        const file=await handle.getFile();
+        const text=await file.text();
+        const parsed=JSON.parse(text);
+        if(parsed&&parsed.id===id){
+          await _fssCharsHandle.removeEntry(name);
+          return;
+        }
+      }catch(e){}
+    }
+  }catch(e){}
 }
 
 // ── Data library file operations ──────────────────────────────────────────────
@@ -5262,7 +5316,7 @@ async function _fssUpdateUI(){
       idbKey:IDB_KEY_DATA,
       handle:_fssDataHandle,
       btnIds:['fssDataBtn','fssDataBtnDrawer'],
-      hintIds:[],
+      hintIds:['fssDataHint','fssDataHintDrawer'],
       connectFn:'fssConnectData()',
       disconnectFn:'fssDisconnectData()',
       label:'Connect data.json folder',
@@ -5295,10 +5349,12 @@ async function _fssUpdateUI(){
       const btn=document.getElementById(btnId);
       if(!btn)continue;
       if(!supported){
-        btn.disabled=true;
+        btn.disabled=false;
         btn.textContent='📁 '+cfg.label;
-        btn.title='File system folders require Chrome or Edge.';
+        btn.title='';
+        btn.onclick=_fssUnsupportedPopup;
         btn.className=btn.className.replace(/\s*fss-btn-connected|\s*fss-btn-warn/g,'');
+        btn.classList.add('fss-btn-unsupported');
         continue;
       }
       btn.disabled=false;
@@ -5334,12 +5390,16 @@ async function _fssUpdateUI(){
       }
     }
 
-    // Update hints for chars and supp
+    // Update hints
     for(const hintId of cfg.hintIds){
       const hint=document.getElementById(hintId);
       if(!hint)continue;
       if(cfg.handle){
-        hint.textContent='Connected: '+cfg.handle.name;
+        if(cfg.idbKey===IDB_KEY_DATA){
+          hint.textContent='Connected: '+cfg.handle.name+' (reload page to apply)';
+        }else{
+          hint.textContent='Connected: '+cfg.handle.name;
+        }
         hint.classList.add('fss-hint-active');
       }else{
         hint.textContent='';
@@ -5348,7 +5408,21 @@ async function _fssUpdateUI(){
     }
   }
 }
-// ── End FSS ───────────────────────────────────────────────────────────────────
+// ── FSS unsupported popup ─────────────────────────────────────────────────────
+function _fssUnsupportedPopup(){
+  const existing=document.getElementById('fssUnsupportedModal');
+  if(existing){existing.remove();return;}
+  const modal=document.createElement('div');
+  modal.id='fssUnsupportedModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;max-width:360px;font-family:sans-serif;color:var(--text)">
+    <div style="font-weight:700;margin-bottom:.75rem;font-size:1rem">Folder storage not available</div>
+    <div style="font-size:.85rem;line-height:1.5;color:var(--faint);margin-bottom:1rem">The File System Storage feature requires a browser that supports the File System Access API. Currently supported browsers are <strong style="color:var(--text)">Chrome</strong> and <strong style="color:var(--text)">Edge</strong>.<br><br>Your characters and data are still saved safely in browser storage.</div>
+    <button onclick="document.getElementById('fssUnsupportedModal').remove()" style="width:100%">OK</button>
+  </div>`;
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+}
 
 _fssRestoreHandles().then(()=>{
   loadDB().then(()=>{

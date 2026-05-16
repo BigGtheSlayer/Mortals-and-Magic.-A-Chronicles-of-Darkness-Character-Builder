@@ -280,6 +280,7 @@
       <div class="io-row fss-row">
         <button id="fssDataBtn" onclick="fssConnectData()">📁 Connect data.json folder</button>
       </div>
+      <div id="fssDataHint" class="hint fss-hint"></div>
       <div class="io-row fss-row">
         <button id="fssSuppBtn" onclick="fssConnectSupp()">📁 Connect supplement folder</button>
       </div>
@@ -429,6 +430,7 @@
           <div class="io-row fss-row">
             <button id="fssDataBtnDrawer" onclick="fssConnectData()">📁 Connect data.json folder</button>
           </div>
+          <div id="fssDataHintDrawer" class="hint fss-hint"></div>
           <div class="io-row fss-row">
             <button id="fssSuppBtnDrawer" onclick="fssConnectSupp()">📁 Connect supplement folder</button>
           </div>
@@ -461,5 +463,14 @@
   </div>
 </div>
 <!-- ── End Storyteller Mode help modal ───────────────────────────────────── -->
+<!-- ── Fixed toast — visible regardless of scroll position ───────────────── -->
+<div id="toast"></div>
+
+<!-- ── Persistent warning banner — requires manual dismiss ───────────────── -->
+<div id="warningBanner">
+  <span id="warningBannerMsg"></span>
+  <button onclick="dismissWarning()" title="Dismiss">✕</button>
+</div>
+
 </body>
 </html>
