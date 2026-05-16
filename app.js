@@ -37,7 +37,22 @@ let STATE={},currentSaveId=null;
 // config panel. Called once on page load. The app is inert until this resolves.
 
 async function loadDB(){
-  const d=await fetch('./data.json').then(r=>r.json());
+  // ── Source data.json — FSS folder takes priority over server fetch ────────
+  let d=null;
+  if(_fssDataHandle){
+    const fssData=await _fssReadDataJson();
+    if(fssData){
+      const validation=_fssValidateDataJson(fssData);
+      if(validation.ok){
+        d=fssData;
+      }else{
+        showStatus('Folder data.json is invalid ('+validation.reason+') — using built-in library.',5000);
+      }
+    }else{
+      showStatus('Could not read folder data.json — using built-in library.',4000);
+    }
+  }
+  if(!d)d=await fetch('./data.json').then(r=>r.json());
   // Sort content lists alphabetically (preserve_order lists are left as-is)
   const preserve=new Set((d.section_definitions||[]).filter(s=>s.db_key&&s.preserve_order).map(s=>s.db_key));
   (d.section_definitions||[]).filter(s=>s.db_key&&!preserve.has(s.db_key)).forEach(s=>{
@@ -49,17 +64,24 @@ async function loadDB(){
     SEC_DEFAULTS[sd.key]=sd.default||false;SECTION_MAP[sd.key]=sd;
     if(sd.db_key&&!(sd.db_key in DB))DB[sd.db_key]=d[sd.db_key]||[];
   });
-  // ── Merge supplemental library from localStorage ─────────────────────────
-  // Supplement entries override base entries of the same name.
-  const rawSupp=_getSupplementRaw();
-  Object.keys(rawSupp).forEach(k=>{
-    if(Array.isArray(rawSupp[k])&&rawSupp[k].length){
-      if(!DB[k])DB[k]=[];
-      const suppNames=new Set(rawSupp[k].map(e=>e.name));
-      DB[k]=DB[k].filter(e=>!suppNames.has(e.name));
-      DB[k]=[...DB[k],...rawSupp[k]];
-    }
-  });
+  // ── Merge supplemental library — localStorage first, then FSS (FSS wins) ──
+  // Merge order: base data.json → localStorage supplement → FSS supplement.
+  // Later sources win on name conflict within the same db_key.
+  const _mergeSupp=(suppObj)=>{
+    Object.keys(suppObj).forEach(k=>{
+      if(Array.isArray(suppObj[k])&&suppObj[k].length){
+        if(!DB[k])DB[k]=[];
+        const suppNames=new Set(suppObj[k].map(e=>e.name));
+        DB[k]=DB[k].filter(e=>!suppNames.has(e.name));
+        DB[k]=[...DB[k],...suppObj[k]];
+      }
+    });
+  };
+  _mergeSupp(_getSupplementRaw());
+  // FSS supplement — read synchronously from the module-level handle if available.
+  // _fssReadSuppJson is async; we await it here since loadDB is already async.
+  const fssSuppRaw=await _fssReadSuppJson();
+  if(fssSuppRaw&&typeof fssSuppRaw==='object')_mergeSupp(fssSuppRaw);
   // Re-sort after merge (preserve_order lists are excluded)
   SECTION_DEFS.filter(s=>s.db_key&&!preserve.has(s.db_key)).forEach(s=>{
     if(Array.isArray(DB[s.db_key]))DB[s.db_key].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
@@ -3801,6 +3823,20 @@ const LS_SUPPLEMENT='mortals_plus_supplement';
 const LS_LIB_SORT='mortals_plus_lib_sort';
 const LS_SAVE_LIST_H='mortals_plus_save_list_h';
 
+// ── File System Save (FSS) constants — v35 ───────────────────────────────────
+// IndexedDB is used to persist FileSystemDirectoryHandles between sessions.
+// localStorage cannot store handles (they are not JSON-serialisable).
+const IDB_DB_NAME='mortals_plus_fss';
+const IDB_STORE='handles';
+const IDB_KEY_CHARS='fss_chars_dir';
+const IDB_KEY_DATA='fss_data_dir';
+const IDB_KEY_SUPP='fss_supp_dir';
+
+// Live handles for the current session. Null means not connected.
+let _fssCharsHandle=null;
+let _fssDataHandle=null;
+let _fssSuppHandle=null;
+
 // ── Theme accent colours for save list badges ─────────────────────────────────
 // Maps theme keys to their accent CSS variable value for inline badge display.
 const THEME_ACCENTS={
@@ -3919,12 +3955,23 @@ function lsGetIndex(){
   try{const s=localStorage.getItem(LS_INDEX);return s?JSON.parse(s):[];}catch(e){return[];}
 }
 
-function saveCharacter(){
+async function saveCharacter(){
   if(!STATE.name&&!STATE.id){showStatus('Nothing to save — load or create a sheet first.');return;}
   if(!STATE.id)STATE.id=_uuid();
   currentSaveId=STATE.id;
+
+  // ── Dual write: FSS folder first, localStorage second ────────────────────
+  let fssSaved=false;
+  let lsSaved=false;
+
+  if(_fssCharsHandle){
+    fssSaved=await _fssWriteChar(STATE);
+    if(!fssSaved)showStatus('Folder save failed — saving to browser only. Check your folder connection.',4000);
+  }
+
   try{
     localStorage.setItem(LS_PREFIX+STATE.id,JSON.stringify(STATE));
+    lsSaved=true;
     _autoSaveWarnActive=false;
     const idx=lsGetIndex();
     const existing=idx.findIndex(s=>s.id===STATE.id);
@@ -3932,11 +3979,24 @@ function saveCharacter(){
     if(existing>=0)idx[existing]=entry;else idx.push(entry);
     idx.sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
     lsSaveIndex(idx);
-    showStatus('Saved.');loadSaves();
+    if(fssSaved){
+      showStatus('Saved.');
+    }else if(!_fssCharsHandle){
+      showStatus('Saved.');
+    }
   }catch(e){
-    if(_isQuotaError(e))showStatus(LS_STORAGE_FULL_MSG,4000);
-    else showStatus('Save failed — unexpected error.');
+    if(_isQuotaError(e)){
+      if(fssSaved){
+        showStatus('Saved to folder. Browser storage is full — browser backup unavailable.',4000);
+      }else{
+        showStatus(LS_STORAGE_FULL_MSG,4000);
+      }
+    }else{
+      if(!fssSaved)showStatus('Save failed — unexpected error.');
+      else showStatus('Saved to folder. Browser save failed — unexpected error.',4000);
+    }
   }
+  loadSaves();
 }
 
 // autoSave — debounced silent save. Only fires for sheets that already have a
@@ -3950,7 +4010,10 @@ let _autoSaveWarnActive=false;
 function autoSave(){
   if(!currentSaveId||!STATE.id)return;
   clearTimeout(_autoSaveTimer);
-  _autoSaveTimer=setTimeout(()=>{
+  _autoSaveTimer=setTimeout(async()=>{
+    // FSS write first if connected
+    if(_fssCharsHandle)await _fssWriteChar(STATE);
+    // localStorage write as fallback
     try{
       localStorage.setItem(LS_PREFIX+STATE.id,JSON.stringify(STATE));
       _autoSaveWarnActive=false;
@@ -3961,8 +4024,13 @@ function autoSave(){
       lsSaveIndex(idx);
     }catch(e){
       if(_isQuotaError(e)){
-        if(!_autoSaveWarnActive){_autoSaveWarnActive=true;showStatus(LS_STORAGE_FULL_MSG,4000);}
-      } else {
+        if(_fssCharsHandle){
+          // LS full but FSS is saving — warn once, non-blocking
+          if(!_autoSaveWarnActive){_autoSaveWarnActive=true;showStatus('Browser storage is full — saving to folder only.',4000);}
+        }else{
+          if(!_autoSaveWarnActive){_autoSaveWarnActive=true;showStatus(LS_STORAGE_FULL_MSG,4000);}
+        }
+      }else{
         showStatus('Auto-save failed — unexpected error.');
       }
     }
@@ -3989,8 +4057,20 @@ function _buildSaveItemHTML(s,folders){
     <button class="sm danger" onclick="event.stopPropagation();deleteSave('${s.id}')" title="Delete">Del</button>
   </div>`;
 }
-function loadSaves(){
-  const rawList=lsGetIndex().map(_patchIndexEntry);
+async function loadSaves(){
+  const lsList=lsGetIndex().map(_patchIndexEntry);
+  // Merge FSS characters — FSS wins on name conflict
+  let rawList=lsList;
+  if(_fssCharsHandle){
+    const fssEntries=await _fssReadAllChars();
+    if(fssEntries.length){
+      // Start with LS list, replace any entries whose name matches an FSS entry
+      const fssNames=new Set(fssEntries.map(e=>(e.name||'').toLowerCase()));
+      const filtered=lsList.filter(s=>!fssNames.has((s.name||'').toLowerCase()));
+      rawList=[...filtered,...fssEntries];
+      rawList.sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+    }
+  }
   const folders=lsGetFolders();
   const f=_saveListFilter;
   const list=f?rawList.filter(s=>{
@@ -4007,6 +4087,9 @@ function loadSaves(){
   const lsUsedMB=(lsUsed/1048576).toFixed(1);
   const lsMaxMB='5.0';
   const barColour=lsPct>80?'var(--danger)':lsPct>60?'var(--info)':'var(--accent)';
+  const fssRow=_fssCharsHandle
+    ?`<div style="display:flex;justify-content:space-between;font-family:sans-serif;font-size:.68rem;color:var(--info);margin-top:4px"><span>📁 Folder connected</span><span>${_fssCharsHandle.name}</span></div>`
+    :'';
   const storageHTML=`<div style="margin-bottom:10px">
     <div style="display:flex;justify-content:space-between;font-family:sans-serif;font-size:.68rem;color:var(--faint);margin-bottom:3px">
       <span>Browser storage</span><span>${lsUsedMB} / ${lsMaxMB} MB</span>
@@ -4014,6 +4097,7 @@ function loadSaves(){
     <div style="height:4px;background:var(--border-light);border-radius:2px;overflow:hidden">
       <div style="height:100%;width:${lsPct}%;background:${barColour};border-radius:2px;transition:width .3s"></div>
     </div>
+    ${fssRow}
   </div>`;
 
   // ── Save items with folder grouping ───────────────────────────────────────
@@ -4151,14 +4235,21 @@ function _showTagInput(id,btn){
   // Show suggestions immediately if tags exist
   if(allTags.length)renderDrop('');
 }
-function loadCharacter(id){
+async function loadCharacter(id){
   try{
-    const raw=localStorage.getItem(LS_PREFIX+id);
-    if(!raw){showStatus('Character not found.');return;}
-    STATE=JSON.parse(raw);currentSaveId=id;patchState();showEditor();renderEditor();loadSaves();
+    let state=null;
+    // FSS folder takes priority if connected
+    if(_fssCharsHandle)state=await _fssReadChar(id);
+    // Fall back to localStorage
+    if(!state){
+      const raw=localStorage.getItem(LS_PREFIX+id);
+      if(raw)state=JSON.parse(raw);
+    }
+    if(!state){showStatus('Character not found.');return;}
+    STATE=state;currentSaveId=id;patchState();showEditor();renderEditor();loadSaves();
   }catch(e){showStatus('Load failed: '+e.message);}
 }
-function deleteSave(id){
+async function deleteSave(id){
   const idx=lsGetIndex();
   const entry=idx.find(s=>s.id===id);
   const name=entry?entry.name||'Unnamed':'this character';
@@ -4168,6 +4259,7 @@ function deleteSave(id){
   const hasInstances=scene.some(inst=>inst.source_id===id);
   if(hasInstances&&!confirm('This character has active instances in the current Storyteller scene. Delete anyway?'))return;
   localStorage.removeItem(LS_PREFIX+id);
+  if(_fssCharsHandle)await _fssDeleteChar(id);
   const newIdx=idx.filter(s=>s.id!==id);
   lsSaveIndex(newIdx);
   if(id===currentSaveId){currentSaveId=null;}
@@ -4247,6 +4339,8 @@ function _saveSupplementRaw(obj){
     if(_isQuotaError(e))showStatus(LS_STORAGE_FULL_MSG,4000);
     else showStatus('Supplement save failed.');
   }
+  // FSS dual-write — fire-and-forget; failures are silent (LS is the primary)
+  if(_fssSuppHandle)_fssWriteSuppJson(obj).catch(()=>{});
 }
 // _suppGetArray — returns the supplement entries for a given db_key
 function _suppGetArray(dbKey){
@@ -4828,7 +4922,441 @@ function showStatus(msg,duration){
 })();
 
 if(window.matchMedia('(pointer:coarse)').matches)document.body.classList.add('touch-device');
-loadDB();loadSaves();
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FILE SYSTEM SAVE (FSS) — v35
+// Allows users to connect device folders for character and library storage.
+// Uses the File System Access API (Chrome/Edge only) for folder handles.
+// Handles are persisted in IndexedDB between sessions.
+// All saves write to both FSS folder and localStorage (dual-write fallback).
+// Users who connect no folders see zero behaviour change.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── IndexedDB helpers ─────────────────────────────────────────────────────────
+function _idbOpen(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(IDB_DB_NAME,1);
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains(IDB_STORE))db.createObjectStore(IDB_STORE);
+    };
+    req.onsuccess=e=>resolve(e.target.result);
+    req.onerror=e=>reject(e.target.error);
+  });
+}
+async function _idbGet(key){
+  try{
+    const db=await _idbOpen();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(IDB_STORE,'readonly');
+      const req=tx.objectStore(IDB_STORE).get(key);
+      req.onsuccess=e=>resolve(e.target.result||null);
+      req.onerror=e=>reject(e.target.error);
+    });
+  }catch(e){return null;}
+}
+async function _idbSet(key,value){
+  try{
+    const db=await _idbOpen();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(IDB_STORE,'readwrite');
+      const req=tx.objectStore(IDB_STORE).put(value,key);
+      req.onsuccess=()=>resolve(true);
+      req.onerror=e=>reject(e.target.error);
+    });
+  }catch(e){return false;}
+}
+async function _idbDelete(key){
+  try{
+    const db=await _idbOpen();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(IDB_STORE,'readwrite');
+      const req=tx.objectStore(IDB_STORE).delete(key);
+      req.onsuccess=()=>resolve(true);
+      req.onerror=e=>reject(e.target.error);
+    });
+  }catch(e){return false;}
+}
+
+// ── FSS support detection ─────────────────────────────────────────────────────
+function fssSupported(){return typeof window.showDirectoryPicker==='function';}
+
+// ── Permission helper ─────────────────────────────────────────────────────────
+// Returns true if handle has (or is granted) readwrite permission.
+// Only call from a user gesture context — browser may show a prompt.
+async function _fssVerifyPermission(handle){
+  try{
+    const perm=await handle.queryPermission({mode:'readwrite'});
+    if(perm==='granted')return true;
+    const req=await handle.requestPermission({mode:'readwrite'});
+    return req==='granted';
+  }catch(e){return false;}
+}
+
+// ── Restore handles at startup ────────────────────────────────────────────────
+// Reads stored handles from IndexedDB. Checks permission state without prompting.
+// Sets module-level variables for handles that are already granted.
+// Handles in 'prompt' state are stored but not set — _fssMaybeReconnectPrompt()
+// will nudge the user to click once to restore them.
+async function _fssRestoreHandles(){
+  if(!fssSupported())return;
+  const keys=[
+    [IDB_KEY_CHARS,'_fssCharsHandle'],
+    [IDB_KEY_DATA,'_fssDataHandle'],
+    [IDB_KEY_SUPP,'_fssSuppHandle'],
+  ];
+  for(const [idbKey,varName] of keys){
+    try{
+      const handle=await _idbGet(idbKey);
+      if(!handle)continue;
+      const perm=await handle.queryPermission({mode:'readwrite'});
+      if(perm==='granted'){
+        if(varName==='_fssCharsHandle')_fssCharsHandle=handle;
+        else if(varName==='_fssDataHandle')_fssDataHandle=handle;
+        else if(varName==='_fssSuppHandle')_fssSuppHandle=handle;
+      }
+      // 'prompt' state: handle exists but needs user gesture — handled by reconnect prompt
+    }catch(e){/* handle unreadable — ignore */}
+  }
+}
+
+// ── Reconnect prompt ──────────────────────────────────────────────────────────
+// If any stored handles are in 'prompt' state, shows a status bar nudge.
+// User clicks once; _fssReconnectAll() requests permission for each.
+async function _fssMaybeReconnectPrompt(){
+  if(!fssSupported())return;
+  const keys=[IDB_KEY_CHARS,IDB_KEY_DATA,IDB_KEY_SUPP];
+  const pending=[];
+  for(const key of keys){
+    try{
+      const handle=await _idbGet(key);
+      if(!handle)continue;
+      const perm=await handle.queryPermission({mode:'readwrite'});
+      if(perm==='prompt')pending.push({key,handle});
+    }catch(e){}
+  }
+  if(!pending.length)return;
+  // Show a persistent status bar message until the user acts
+  const el=document.getElementById('statusBar');
+  if(!el)return;
+  el.textContent='Folder connection needs approval — click to reconnect.';
+  el.classList.add('show');
+  el.style.cursor='pointer';
+  el._fssReconnect=true;
+  el.onclick=async()=>{
+    if(!el._fssReconnect)return;
+    el.onclick=null;el._fssReconnect=false;el.style.cursor='';
+    await _fssReconnectAll(pending);
+    el.classList.remove('show');
+    _fssUpdateUI();
+    loadSaves();
+  };
+}
+async function _fssReconnectAll(pending){
+  for(const {key,handle} of pending){
+    try{
+      const granted=await _fssVerifyPermission(handle);
+      if(granted){
+        if(key===IDB_KEY_CHARS)_fssCharsHandle=handle;
+        else if(key===IDB_KEY_DATA)_fssDataHandle=handle;
+        else if(key===IDB_KEY_SUPP)_fssSuppHandle=handle;
+      }
+    }catch(e){}
+  }
+}
+
+// ── Character file operations ─────────────────────────────────────────────────
+async function _fssWriteChar(state){
+  if(!_fssCharsHandle)return false;
+  try{
+    const filename=state.id+'.json';
+    const fileHandle=await _fssCharsHandle.getFileHandle(filename,{create:true});
+    const writable=await fileHandle.createWritable();
+    await writable.write(JSON.stringify(state,null,2));
+    await writable.close();
+    return true;
+  }catch(e){return false;}
+}
+async function _fssReadChar(id){
+  if(!_fssCharsHandle)return null;
+  try{
+    const fileHandle=await _fssCharsHandle.getFileHandle(id+'.json');
+    const file=await fileHandle.getFile();
+    const text=await file.text();
+    return JSON.parse(text);
+  }catch(e){return null;}
+}
+async function _fssReadAllChars(){
+  if(!_fssCharsHandle)return[];
+  const entries=[];
+  try{
+    for await(const [name,handle] of _fssCharsHandle.entries()){
+      if(!name.endsWith('.json'))continue;
+      try{
+        const file=await handle.getFile();
+        const text=await file.text();
+        const parsed=JSON.parse(text);
+        if(parsed&&parsed.id){
+          entries.push({
+            id:parsed.id,
+            name:parsed.name||'Unnamed',
+            theme:parsed.theme||'neutral',
+            tags:[],
+            last_modified:parsed._last_modified||0,
+            folder:null,
+            _fromFSS:true,
+          });
+        }
+      }catch(e){}
+    }
+  }catch(e){}
+  return entries;
+}
+async function _fssDeleteChar(id){
+  if(!_fssCharsHandle)return;
+  try{await _fssCharsHandle.removeEntry(id+'.json');}catch(e){}
+}
+
+// ── Data library file operations ──────────────────────────────────────────────
+async function _fssReadDataJson(){
+  if(!_fssDataHandle)return null;
+  try{
+    const fileHandle=await _fssDataHandle.getFileHandle('data.json');
+    const file=await fileHandle.getFile();
+    const text=await file.text();
+    return JSON.parse(text);
+  }catch(e){return null;}
+}
+async function _fssWriteSuppJson(obj){
+  if(!_fssSuppHandle)return false;
+  try{
+    const fileHandle=await _fssSuppHandle.getFileHandle('supplemental.json',{create:true});
+    const writable=await fileHandle.createWritable();
+    await writable.write(JSON.stringify(obj,null,2));
+    await writable.close();
+    return true;
+  }catch(e){return false;}
+}
+async function _fssReadSuppJson(){
+  if(!_fssSuppHandle)return null;
+  try{
+    const fileHandle=await _fssSuppHandle.getFileHandle('supplemental.json');
+    const file=await fileHandle.getFile();
+    const text=await file.text();
+    return JSON.parse(text);
+  }catch(e){return null;}
+}
+
+// ── data.json structural validation ──────────────────────────────────────────
+// Checks the minimum required structure before using an FSS data.json.
+// Does not validate content arrays — only configuration keys.
+function _fssValidateDataJson(d){
+  if(!d||typeof d!=='object')return{ok:false,reason:'Not a valid JSON object.'};
+  if(!Array.isArray(d.section_definitions)||!d.section_definitions.length)
+    return{ok:false,reason:'Missing or empty section_definitions.'};
+  if(!Array.isArray(d.skill_definitions)||!d.skill_definitions.length)
+    return{ok:false,reason:'Missing or empty skill_definitions.'};
+  if(!Array.isArray(d.sheet_presets))
+    return{ok:false,reason:'Missing sheet_presets.'};
+  return{ok:true};
+}
+
+// ── Migration ─────────────────────────────────────────────────────────────────
+// Called when user first connects a folder. Writes existing localStorage data
+// into the folder. Never removes localStorage data.
+async function _fssMigrateCharsToFolder(){
+  const idx=lsGetIndex();
+  if(!idx.length)return;
+  let migrated=0;
+  for(const entry of idx){
+    try{
+      const raw=localStorage.getItem(LS_PREFIX+entry.id);
+      if(!raw)continue;
+      const state=JSON.parse(raw);
+      const ok=await _fssWriteChar(state);
+      if(ok)migrated++;
+    }catch(e){}
+  }
+  if(migrated)showStatus(`${migrated} character${migrated===1?'':'s'} migrated to folder.`,3000);
+}
+async function _fssMigrateSupplementToFolder(){
+  const raw=_getSupplementRaw();
+  if(!Object.keys(raw).length)return;
+  await _fssWriteSuppJson(raw);
+}
+
+// ── Connect / disconnect ──────────────────────────────────────────────────────
+async function fssConnectChars(){
+  if(!fssSupported())return;
+  try{
+    const handle=await window.showDirectoryPicker({mode:'readwrite'});
+    _fssCharsHandle=handle;
+    await _idbSet(IDB_KEY_CHARS,handle);
+    await _fssMigrateCharsToFolder();
+    _fssUpdateUI();
+    loadSaves();
+  }catch(e){
+    if(e.name!=='AbortError')showStatus('Could not connect characters folder.');
+  }
+}
+async function fssConnectData(){
+  if(!fssSupported())return;
+  try{
+    const handle=await window.showDirectoryPicker({mode:'readwrite'});
+    _fssDataHandle=handle;
+    await _idbSet(IDB_KEY_DATA,handle);
+    _fssUpdateUI();
+    showStatus('Data folder connected. Reload the page to apply the new library.',4000);
+  }catch(e){
+    if(e.name!=='AbortError')showStatus('Could not connect data folder.');
+  }
+}
+async function fssConnectSupp(){
+  if(!fssSupported())return;
+  try{
+    const handle=await window.showDirectoryPicker({mode:'readwrite'});
+    _fssSuppHandle=handle;
+    await _idbSet(IDB_KEY_SUPP,handle);
+    await _fssMigrateSupplementToFolder();
+    _fssUpdateUI();
+    showStatus('Supplement folder connected.',2500);
+  }catch(e){
+    if(e.name!=='AbortError')showStatus('Could not connect supplement folder.');
+  }
+}
+async function fssDisconnectChars(){
+  _fssCharsHandle=null;
+  await _idbDelete(IDB_KEY_CHARS);
+  _fssUpdateUI();
+  loadSaves();
+}
+async function fssDisconnectData(){
+  _fssDataHandle=null;
+  await _idbDelete(IDB_KEY_DATA);
+  _fssUpdateUI();
+  showStatus('Data folder disconnected. Reload the page to revert to built-in library.',4000);
+}
+async function fssDisconnectSupp(){
+  _fssSuppHandle=null;
+  await _idbDelete(IDB_KEY_SUPP);
+  _fssUpdateUI();
+  showStatus('Supplement folder disconnected.',2500);
+}
+
+// ── UI update ─────────────────────────────────────────────────────────────────
+// Renders the current connection state into all six button sets
+// (3 connections × desktop sidebar + mobile drawer).
+async function _fssUpdateUI(){
+  const supported=fssSupported();
+  const configs=[
+    {
+      idbKey:IDB_KEY_CHARS,
+      handle:_fssCharsHandle,
+      btnIds:['fssCharsBtn','fssCharsBtnDrawer'],
+      hintIds:['fssCharsHint','fssCharsHintDrawer'],
+      connectFn:'fssConnectChars()',
+      disconnectFn:'fssDisconnectChars()',
+      label:'Connect characters folder',
+    },
+    {
+      idbKey:IDB_KEY_DATA,
+      handle:_fssDataHandle,
+      btnIds:['fssDataBtn','fssDataBtnDrawer'],
+      hintIds:[],
+      connectFn:'fssConnectData()',
+      disconnectFn:'fssDisconnectData()',
+      label:'Connect data.json folder',
+    },
+    {
+      idbKey:IDB_KEY_SUPP,
+      handle:_fssSuppHandle,
+      btnIds:['fssSuppBtn','fssSuppBtnDrawer'],
+      hintIds:['fssLibHint','fssLibHintDrawer'],
+      connectFn:'fssConnectSupp()',
+      disconnectFn:'fssDisconnectSupp()',
+      label:'Connect supplement folder',
+    },
+  ];
+
+  for(const cfg of configs){
+    // Check for stored-but-not-yet-granted handles (prompt state)
+    let pendingHandle=null;
+    if(!cfg.handle){
+      try{
+        const stored=await _idbGet(cfg.idbKey);
+        if(stored){
+          const perm=await stored.queryPermission({mode:'readwrite'});
+          if(perm==='prompt')pendingHandle=stored;
+        }
+      }catch(e){}
+    }
+
+    for(const btnId of cfg.btnIds){
+      const btn=document.getElementById(btnId);
+      if(!btn)continue;
+      if(!supported){
+        btn.disabled=true;
+        btn.textContent='📁 '+cfg.label;
+        btn.title='File system folders require Chrome or Edge.';
+        btn.className=btn.className.replace(/\s*fss-btn-connected|\s*fss-btn-warn/g,'');
+        continue;
+      }
+      btn.disabled=false;
+      btn.title='';
+      if(cfg.handle){
+        // Connected — show folder name and disconnect option
+        btn.textContent='📁 '+cfg.handle.name+' ✕';
+        btn.onclick=new Function(cfg.disconnectFn);
+        btn.classList.add('fss-btn-connected');
+        btn.classList.remove('fss-btn-warn');
+      }else if(pendingHandle){
+        // Stored but needs permission
+        btn.textContent='⚠ Reconnect '+cfg.label.replace('Connect ','');
+        btn.onclick=async()=>{
+          const granted=await _fssVerifyPermission(pendingHandle);
+          if(granted){
+            if(cfg.idbKey===IDB_KEY_CHARS)_fssCharsHandle=pendingHandle;
+            else if(cfg.idbKey===IDB_KEY_DATA)_fssDataHandle=pendingHandle;
+            else if(cfg.idbKey===IDB_KEY_SUPP)_fssSuppHandle=pendingHandle;
+            _fssUpdateUI();
+            if(cfg.idbKey===IDB_KEY_CHARS)loadSaves();
+          }else{
+            showStatus('Permission denied — folder not reconnected.');
+          }
+        };
+        btn.classList.add('fss-btn-warn');
+        btn.classList.remove('fss-btn-connected');
+      }else{
+        // Not connected
+        btn.textContent='📁 '+cfg.label;
+        btn.onclick=new Function(cfg.connectFn);
+        btn.classList.remove('fss-btn-connected','fss-btn-warn');
+      }
+    }
+
+    // Update hints for chars and supp
+    for(const hintId of cfg.hintIds){
+      const hint=document.getElementById(hintId);
+      if(!hint)continue;
+      if(cfg.handle){
+        hint.textContent='Connected: '+cfg.handle.name;
+        hint.classList.add('fss-hint-active');
+      }else{
+        hint.textContent='';
+        hint.classList.remove('fss-hint-active');
+      }
+    }
+  }
+}
+// ── End FSS ───────────────────────────────────────────────────────────────────
+
+_fssRestoreHandles().then(()=>{
+  loadDB().then(()=>{
+    loadSaves();
+    _fssUpdateUI();
+    _fssMaybeReconnectPrompt();
+  });
+});
 
 
 // ══════════════════════════════════════════════════════════════════════════════

@@ -1338,4 +1338,12 @@ body.touch-device .st-mode-toggle-wrap{display:none}
 .st-add-btn{font-size:.72rem;padding:.2rem .5rem;flex-shrink:0}
 .st-add-count{width:36px;font-family:sans-serif;font-size:.75rem;text-align:center;padding:2px 3px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);flex-shrink:0}
 /* ── End v29 CSS ──────────────────────────────────────────────────────────── */
+
+/* ── File System Save (FSS) — v35 ────────────────────────────────────────── */
+.fss-row{margin-top:6px}
+.fss-hint{margin-top:3px;min-height:1em;transition:color .2s}
+.fss-hint-active{color:var(--info)!important}
+.fss-btn-connected{background:color-mix(in srgb,var(--accent) 15%,var(--surface))!important;border-color:var(--accent)!important}
+.fss-btn-warn{background:color-mix(in srgb,var(--info) 15%,var(--surface))!important;border-color:var(--info)!important}
+/* ── End FSS CSS ──────────────────────────────────────────────────────────── */
 /* ── End print stylesheet ─────────────────────────────────────────────────── */
