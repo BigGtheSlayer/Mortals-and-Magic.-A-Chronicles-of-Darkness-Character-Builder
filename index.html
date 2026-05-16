@@ -264,6 +264,10 @@
       <input type="file" id="importSheetFile" accept=".json" style="display:none" onchange="importSheet(this)">
       <div id="sheetImportResult" class="import-result"></div>
       <div class="hint">Export saves the current sheet as JSON. Import loads a sheet file.</div>
+      <div class="io-row fss-row">
+        <button id="fssCharsBtn" onclick="fssConnectChars()">📁 Connect characters folder</button>
+      </div>
+      <div id="fssCharsHint" class="hint fss-hint"></div>
     </div>
   </div>
   <div class="sidebar-card">
@@ -273,6 +277,14 @@
         <button onclick="openLibEditor()">&#9998; Edit library</button>
       </div>
       <div class="hint">Add, edit, and override library entries. Export your supplement regularly as a backup.</div>
+      <div class="io-row fss-row">
+        <button id="fssDataBtn" onclick="fssConnectData()">📁 Connect data.json folder</button>
+      </div>
+      <div id="fssDataHint" class="hint fss-hint"></div>
+      <div class="io-row fss-row">
+        <button id="fssSuppBtn" onclick="fssConnectSupp()">📁 Connect supplement folder</button>
+      </div>
+      <div id="fssLibHint" class="hint fss-hint"></div>
     </div>
   </div>
   </div><!-- /#normalSidebarContent -->
@@ -401,6 +413,10 @@
           </div>
           <input type="file" id="importSheetFileDrawer" accept=".json" style="display:none" onchange="importSheet(this)">
           <div class="hint">Export saves the current sheet as JSON. Import loads a sheet file.</div>
+          <div class="io-row fss-row">
+            <button id="fssCharsBtnDrawer" onclick="fssConnectChars()">📁 Connect characters folder</button>
+          </div>
+          <div id="fssCharsHintDrawer" class="hint fss-hint"></div>
         </div>
       </div>
 
@@ -411,6 +427,14 @@
             <button onclick="openLibEditor()">&#9998; Edit library</button>
           </div>
           <div class="hint">Add, edit, and override library entries. Export your supplement regularly as a backup.</div>
+          <div class="io-row fss-row">
+            <button id="fssDataBtnDrawer" onclick="fssConnectData()">📁 Connect data.json folder</button>
+          </div>
+          <div id="fssDataHintDrawer" class="hint fss-hint"></div>
+          <div class="io-row fss-row">
+            <button id="fssSuppBtnDrawer" onclick="fssConnectSupp()">📁 Connect supplement folder</button>
+          </div>
+          <div id="fssLibHintDrawer" class="hint fss-hint"></div>
         </div>
       </div>
 
@@ -439,5 +463,14 @@
   </div>
 </div>
 <!-- ── End Storyteller Mode help modal ───────────────────────────────────── -->
+<!-- ── Fixed toast — visible regardless of scroll position ───────────────── -->
+<div id="toast"></div>
+
+<!-- ── Persistent warning banner — requires manual dismiss ───────────────── -->
+<div id="warningBanner">
+  <span id="warningBannerMsg"></span>
+  <button onclick="dismissWarning()" title="Dismiss">✕</button>
+</div>
+
 </body>
 </html>

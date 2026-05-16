@@ -1,10 +1,10 @@
 # Mortals+ Customisation Guide
 
-Everything in Mortals+ that can be customised lives in one file: **`data.json`**. You don't need to touch any code. This guide walks through every type of change you can make, from adding a merit to building a full new splat.
+Everything in Mortals+ that can be customised lives in **`data.json`**. You don't need to touch any code. This guide walks through every type of change you can make, from adding a merit to building a full new splat.
 
-> **Before you start:** Make a backup copy of `data.json` before editing. It's a plain text file — open it in any text editor (VS Code works well; Notepad++ is also fine). Do not use a word processor such as Microsoft Word, as it may introduce hidden formatting that will break the file. If the app stops loading after an edit, the JSON is likely malformed — paste the file contents into [jsonlint.com](https://jsonlint.com) to find the problem.
+> **Before you start:** Make a backup copy of `data.json` before editing. It's a plain text file. Open it in any text editor (VS Code works well; Notepad++ is also fine). Do not use a word processor such as Microsoft Word, as it may introduce hidden formatting that will break the file. If the app stops loading after an edit, the JSON is likely malformed. Paste the file contents into [jsonlint.com](https://jsonlint.com) to find the problem.
 
-> **Testing changes:** Use the Live Server extension in VS Code (`Go Live` button). Do not open `index.html` directly via `file://` — the app won't load.
+> **Testing changes:** Use the Live Server extension in VS Code (`Go Live` button). Do not open `index.html` directly via `file://` as the app won't load.
 
 > **Deploying changes:** Mortals+ is a static web app hosted on GitHub Pages. After editing `data.json`, commit and push to `main`. The live app updates automatically within a minute or two.
 
@@ -24,19 +24,19 @@ Everything in Mortals+ that can be customised lives in one file: **`data.json`**
 10. [Adding a new splat](#10-adding-a-new-splat)
 11. [Section definition reference](#11-section-definition-reference)
 12. [What you cannot change in data.json](#12-what-you-cannot-change-in-datajson)
-13. [Advanced customisation — forking and system adaptation](#13-advanced-customisation--forking-and-system-adaptation)
+13. [Advanced customisation: forking and system adaptation](#13-advanced-customisation-forking-and-system-adaptation)
 
 ---
 
 ## 1. Adding library content
 
-The app ships with a starter library of merits, weapons, tilts, and splat abilities. The starter library is intentionally small — it exists to show the format, not to be comprehensive. Add your own entries freely.
+The app ships with a starter library of merits, weapons, tilts, and splat abilities. The starter library is intentionally small: it exists to show the format, not to be comprehensive. Add your own entries freely.
 
 **The easiest way to add entries is the in-app Library Editor.** Open the sidebar or drawer, go to **Data Library**, and click **✎ Edit library**. Select a section type, click **+ New entry**, fill in the fields, and save. Your entries are stored in your browser and merged with the base library automatically. Use **Export** in the editor to save a backup as `supplement.json`.
 
-The formats below document the field shapes used by both the in-app editor and `data.json` directly. Editing `data.json` directly is useful when adding many entries at once or sharing a full content set with others — changes to `data.json` become the base library for all users of your fork.
+The formats below document the field shapes used by both the in-app editor and `data.json` directly. Editing `data.json` directly is useful when adding many entries at once or sharing a full content set with others. Changes to `data.json` become the base library for all users of your fork.
 
-Content arrays are grouped by splat in `data.json`. Find the relevant splat section using the `_comment` markers (e.g. `── Vampire: the Requiem ──`) to locate the right array quickly. Placeholder entries in empty arrays document the correct field format — replace them with real entries.
+Content arrays are grouped by splat in `data.json`. Find the relevant splat section using the `_comment` markers (e.g. `── Vampire: the Requiem ──`) to locate the right array quickly. Placeholder entries in empty arrays document the correct field format. Replace them with real entries.
 
 ### Merits
 
@@ -77,7 +77,7 @@ Melee:
 }
 ```
 
-Ranged — add `ranges` (short/medium/long in yards) and `clip`:
+Ranged: add `ranges` (short/medium/long in yards) and `clip`:
 ```json
 {
   "name": "Hunting Rifle",
@@ -109,9 +109,9 @@ Ranged — add `ranges` (short/medium/long in yards) and `clip`:
 }
 ```
 
-The `coverage` object sets which locations are pre-checked when this entry is added from the library. All four keys must be present. Players can adjust coverage on any armor card at any time. Multiple equipped pieces covering the same location stack — this is intentional, to support edge cases like Mage Armor combining with mundane armor.
+The `coverage` object sets which locations are pre-checked when this entry is added from the library. All four keys must be present. Players can adjust coverage on any armor card at any time. Multiple equipped pieces covering the same location stack. This is intentional, to support edge cases like Mage Armor combining with mundane armor.
 
-**Coverage and derived stats** — when any armor is equipped, the Other Traits section shows an Armor row listing the summed general/ballistic rating per location (e.g. `Head 0/0 · Torso 1/3`). This row appears for both mortal and Ephemeral Entity sheets.
+**Coverage and derived stats**: when any armor is equipped, the Other Traits section shows an Armor row listing the summed general/ballistic rating per location (e.g. `Head 0/0 · Torso 1/3`). This row appears for both mortal and Ephemeral Entity sheets.
 
 ### Equipment
 
@@ -131,7 +131,7 @@ The `coverage` object sets which locations are pre-checked when this entry is ad
 
 All of the following use `{ name, rating, desc }`: `endowments`, `rotes`, `arcana_attainments`, `legacy_attainments`, `gifts`, `rites`, `disciplines`, `devotions`, `vampire_rites`, `variations`, `scars`, `haunts`, `influences`, `utterances`.
 
-The `blessings` section (Proximi) draws from the `rotes` list — there is no separate `blessings` content list. Add Proximi Blessings to `rotes`.
+The `blessings` section (Proximi) draws from the `rotes` list. There is no separate `blessings` content list. Add Proximi Blessings to `rotes`.
 
 ```json
 {
@@ -143,7 +143,7 @@ The `blessings` section (Proximi) draws from the `rotes` list — there is no se
 
 For `variations` and `scars`, `rating` represents Magnitude (1–5). For `influences`, `rating` represents the entity's influence rating (0–5).
 
-Descriptions should include enough mechanical detail that a player can use the ability at the table without opening a book — cost, dice pool, action type, duration, and any relevant conditions.
+Descriptions should include enough mechanical detail that a player can use the ability at the table without opening a book: cost, dice pool, action type, duration, and any relevant conditions.
 
 ### Named ability lists (name + desc)
 
@@ -192,7 +192,7 @@ The Forms table is data-driven. Each entry in `werewolf_forms` defines one colum
 }
 ```
 
-`attr_mods` lists only the attributes that change from base scores. `werewolf_forms` is one of the few lists that preserves order — columns appear in the table in the order listed.
+`attr_mods` lists only the attributes that change from base scores. `werewolf_forms` is one of the few lists that preserves order. Columns appear in the table in the order listed.
 
 ---
 
@@ -204,7 +204,7 @@ Every section is defined in `section_definitions`. Each entry has a `zone` and `
 
 | Zone | Where it appears |
 |---|---|
-| `header` | Character header row — identity fields only |
+| `header` | Character header row (identity fields only) |
 | `beats` | Beats/XP tracker row |
 | `full-width-top` | Full-width area above the two columns |
 | `left-column` | Left column |
@@ -213,9 +213,9 @@ Every section is defined in `section_definitions`. Each entry has a `zone` and `
 
 ### Default layout philosophy
 
-- **Left column** — Skills (order 2) and all power/ability lists (order 3+)
-- **Right column** — Other Traits (1), power stat (2), morality track (3), resource track (4), splat-specific blocks (5–19), Tilts (20), Conditions (21), Aspirations (22)
-- **Full-width bottom** — Merits (10), Attainments (11–12), reference tables (13+), Weapons (20), Armor (21), Equipment (22), Notes (50)
+- **Left column**: Skills (order 2) and all power/ability lists (order 3+)
+- **Right column**: Other Traits (1), power stat (2), morality track (3), resource track (4), splat-specific blocks (5–19), Tilts (20), Conditions (21), Aspirations (22)
+- **Full-width bottom**: Merits (10), Attainments (11–12), reference tables (13+), Weapons (20), Armor (21), Equipment (22), Notes (50)
 
 Tilts, Conditions, and Aspirations are at orders 20–22 so all splat stats render above them by default.
 
@@ -244,9 +244,9 @@ Changing `default` only affects new characters. Existing saved characters preser
 
 ## 4. Renaming sections and skills
 
-Change the `"label"` field on any section or skill definition. The new name appears in the config panel and on the sheet. Keys must never be changed — they are permanent identifiers used in save files.
+Change the `"label"` field on any section or skill definition. The new name appears in the config panel and on the sheet. Keys must never be changed. They are permanent identifiers used in save files.
 
-The `athletics` skill key in particular must not be changed — it is used in the Defense formula.
+The `athletics` skill key in particular must not be changed, as it is used in the Defense formula.
 
 ---
 
@@ -309,7 +309,7 @@ Entity names are stored per entity type in `entity_types`:
 }
 ```
 
-`attribute_spreads` — extra dots distributed across the three attribute categories (on top of the baseline 1 per attribute). `skill_spreads` — dots distributed across the three skill categories.
+`attribute_spreads`: extra dots distributed across the three attribute categories (on top of the baseline 1 per attribute). `skill_spreads`: dots distributed across the three skill categories.
 
 ### Entity generation
 
@@ -366,7 +366,7 @@ Each splat can have its own beats currency. Add a new entry to `section_definiti
 }
 ```
 
-Then add `"arcane-beats-xp": true` to the Mage preset. No other preset changes are required — omitting a key from a preset is equivalent to setting it `false` for sections whose `default` is `false`. No code changes required.
+Then add `"arcane-beats-xp": true` to the Mage preset. No other preset changes are required. Omitting a key from a preset is equivalent to setting it `false` for sections whose `default` is `false`. No code changes required.
 
 ---
 
@@ -379,7 +379,7 @@ Presets replace `sectionConfig` entirely when applied. The rules for what to inc
 
 The easiest approach is to copy an existing preset as a starting point and modify it.
 
-Each preset must also have a `"category"` field. This controls which group the preset appears under in the Sheet Configuration dropdown. Current categories are `"Main Splats"`, `"Half-Splats"`, `"Ephemeral Entities"`, and `"Other"`. You can introduce a new category simply by using a new string — no code changes needed.
+Each preset must also have a `"category"` field. This controls which group the preset appears under in the Sheet Configuration dropdown. Current categories are `"Main Splats"`, `"Half-Splats"`, `"Ephemeral Entities"`, and `"Other"`. You can introduce a new category simply by using a new string. No code changes needed.
 
 ```json
 {
@@ -413,31 +413,36 @@ Each preset must also have a `"category"` field. This controls which group the p
 
 ## 10. Adding a new splat
 
-A new splat is a combination of new content lists, new section definitions, and a new preset. **All steps are `data.json` changes only** for standard section types. A new section type (like Demon's Cipher diagram or Werewolf's Forms table) requires additional code in `index.html`.
+A new splat is a combination of new content lists, new section definitions, and a new preset. **All steps are `data.json` changes only** for standard section types. A new section type (like Demon's Cipher diagram or Werewolf's Forms table) requires additional code in `app.js`.
 
 ### Full splats
 
-#### Step 1 — Add content lists
+#### Step 1: Add content lists
 
 Add any new ability lists to `data.json` under the appropriate splat comment block. Rated lists use `{ name, rating, desc }`. Named lists use `{ name, desc }`. Add at least one placeholder entry so the field format is documented.
 
-#### Step 2 — Add section definitions
+#### Step 2: Add section definitions
 
 Add entries to `section_definitions` under the correct splat comment marker. Use existing types where possible. Set `group` to your splat's name and `config_category` to `"Main Splats"`. See the [Section definition reference](#11-section-definition-reference) for all available fields and types.
 
 Place the new sections in alphabetical splat order relative to existing splats. The order of entries in `section_definitions` controls config panel display order.
 
-#### Step 3 — Add the new preset
+#### Step 3: Add the new preset
 
 See [Creating a new preset](#9-creating-a-new-preset) above. Set `"category": "Main Splats"`. Enable the mortal core sections you want, set `integrity: false` if your splat uses a different morality track, and enable all your new splat sections.
 
 Place the preset in alphabetical order within `sheet_presets`.
 
-#### Step 4 — Add theme and selector options
+#### Step 4: Add theme and selector options
 
-Add a CSS theme block and `<option>` entries in both theme `<select>` elements in `index.html` (desktop sidebar and drawer). See the existing theme blocks for the pattern. Be careful not to accidentally consume the adjacent `<select>`'s opening tag when editing — this has caused bugs before.
+Adding a theme requires changes across two files:
 
-#### Step 5 — Done
+1. In `style.css`: add a `[data-theme="yourtheme"]` CSS block overriding the `:root` colour variables. Follow the pattern of existing theme blocks near the top of the file.
+2. In `index.html`: add an `<option>` entry to both theme `<select>` elements (`#themeSelect` in the desktop sidebar and `#drawerThemeSelect` in the drawer). Be careful not to accidentally consume the adjacent `<select>`'s opening tag when editing, as this has caused bugs before.
+
+Optionally add a watermark `<option>` to both watermark selects and provide the corresponding asset file.
+
+#### Step 5: Done
 
 No further code changes required for standard section types.
 
@@ -447,11 +452,11 @@ No further code changes required for standard section types.
 
 Half-splats layer onto the mortal sheet base rather than replacing it. They share sections from full splats where appropriate and use a separate config panel group under the *Half-Splats* category.
 
-#### Step 1 — Add content lists (if needed)
+#### Step 1: Add content lists (if needed)
 
-Same as full splats. Half-splat sections that share an existing library (e.g. Blessings using Rotes) do not need a new content list — just point `db_key` at the existing one.
+Same as full splats. Half-splat sections that share an existing library (e.g. Blessings using Rotes) do not need a new content list. Just point `db_key` at the existing one.
 
-#### Step 2 — Add section definitions
+#### Step 2: Add section definitions
 
 Set `"config_category": "Half-Splats"` and `"group"` to your half-splat's name (e.g. `"Ghoul"`).
 
@@ -470,13 +475,13 @@ This renders a linked checkbox under both the Vampire and Ghoul config panel gro
 
 Use namespaced state keys for identity fields to avoid collisions with the parent splat (e.g. `wb_tribe` not `ww_tribe`).
 
-#### Step 3 — Add the new preset
+#### Step 3: Add the new preset
 
 Same as full splats. Set `"category": "Half-Splats"`. Enable the mortal core sections, the half-splat-specific sections, and any shared sections from the parent splat.
 
-#### Step 4 — Done
+#### Step 4: Done
 
-No theme required — half-splats use the Neutral theme by default. No code changes required for standard section types.
+No theme required. Half-splats use the Neutral theme by default. No code changes required for standard section types.
 
 ---
 
@@ -493,12 +498,12 @@ No theme required — half-splats use the Neutral theme by default. No code chan
 | `also_groups` | no | Array of additional group names. Renders a linked checkbox in each listed group without duplicating the section. Used for sections shared across splats (e.g. Disciplines in both Vampire and Ghoul). |
 | `zone` | yes | `header`, `beats`, `full-width-top`, `left-column`, `right-column`, `full-width-bottom` |
 | `order` | yes | Default sort position within the zone. Gaps are fine (10, 20, 30). Sections from different splats can share order values. |
-| `type` | yes | Section type — see table below. |
+| `type` | yes | Section type (see table below). |
 | `default` | yes | `true` = visible on new sheets. `false` = hidden until toggled. |
 | `state_key` | no | STATE field name. Defaults to `key`. Use when the same state key is shared across sections. |
 | `fields` | header-fields, arcana-block, renown-block, cipher-block, pillars-block | Array of `{ key, label }` entries defining the individual fields. |
 | `max` | dot-track, dot-square-track, labeled-track, resource-track | Number of dots or squares. Default: 10 for dot tracks, 20 for resource-track. |
-| `default_value` | dot-track, dot-square-track, labeled-track | Starting value for new characters. Default: `1`. Set to `7` for morality stats. Do not set on power stats — they start at 1. |
+| `default_value` | dot-track, dot-square-track, labeled-track | Starting value for new characters. Default: `1`. Set to `7` for morality stats. Do not set on power stats (they start at 1). |
 | `max_rating` | rated-list | Maximum dot rating on cards. Default: 5. |
 | `db_key` | no | Names the content list in `data.json` that populates this section's dropdown. Can point to an existing list (e.g. `blessings` points to `rotes`). |
 | `preserve_order` | no | If `true`, the content list named by `db_key` is not sorted alphabetically on load. Use for forms lists where column order matters. |
@@ -541,13 +546,13 @@ No theme required — half-splats use the Neutral theme by default. No code chan
 
 ## 12. What you cannot change in data.json
 
-- **The `athletics` skill key** — used in the Defense formula. Change the label freely, but not the key.
-- **Section types** — must be one of the types listed above. New types require editing `index.html`.
-- **Mortal derived stat formulas** — Health, Willpower, Defense, Initiative, Speed. Code only.
-- **Entity derived stat formulas** — Corpus, Willpower, Defense (rank-dependent), Initiative, Speed. Code only.
-- **The 9 core mortal attributes** — fixed in the app. Not configurable via data.
-- **The 3 entity attributes** — Power, Finesse, Resistance. Fixed in the app.
-- **Attribute row labels** — Power, Finesse, Resistance are hardcoded.
+- **The `athletics` skill key**: used in the Defense formula. Change the label freely, but not the key.
+- **Section types**: must be one of the types listed above. New types require editing `app.js`.
+- **Mortal derived stat formulas**: Health, Willpower, Defense, Initiative, Speed. Code only.
+- **Entity derived stat formulas**: Corpus, Willpower, Defense (rank-dependent), Initiative, Speed. Code only.
+- **The 9 core mortal attributes**: fixed in the app. Not configurable via data.
+- **The 3 entity attributes**: Power, Finesse, Resistance. Fixed in the app.
+- **Attribute row labels**: Power, Finesse, Resistance are hardcoded.
 
 ---
 
@@ -565,7 +570,7 @@ No theme required — half-splats use the Neutral theme by default. No code chan
 
 **Set `"print_empty": true` on all dot-track, dot-square-track, and labeled-track sections.** This makes dots and squares print empty for pencil-and-paper use at the table. All existing tracks already have this flag.
 
-**Only `default: true` sections need to appear in presets.** Sections with `"default": false` can simply be omitted from a preset — omitting them is equivalent to setting them `false`. Only explicitly list `false` when overriding a `default: true` section.
+**Only `default: true` sections need to appear in presets.** Sections with `"default": false` can simply be omitted from a preset. Omitting them is equivalent to setting them `false`. Only explicitly list `false` when overriding a `default: true` section.
 
 **Config panel and preset dropdown order follow file order.** The order groups appear in the config panel mirrors the order their sections first appear in `section_definitions`. Preset dropdown order mirrors `sheet_presets` array order. Maintain the canonical order when adding new sections: Mortal → Main Splats A–Z → Half-Splats A–Z → Ephemeral Entities → Other.
 
@@ -575,27 +580,27 @@ No theme required — half-splats use the Neutral theme by default. No code chan
 
 **Half-splat state keys should be namespaced.** Use a short prefix unique to the half-splat (e.g. `wb_` for Wolf-Blooded, `ghoul_` for Ghoul) to avoid collisions with the parent splat's keys.
 
-**Presets must have a `category` field.** Without it, the preset will appear under no group in the dropdown. Use an existing category string or introduce a new one — either works without code changes.
+**Presets must have a `category` field.** Without it, the preset will appear under no group in the dropdown. Use an existing category string or introduce a new one. Either works without code changes.
 
 **Sharing library additions.** Use the **Library Editor → Export** button to save your supplement entries as `supplement.json`. Others can import it via **Library Editor → Import**, which merges your entries into their supplement without overwriting existing entries. To share changes made directly in `data.json` (base library edits), distribute the modified `data.json` file as usual.
 
 ---
 
-## 13. Advanced customisation — forking and system adaptation
+## 13. Advanced customisation: forking and system adaptation
 
-Everything in sections 1–12 can be done without touching `index.html`. This section is for developers who want to go further — adapting the app to a different game system, replacing core mechanics, or forking it as the basis for a new tool.
+Everything in sections 1–12 can be done without touching the code files. This section is for developers who want to go further: adapting the app to a different game system, replacing core mechanics, or forking it as the basis for a new tool.
 
-The items below are hardcoded in `index.html` and cannot be changed through `data.json` alone. They are grouped into two tiers: **mechanical** (things that directly affect game rules) and **structural/cosmetic** (things that affect the app's identity and UI). All line references are approximate — search for the function or constant name to find them.
+The items below are hardcoded in the code files and cannot be changed through `data.json` alone. They are grouped into two tiers: **mechanical** (things that directly affect game rules) and **structural/cosmetic** (things that affect the app's identity and UI). Since v34, the code is split across three files: `app.js` for all logic, `style.css` for all styling, and `index.html` for the HTML structure. Each item below notes which file to edit. All line references are approximate. Search for the function or constant name to find them.
 
 ---
 
-### Tier 1 — Mechanical hardcoding
+### Tier 1: Mechanical hardcoding
 
 These are the things most likely to require change when adapting to a different RPG system.
 
 #### The 9 mortal attributes
 
-**Where:** `const ATTRIBUTES` and `const ATTR_LABELS` near the top of the `<script>` block.
+**Where:** `const ATTRIBUTES` and `const ATTR_LABELS` near the top of `app.js`.
 
 ```js
 const ATTRIBUTES = {
@@ -608,15 +613,15 @@ const ATTR_LABELS = { intelligence: 'Intelligence', wits: 'Wits', ... };
 
 `ATTRIBUTES` defines both the three categories and the three attributes per category. The category keys (`mental`, `physical`, `social`) appear as column headers in the rendered block. To rename, add, or remove attributes, change both constants.
 
-**Ripple effects:** Changing attribute keys breaks any saved characters that reference the old keys. The compact print renderer (`renderAttrBlockCompact`) iterates `ATTRIBUTES` directly and needs no changes if you only rename labels. The derived stat formulas (below) reference specific attribute keys by name — update those too.
+**Ripple effects:** Changing attribute keys breaks any saved characters that reference the old keys. The compact print renderer (`renderAttrBlockCompact`) iterates `ATTRIBUTES` directly and needs no changes if you only rename labels. The derived stat formulas (below) reference specific attribute keys by name, so update those too.
 
-**Row labels** (`Power`, `Finesse`, `Resistance`) appear twice: once in `renderAttrBlock()` and again in `renderAttrBlockCompact()`. Search for `ROW_LABELS` to find both. These are the labels for the three attribute rows (corresponding to the three attributes in each category), not the category names.
+**Row labels** (`Power`, `Finesse`, `Resistance`) appear twice in `app.js`: once in `renderAttrBlock()` and again in `renderAttrBlockCompact()`. Search for `ROW_LABELS` to find both. These are the labels for the three attribute rows, not the category names.
 
 ---
 
 #### Mortal derived stat formulas
 
-**Where:** Five `calcBase*` functions grouped together, just above `updateDerived()`.
+**Where:** Five `calcBase*` functions grouped together in `app.js`, just above `updateDerived()`.
 
 | Function | Formula | Attribute keys used |
 |---|---|---|
@@ -626,15 +631,15 @@ const ATTR_LABELS = { intelligence: 'Intelligence', wits: 'Wits', ... };
 | `calcBaseHealth` | Stamina + Size | `stamina` |
 | `calcBaseWillpower` | Resolve + Composure | `resolve`, `composure` |
 
-To change a formula, edit the corresponding function. The `+5` in Speed is a hardcoded species factor — replace it if your system uses a different base. The `athletics` key in Defense is the only skill key the app references directly; if you rename or remove the Athletics skill, update `calcBaseDefense` to match.
+To change a formula, edit the corresponding function. The `+5` in Speed is a hardcoded species factor. Replace it if your system uses a different base. The `athletics` key in Defense is the only skill key the app references directly. If you rename or remove the Athletics skill, update `calcBaseDefense` to match.
 
 `updateDerived()` calls all five functions and writes their results to STATE and the DOM. It also handles gear modifiers (armor defense penalty, weapon initiative modifier, speed penalty) via `calcGearMods()`. If your system doesn't use these modifiers, `calcGearMods()` can be simplified or removed.
 
 ---
 
-#### Mortal health track — damage types
+#### Mortal health track: damage types
 
-**Where:** `const DAMAGE_CYCLE`, `cycleHealth()`, `renderHealthTrack()`, `healthSVG()`.
+**Where:** `const DAMAGE_CYCLE`, `cycleHealth()`, `renderHealthTrack()`, and `healthSVG()` in `app.js`.
 
 ```js
 const DAMAGE_CYCLE = { '': 'b', 'b': 'l', 'l': 'a', 'a': '' };
@@ -642,15 +647,15 @@ const DAMAGE_CYCLE = { '': 'b', 'b': 'l', 'l': 'a', 'a': '' };
 
 The health track cycles through four states: empty, bashing (`b`), lethal (`l`), aggravated (`a`). `healthSVG()` renders each state as a different SVG mark. `renderHealthTrack()` counts damage boxes and derives the wound penalty.
 
-To change to a simpler damage model (e.g. a single damage type), replace `DAMAGE_CYCLE` with fewer states, update `healthSVG()` to return the appropriate SVG for each state, and simplify the wound penalty calculation in `renderHealthTrack()`.
+To change to a simpler damage model (e.g. a single damage type), replace `DAMAGE_CYCLE` with fewer states, update `healthSVG()` to return the appropriate SVG for each state, and simplify the wound penalty calculation in `renderHealthTrack()`. All changes are in `app.js`.
 
-This damage model also appears in `copyText()` — search for `health_track` there to update the text export as well.
+This damage model also appears in `copyText()`. Search for `health_track` there to update the text export as well.
 
 ---
 
 #### The 3 entity attributes
 
-**Where:** `const ENTITY_ATTRS` near the top of the `<script>` block.
+**Where:** `const ENTITY_ATTRS` near the top of `app.js`.
 
 ```js
 const ENTITY_ATTRS = [
@@ -660,13 +665,13 @@ const ENTITY_ATTRS = [
 ];
 ```
 
-Unlike mortal attributes, entity attributes have no category structure — they are a flat list of three. To rename them, change `label`. To change the keys, also update `patchState()` (which initialises `STATE.entity_attrs`), `_baseCharacterFields()`, and the entity derived formulas below.
+Unlike mortal attributes, entity attributes have no category structure. They are a flat list of three. To rename them, change `label`. To change the keys, also update `patchState()` (which initialises `STATE.entity_attrs`), `_baseCharacterFields()`, and the entity derived formulas below.
 
 ---
 
 #### Entity derived stat formulas
 
-**Where:** Six `calcBase*` functions grouped just above `updateEntityDerived()`.
+**Where:** Six `calcBase*` functions in `app.js`, grouped just above `updateEntityDerived()`.
 
 | Function | Formula |
 |---|---|
@@ -676,58 +681,57 @@ Unlike mortal attributes, entity attributes have no category structure — they 
 | `calcBaseEntityInitiative` | Finesse + Resistance |
 | `calcBaseEntitySpeed` | Power + Finesse + 5 |
 
-The rank-dependent Defense formula is the only place in the app that branches on `STATE.entity_rank_num`. If your system doesn't use entity ranks, replace that branch with a single formula.
+The rank-dependent Defense formula is the only place in the app that branches on `STATE.entity_rank_num`. If your system does not use entity ranks, replace that branch with a single formula.
 
 ---
 
-#### `copyText()` — plain-text export
+#### `copyText()`: plain-text export
 
-**Where:** The `copyText()` function near the bottom of the `<script>` block, in the Utilities section.
+**Where:** The `copyText()` function in `app.js`, in the Utilities section near the bottom of the file.
 
-`copyText()` produces a plain-text character summary for clipboard export. It is not a general renderer — it explicitly references `STATE.merits`, `STATE.weapons`, `STATE.armor`, `STATE.equipment`, mortal attribute keys, the damage type characters (`b`, `l`, `a`), and the specific derived stat names. If you change attribute names, add new core sections, or alter the damage model, update `copyText()` to match.
+`copyText()` produces a plain-text character summary for clipboard export. It is not a general renderer. It explicitly references `STATE.merits`, `STATE.weapons`, `STATE.armor`, `STATE.equipment`, mortal attribute keys, the damage type characters (`b`, `l`, `a`), and the specific derived stat names. If you change attribute names, add new core sections, or alter the damage model, update `copyText()` to match.
 
-Entity sheets are partially covered — Corpus, Willpower, Essence, and entity attributes are included, but entity-specific sections (Numina, Manifestations, etc.) are not yet rendered in `copyText()`. This is a known gap noted in the project documentation.
+Entity sheets are partially covered. Corpus, Willpower, Essence, and entity attributes are included, but entity-specific sections (Numina, Manifestations, etc.) are not yet rendered in `copyText()`. This is a known gap noted in the project documentation.
 
 ---
 
-### Tier 2 — Structural and cosmetic hardcoding
+### Tier 2: Structural and cosmetic hardcoding
 
-These items don't affect game mechanics but will need updating when adapting the app's identity for a fork.
+These items do not affect game mechanics but will need updating when adapting the app's identity for a fork.
 
 #### App title and subtitle
 
-**Where:** The `<h1>` and `.app-sub` paragraph in the HTML body, and `document.title` in the `<head>`.
+**Where:** The `<h1>` and `.app-sub` paragraph in `index.html`, and the `<title>` element in `<head>`.
 
-The title (`Mortals+`) and subtitle (`Chronicles of Darkness — character sheet builder`) are plain HTML. The `afterprint` handler in the print/restore block also restores `document.title` to a hardcoded string — search for `afterprint` and update that string to match.
+The title (`Mortals+`) and subtitle are plain HTML in `index.html`. The `afterprint` handler in `app.js` also restores `document.title` to a hardcoded string. Search for `afterprint` in `app.js` and update that string to match.
 
 ---
 
 #### Theme and watermark selects
 
-**Where:** Two `<select>` elements in the HTML — `#themeSelect` in the desktop sidebar and `#drawerThemeSelect` in the tablet drawer. Same duplication for `#watermarkSelect` / `#drawerWatermarkSelect`.
+**Where:** Theme and watermark options span two files.
 
-The theme and watermark options are hardcoded `<option>` elements in the HTML, not data-driven. Adding a new theme requires four changes:
+Adding a new theme requires changes in three places:
 
-1. Add a `[data-theme="yourtheme"]` CSS block overriding the `:root` variables (follow the pattern of existing themes at the top of the `<style>` block).
-2. Add an entry to `WATERMARK_ASSETS` in JS, mapping the theme name to an asset path.
-3. Add an `<option>` to both theme selects in HTML (`#themeSelect` and `#drawerThemeSelect`).
-4. Optionally add the theme name to both watermark selects and provide an asset file.
+1. In `style.css`: add a `[data-theme="yourtheme"]` CSS block overriding the `:root` colour variables. Follow the pattern of existing theme blocks near the top of the file. The comment at the top of `:root` lists this as a checklist.
+2. In `app.js`: add an entry to `WATERMARK_ASSETS`, mapping the theme name to an asset path.
+3. In `index.html`: add an `<option>` to both theme selects (`#themeSelect` and `#drawerThemeSelect`) and optionally to both watermark selects.
 
-The CSS block comment at the top of `:root` also lists this as a checklist.
+The theme and watermark options are hardcoded `<option>` elements, not data-driven.
 
 ---
 
 #### The generate bar
 
-**Where:** The `.gen-bar` `<div>` in the HTML body.
+**Where:** The `.gen-bar` `<div>` in `index.html`, and the corresponding generation functions in `app.js`.
 
-The two character generation groups ("Mortal" and "Ephemeral Entity") are hardcoded HTML. Each calls a specific JS function (`generateMortal()`, `generateEphemeral()`, `blank()`, `blankEntity()`). Adding a third character type requires adding a new `.gen-group` div in the HTML and a new generation function in JS. The generation functions themselves (`generateMortal`, `generateEphemeral`) are fully self-contained and can be used as templates.
+The two character generation groups ("Mortal" and "Ephemeral Entity") are hardcoded HTML in `index.html`. Each calls a specific JS function (`generateMortal()`, `generateEphemeral()`, `blank()`, `blankEntity()`). Adding a third character type requires adding a new `.gen-group` div in `index.html` and a new generation function in `app.js`. The generation functions themselves (`generateMortal`, `generateEphemeral`) are fully self-contained and can be used as templates.
 
 ---
 
 #### Armor coverage locations
 
-**Where:** The string array `['head','torso','arms','legs']` appears in several places: `calcGearMods()`, `patchState()`, `renderArmorList()` (inside the armor card builder), `updateDerived()`, `updateEntityDerived()`, `renderGearCompact()`, and `copyText()`. Search for `'head','torso','arms','legs'` to find all occurrences.
+**Where:** All occurrences are in `app.js`. The string array `['head','torso','arms','legs']` appears in `calcGearMods()`, `patchState()`, `renderArmorList()`, `updateDerived()`, `updateEntityDerived()`, `renderGearCompact()`, and `copyText()`. Search for `'head','torso','arms','legs'` to find all occurrences.
 
 These four locations are hardcoded throughout the gear system. Changing them (e.g. adding a `neck` location or removing `arms`) requires updating every occurrence, as well as the coverage checkbox HTML inside `renderArmorList()`.
 
@@ -735,17 +739,17 @@ These four locations are hardcoded throughout the gear system. Changing them (e.
 
 ### Summary table
 
-| Item | Tier | Location in index.html |
+| Item | Tier | File and location |
 |---|---|---|
-| Mortal attribute names and categories | Mechanical | `const ATTRIBUTES`, `const ATTR_LABELS` |
-| Attribute row labels (Power/Finesse/Resistance) | Mechanical | `renderAttrBlock()`, `renderAttrBlockCompact()` |
-| Mortal derived stat formulas | Mechanical | `calcBaseDefense()` through `calcBaseWillpower()` |
-| Health damage types (bashing/lethal/aggravated) | Mechanical | `DAMAGE_CYCLE`, `cycleHealth()`, `healthSVG()` |
-| Entity attribute names | Mechanical | `const ENTITY_ATTRS` |
-| Entity derived stat formulas | Mechanical | `calcBaseCorpus()` through `calcBaseEntitySpeed()` |
-| `copyText()` mortal-specific fields | Mechanical | `copyText()` |
-| App title and subtitle | Cosmetic | `<h1>`, `.app-sub`, `afterprint` handler |
-| Theme and watermark select options | Cosmetic | `#themeSelect`, `#drawerThemeSelect`, `#watermarkSelect`, `#drawerWatermarkSelect` |
-| Generate bar buttons | Structural | `.gen-bar` in HTML body |
-| Armor coverage locations | Mechanical/Structural | Multiple — search `'head','torso','arms','legs'` |
+| Mortal attribute names and categories | Mechanical | `app.js`: `const ATTRIBUTES`, `const ATTR_LABELS` |
+| Attribute row labels (Power/Finesse/Resistance) | Mechanical | `app.js`: `renderAttrBlock()`, `renderAttrBlockCompact()` |
+| Mortal derived stat formulas | Mechanical | `app.js`: `calcBaseDefense()` through `calcBaseWillpower()` |
+| Health damage types (bashing/lethal/aggravated) | Mechanical | `app.js`: `DAMAGE_CYCLE`, `cycleHealth()`, `healthSVG()` |
+| Entity attribute names | Mechanical | `app.js`: `const ENTITY_ATTRS` |
+| Entity derived stat formulas | Mechanical | `app.js`: `calcBaseCorpus()` through `calcBaseEntitySpeed()` |
+| `copyText()` mortal-specific fields | Mechanical | `app.js`: `copyText()` |
+| App title and subtitle | Cosmetic | `index.html`: `<h1>`, `.app-sub`; `app.js`: `afterprint` handler |
+| Theme and watermark select options | Cosmetic | `style.css`: theme CSS block; `app.js`: `WATERMARK_ASSETS`; `index.html`: `<select>` options |
+| Generate bar buttons | Structural | `index.html`: `.gen-bar`; `app.js`: generation functions |
+| Armor coverage locations | Mechanical/Structural | `app.js`: search `'head','torso','arms','legs'` |
 

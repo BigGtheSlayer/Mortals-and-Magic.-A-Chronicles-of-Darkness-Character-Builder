@@ -1338,4 +1338,74 @@ body.touch-device .st-mode-toggle-wrap{display:none}
 .st-add-btn{font-size:.72rem;padding:.2rem .5rem;flex-shrink:0}
 .st-add-count{width:36px;font-family:sans-serif;font-size:.75rem;text-align:center;padding:2px 3px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);flex-shrink:0}
 /* ── End v29 CSS ──────────────────────────────────────────────────────────── */
+
+/* ── Fixed toast (v35) ────────────────────────────────────────────────────── */
+/* Replaces the inline status-bar as the primary user-visible notification.   */
+/* Visible regardless of scroll position. Auto-dismisses like showStatus().   */
+#toast{
+  position:fixed;
+  bottom:1.5rem;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--green-bg);
+  color:var(--green);
+  border:1px solid #b8dfc8;
+  border-radius:6px;
+  padding:.5rem 1.1rem;
+  font-family:sans-serif;
+  font-size:.82rem;
+  white-space:nowrap;
+  max-width:90vw;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  box-shadow:0 3px 12px rgba(0,0,0,.18);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s;
+  z-index:3000;
+}
+#toast.show{opacity:1;pointer-events:auto}
+
+/* ── Persistent warning banner (v35) ──────────────────────────────────────── */
+/* Requires manual dismiss. Used for conditions that need user attention,      */
+/* e.g. FSS data.json fallback, folder permission failures.                   */
+#warningBanner{
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;
+  background:#fff3cd;
+  color:#856404;
+  border-bottom:1px solid #ffc107;
+  padding:.5rem 2.5rem .5rem 1rem;
+  font-family:sans-serif;
+  font-size:.82rem;
+  z-index:3000;
+  line-height:1.4;
+}
+#warningBanner.show{display:block}
+#warningBanner button{
+  position:absolute;
+  top:50%;right:.75rem;
+  transform:translateY(-50%);
+  background:none;
+  border:none;
+  font-size:1rem;
+  cursor:pointer;
+  color:#856404;
+  padding:0 .2rem;
+  line-height:1;
+}
+@media print{
+  #toast,#warningBanner{display:none!important}
+}
+/* ── End toast/warning CSS ────────────────────────────────────────────────── */
+
+/* ── File System Save (FSS) — v35 ────────────────────────────────────────── */
+.fss-row{margin-top:6px}
+.fss-hint{margin-top:3px;min-height:1em;transition:color .2s}
+.fss-hint-active{color:var(--info)!important}
+.fss-btn-connected{background:color-mix(in srgb,var(--accent) 15%,var(--surface))!important;border-color:var(--accent)!important}
+.fss-btn-warn{background:color-mix(in srgb,var(--info) 15%,var(--surface))!important;border-color:var(--info)!important}
+.fss-btn-unsupported{opacity:.55;cursor:pointer}
+/* ── End FSS CSS ──────────────────────────────────────────────────────────── */
 /* ── End print stylesheet ─────────────────────────────────────────────────── */
