@@ -3832,6 +3832,13 @@ const IDB_KEY_CHARS='fss_chars_dir';
 const IDB_KEY_DATA='fss_data_dir';
 const IDB_KEY_SUPP='fss_supp_dir';
 
+// One-time folder warning flags — stored in localStorage (not IDB).
+// Set after the user has seen and acknowledged the dedicated-folder warning
+// for each connection type. Never shown again once set.
+const LS_FSS_WARNED_CHARS='mortals_plus_fss_warned_chars';
+const LS_FSS_WARNED_DATA='mortals_plus_fss_warned_data';
+const LS_FSS_WARNED_SUPP='mortals_plus_fss_warned_supp';
+
 // Live handles for the current session. Null means not connected.
 let _fssCharsHandle=null;
 let _fssDataHandle=null;
@@ -5240,8 +5247,41 @@ async function _fssMigrateSupplementToFolder(){
 }
 
 // ── Connect / disconnect ──────────────────────────────────────────────────────
+// ── One-time folder warning ───────────────────────────────────────────────────
+// Shown the first time a user connects each folder type. Recommends using a
+// dedicated subfolder. Resolves true (proceed) or false (cancelled).
+// Once acknowledged, the LS flag is set and the warning never appears again.
+function _fssShowFolderWarning(lsFlag,typeLabel){
+  // Check if already acknowledged — skip modal entirely
+  let alreadySeen=false;
+  try{alreadySeen=!!localStorage.getItem(lsFlag);}catch(e){}
+  if(alreadySeen)return Promise.resolve(true);
+
+  return new Promise(resolve=>{
+    const modal=document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+    modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;max-width:400px;font-family:sans-serif;color:var(--text);box-shadow:0 4px 24px rgba(0,0,0,.3)">
+      <div style="font-weight:700;margin-bottom:.75rem;font-size:1rem">📁 Connect ${typeLabel}</div>
+      <div style="font-size:.85rem;line-height:1.6;color:var(--faint);margin-bottom:1.25rem">Mortals+ will be able to read and write files in the folder you choose.<br><br><strong style="color:var(--text)">Use a dedicated folder</strong> — do not point this at a general-purpose folder like Documents or a cloud storage root. Mortals+ may overwrite existing <code>.json</code> files whose names match your characters or library files.<br><br>A folder named <em>Mortals+</em> or similar, inside your preferred sync location, is recommended.</div>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end">
+        <button id="_fssWarnCancel" style="min-width:80px">Cancel</button>
+        <button id="_fssWarnProceed" class="primary" style="min-width:120px">Choose folder</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('#_fssWarnProceed').onclick=()=>{
+      modal.remove();
+      try{localStorage.setItem(lsFlag,'1');}catch(e){}
+      resolve(true);
+    };
+    modal.querySelector('#_fssWarnCancel').onclick=()=>{modal.remove();resolve(false);};
+    modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();resolve(false);}});
+  });
+}
+
 async function fssConnectChars(){
   if(!fssSupported())return;
+  if(!await _fssShowFolderWarning(LS_FSS_WARNED_CHARS,'characters folder'))return;
   try{
     const handle=await window.showDirectoryPicker({mode:'readwrite'});
     _fssCharsHandle=handle;
@@ -5255,6 +5295,7 @@ async function fssConnectChars(){
 }
 async function fssConnectData(){
   if(!fssSupported())return;
+  if(!await _fssShowFolderWarning(LS_FSS_WARNED_DATA,'data.json folder'))return;
   try{
     const handle=await window.showDirectoryPicker({mode:'readwrite'});
     _fssDataHandle=handle;
@@ -5267,6 +5308,7 @@ async function fssConnectData(){
 }
 async function fssConnectSupp(){
   if(!fssSupported())return;
+  if(!await _fssShowFolderWarning(LS_FSS_WARNED_SUPP,'supplement folder'))return;
   try{
     const handle=await window.showDirectoryPicker({mode:'readwrite'});
     _fssSuppHandle=handle;
