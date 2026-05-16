@@ -4066,15 +4066,33 @@ function _buildSaveItemHTML(s,folders){
 }
 async function loadSaves(){
   const lsList=lsGetIndex().map(_patchIndexEntry);
-  // Merge FSS characters — FSS wins on name conflict
+  // Merge FSS characters with localStorage index.
+  // FSS wins on file content (id, name, theme, last_modified).
+  // localStorage index wins on metadata (tags, folder) — these are browser-local
+  // and never written into the character files themselves.
+  // Characters that exist only in FSS (no matching LS entry) appear ungrouped
+  // with no tags, which is the documented behaviour.
   let rawList=lsList;
   if(_fssCharsHandle){
     const fssEntries=await _fssReadAllChars();
     if(fssEntries.length){
-      // Start with LS list, replace any entries whose name matches an FSS entry
-      const fssNames=new Set(fssEntries.map(e=>(e.name||'').toLowerCase()));
-      const filtered=lsList.filter(s=>!fssNames.has((s.name||'').toLowerCase()));
-      rawList=[...filtered,...fssEntries];
+      const lsById=new Map(lsList.map(e=>[e.id,e]));
+      const lsByName=new Map(lsList.map(e=>[(e.name||'').toLowerCase(),e]));
+      // Build merged FSS entries: carry tags and folder from LS where available
+      const mergedFSS=fssEntries.map(fssEntry=>{
+        // Match by id first (most reliable), then fall back to name
+        const lsMatch=lsById.get(fssEntry.id)||lsByName.get((fssEntry.name||'').toLowerCase());
+        return{
+          ...fssEntry,
+          tags:lsMatch?(lsMatch.tags||[]):[],
+          folder:lsMatch?(lsMatch.folder||null):null,
+        };
+      });
+      // Remove LS entries that have a corresponding FSS entry (FSS is authoritative)
+      const fssIds=new Set(mergedFSS.map(e=>e.id));
+      const fssNames=new Set(mergedFSS.map(e=>(e.name||'').toLowerCase()));
+      const filteredLS=lsList.filter(s=>!fssIds.has(s.id)&&!fssNames.has((s.name||'').toLowerCase()));
+      rawList=[...filteredLS,...mergedFSS];
       rawList.sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
     }
   }
