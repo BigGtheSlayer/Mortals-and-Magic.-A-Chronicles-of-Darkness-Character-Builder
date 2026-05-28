@@ -5681,7 +5681,6 @@ function stAddToScene(sourceId,countVal){
 function stSetInstNotes(iid,val){
   _stMutate(iid,inst=>{inst.notes=val;});
 }
-// Notes pinning uses stTogglePinSection(iid,'instance-notes') — no separate function needed.
 
 // Toggle whether an entire section (arcana-block, pillars-block, pool-list) is
 // pinned as a block in the card header. Uses inst.pinned_sections {[sdKey]:bool}.
@@ -6002,13 +6001,16 @@ function _stRefreshCardItems(iid){
   ).join('');
   const condLines=(inst.conditions||[]).map(c=>`<div class="st-item-line st-item-cond"><span class="st-item-line-name">${escH(c.name)}</span></div>`).join('');
   const tiltLines=(inst.tilts||[]).map(t=>`<div class="st-item-line st-item-tilt"><span class="st-item-line-name">${escH(t.name)}</span></div>`).join('');
-  if(weaponLines||armorLinesHTML||equipLines||pinnedLines||condLines||tiltLines){
+  const notesLine=inst.notes&&inst.notes.trim()
+    ?`<div class="st-inst-notes" style="font-style:italic">${escH(inst.notes)}</div>`:'';
+  if(weaponLines||armorLinesHTML||equipLines||pinnedLines||condLines||tiltLines||notesLine){
     const html=`<div class="st-card-items">
       ${pinnedLines?_stItemsGroup('',pinnedLines):''}
       ${weaponLines?_stItemsGroup('Weapons',weaponLines):''}
       ${armorLinesHTML?_stItemsGroup('Armor',armorLinesHTML):''}
       ${equipLines?_stItemsGroup('Equipment',equipLines):''}
       ${condLines||tiltLines?_stItemsGroup('Conditions & Tilts',condLines+tiltLines):''}
+      ${notesLine?_stItemsGroup('Notes',notesLine):''}
     </div>`;
     if(itemsEl){itemsEl.outerHTML=html;}
     else{const derivedEl=nameWrap.querySelector('.st-card-derived');if(derivedEl)derivedEl.insertAdjacentHTML('afterend',html);}
@@ -6051,11 +6053,6 @@ function _stPinnedItemsHTML(iid,src,inst){
   let lines='';
 
   const pinnedSecs=inst.pinned_sections||{};
-
-  // ── Pinned Instance Notes ─────────────────────────────────────────────────
-  if(pinnedSecs['instance-notes']&&inst.notes&&inst.notes.trim()){
-    lines+=`<div class="st-inst-notes" style="font-style:italic">${escH(inst.notes)}</div>`;
-  }
 
   SECTION_DEFS.forEach(sd=>{
     if(cfg[sd.key]===false)return;
@@ -6388,15 +6385,9 @@ function _stRenderCardBody(iid,inst,src){
   let html='';
 
   // ── Instance Notes (always first, always visible) ─────────────────────────
-  const notesPinned=!!(inst.pinned_sections||{})['instance-notes'];
   html+=`<div class="st-body-section">
     <div class="st-body-hd" onclick="_stToggleBodySection(this)">
-      <span>Instance Notes</span>
-      <span style="display:flex;align-items:center;gap:4px">
-        <span class="st-pin-btn${notesPinned?' st-pin-active':''}" title="${notesPinned?'Remove from header':'Pin to header'}"
-          onclick="event.stopPropagation();stTogglePinSection('${iid}','instance-notes')">${notesPinned?'★':'☆'}</span>
-        <span class="st-body-chevron">▼</span>
-      </span>
+      <span>Instance Notes</span><span class="st-body-chevron">▼</span>
     </div>
     <div class="st-body-content">
       <textarea class="st-notes-area" placeholder="Notes for this instance…"
@@ -6897,13 +6888,16 @@ function stRenderPanel(){
     ).join('');
     const condLines=(inst.conditions||[]).map(c=>`<div class="st-item-line st-item-cond"><span class="st-item-line-name">${escH(c.name)}</span></div>`).join('');
     const tiltLines=(inst.tilts||[]).map(t=>`<div class="st-item-line st-item-tilt"><span class="st-item-line-name">${escH(t.name)}</span></div>`).join('');
-    const itemsSection=(pinnedLines||weaponLines||armorLinesHTML||equipLines||condLines||tiltLines)?
+    const notesLine=inst.notes&&inst.notes.trim()
+      ?`<div class="st-inst-notes" style="font-style:italic">${escH(inst.notes)}</div>`:'';
+    const itemsSection=(pinnedLines||weaponLines||armorLinesHTML||equipLines||condLines||tiltLines||notesLine)?
       `<div class="st-card-items">
         ${pinnedLines?_stItemsGroup('',pinnedLines):''}
         ${weaponLines?_stItemsGroup('Weapons',weaponLines):''}
         ${armorLinesHTML?_stItemsGroup('Armor',armorLinesHTML):''}
         ${equipLines?_stItemsGroup('Equipment',equipLines):''}
         ${condLines||tiltLines?_stItemsGroup('Conditions & Tilts',condLines+tiltLines):''}
+        ${notesLine?_stItemsGroup('Notes',notesLine):''}
       </div>`:'';
 
     return `<div class="st-card" id="st-card-${inst.id}" draggable="true" ondragstart="stCardDragStart(event,'${inst.id}')" ondragend="stCardDragEnd(event)">
