@@ -162,6 +162,8 @@
     "  max:        for dot-track — number of dots (default 10)",
     "  beats_key:  for beats-xp — STATE key for the beats counter (default: 'beats')",
     "  xp_key:     for beats-xp — STATE key for the experience counter (default: 'experience')",
+    "  top_label:   for quinpar-wheel — label for the top value (default: 'Quintessence')",
+    "  bottom_label: for quinpar-wheel — label for the bottom value (default: 'Paradox')",
     "",
     "Section types:",
     "  attributes      — the 9 core attributes (special renderer)",
@@ -2301,6 +2303,8 @@
       "order": 4,
       "type": "quinpar-wheel",
       "state_key": "quintessence_paradox",
+      "top_label": "Quintessence",
+      "bottom_label": "Paradox",
       "default": false,
       "config_category": "Other"
     },

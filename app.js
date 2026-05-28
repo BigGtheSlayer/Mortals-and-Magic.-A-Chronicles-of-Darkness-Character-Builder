@@ -551,11 +551,6 @@ function clearCustomWatermark(){
   if(STATE.watermark==='custom') applyWatermark('none');
 }
 
-// toggleWatermark — DEPRECATED in v27. Stub kept for safety; watermark is now
-// controlled independently via applyWatermark(value).
-function toggleWatermark(visible){
-  if(!visible) applyWatermark('none');
-}
 
 
 // sec-blocks in collapsible zones, attaches the collapse chevron and click
@@ -758,8 +753,8 @@ let _activeDrawerTab='saves';
 function openDrawer(){
   document.getElementById('drawerBackdrop').classList.add('open');
   document.body.style.overflow='hidden'; // prevent background scroll
-  // Refresh the drawer save list when opening
-  _refreshDrawerSaveList();
+  // Refresh via loadSaves so the drawer gets the FSS-merged list
+  loadSaves();
 }
 function closeDrawer(){
   document.getElementById('drawerBackdrop').classList.remove('open');
@@ -779,15 +774,10 @@ function switchDrawerTab(tab){
   });
 }
 
-function _refreshDrawerSaveList(){
-  const rawList=lsGetIndex().map(_patchIndexEntry);
-  const folders=lsGetFolders();
-  const f=_saveListFilter;
-  const list=f?rawList.filter(s=>{
-    const nameMatch=(s.name||'').toLowerCase().includes(f);
-    const tagMatch=(s.tags||[]).some(t=>t.toLowerCase().includes(f));
-    return nameMatch||tagMatch;
-  }):rawList;
+// _refreshDrawerSaveList — renders the drawer save list using pre-merged data
+// from loadSaves(). Always called via loadSaves() so the list reflects FSS state.
+// rawList: full merged character list. list: filtered subset. folders: folder array.
+function _refreshDrawerSaveList(rawList,list,folders){
   const el=document.getElementById('drawerSaveList');
   if(!el)return;
   if(!rawList.length){
@@ -798,23 +788,13 @@ function _refreshDrawerSaveList(){
     el.innerHTML='<span style="font-size:.8rem;color:var(--faint);font-family:sans-serif">No characters match your filter.</span>';
     return;
   }
-  const _drawerItem=s=>{
-    const tagPills=(s.tags||[]).map(t=>`<span class="si-tag">${escH(t)}</span>`).join('');
-    return `<div class="save-item ${s.id===currentSaveId?'active':''}" onclick="loadCharacter('${s.id}');closeDrawer()">
-      <span class="si-body">
-        <span class="si-name-row">
-          <span class="si-name">${escH(s.name||'Unnamed')}</span>
-        </span>
-        ${tagPills?`<span class="si-tags">${tagPills}</span>`:''}
-      </span>
-      <button class="sm danger" onclick="event.stopPropagation();deleteSave('${s.id}')">Del</button>
-    </div>`;
-  };
+  const f=_saveListFilter;
+  const _drawerItem=s=>_buildSaveItemHTML(s,folders,'drawer');
   if(f){
     el.innerHTML=list.map(_drawerItem).join('');
     return;
   }
-  // Folder grouping
+  // Folder grouping — rename/delete buttons omitted (drawer is not the right place)
   const folderSections=folders.map(folder=>{
     const chars=list.filter(s=>s.folder===folder.id);
     if(!chars.length)return'';
@@ -1946,18 +1926,20 @@ function buildSectionHTML(sd){
     const sk=sd.state_key||sd.key;
     const qVal=STATE[sk+'_quintessence']||0;
     const pVal=STATE[sk+'_paradox']||0;
+    const qLbl=escH(sd.top_label||'Quintessence');
+    const pLbl=escH(sd.bottom_label||'Paradox');
     return `<div class="sec-block ${hidden}" id="secblock-${sd.key}" style="margin-bottom:8px">
       <div class="sec" style="margin-top:12px">${lbl}</div>
       <div class="sec-collapsible-body">
         <div class="quinpar-wrap">
           <div class="quinpar-svg-wrap">
             <svg class="quinpar-svg" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" id="${sd.key}-wheel-svg"></svg>
-            <div class="quinpar-lbl-top">Quintessence</div>
-            <div class="quinpar-lbl-btm">Paradox</div>
+            <div class="quinpar-lbl-top">${qLbl}</div>
+            <div class="quinpar-lbl-btm">${pLbl}</div>
           </div>
           <div class="quinpar-controls">
             <div class="quinpar-ctrl">
-              <div class="quinpar-ctrl-lbl">Quintessence</div>
+              <div class="quinpar-ctrl-lbl">${qLbl}</div>
               <div class="quinpar-ctrl-row">
                 <button class="spin" onclick="adjQuinpar('${sk}','${sd.key}',-1,1)">−</button>
                 <span class="quinpar-val" id="${sd.key}-q-val">${qVal}</span>
@@ -1965,7 +1947,7 @@ function buildSectionHTML(sd){
               </div>
             </div>
             <div class="quinpar-ctrl">
-              <div class="quinpar-ctrl-lbl">Paradox</div>
+              <div class="quinpar-ctrl-lbl">${pLbl}</div>
               <div class="quinpar-ctrl-row">
                 <button class="spin" onclick="adjQuinpar('${sk}','${sd.key}',-1,2)">−</button>
                 <span class="quinpar-val" id="${sd.key}-p-val">${pVal}</span>
@@ -2023,7 +2005,7 @@ function buildBeatsXpHTML(sd,hidden){
 }
 function buildMeritsHTML(sd,hidden){
   return `<div class="sec-block ${hidden}" id="secblock-merits">
-    <div class="merit-toggle-hd"><span class="sec">Merits</span>
+    <div class="merit-toggle-hd"><span class="sec">${escH(sd.label||'Merits')}</span>
       <button id="meritMaxToggle" class="sm" onclick="event.stopPropagation();toggleMeritMax()" style="font-size:.62rem;padding:2px 7px">5-dot max</button>
     </div>
     <div class="sec-collapsible-body">
@@ -4043,18 +4025,23 @@ function autoSave(){
     }
   },1500);
 }
-// _buildSaveItemHTML — renders a single character save-item row for the desktop sidebar
-function _buildSaveItemHTML(s,folders){
-  const tagPills=(s.tags||[]).map(t=>
-    `<span class="si-tag" onclick="event.stopPropagation();removeTagFromSave('${s.id}','${escH(t)}')" title="Remove tag">${escH(t)} ✕</span>`
+// _buildSaveItemHTML — renders a single character save-item row.
+// context: 'sidebar' (default) — full controls (tag editing, folder-move select).
+//          'drawer' — tag pills read-only, no folder-move select, closes drawer on load.
+function _buildSaveItemHTML(s,folders,context){
+  const isDrawer=context==='drawer';
+  const tagPills=(s.tags||[]).map(t=>isDrawer
+    ?`<span class="si-tag">${escH(t)}</span>`
+    :`<span class="si-tag" onclick="event.stopPropagation();removeTagFromSave('${s.id}','${escH(t)}')" title="Remove tag">${escH(t)} ✕</span>`
   ).join('');
-  const addTagInput=`<span class="si-tag si-tag-add" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();_showTagInput('${s.id}',this)" title="Add tag">+</span>`;
-  // Folder move select — only shown when folders exist
-  const folderOpts=folders.length?`<option value="">— Ungrouped —</option>`+folders.map(f=>
+  const addTagInput=isDrawer?'':`<span class="si-tag si-tag-add" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();_showTagInput('${s.id}',this)" title="Add tag">+</span>`;
+  // Folder move select — sidebar only
+  const folderOpts=(!isDrawer&&folders.length)?`<option value="">— Ungrouped —</option>`+folders.map(f=>
     `<option value="${escH(f.id)}"${s.folder===f.id?' selected':''}>${escH(f.name)}</option>`
   ).join(''):'';
-  const folderMove=folders.length?`<select class="si-move-select" title="Move to folder" onclick="event.stopPropagation()" onchange="setCharFolder('${s.id}',this.value||null)">${folderOpts}</select>`:'';
-  return `<div class="save-item ${s.id===currentSaveId?'active':''}" onclick="loadCharacter('${s.id}')">
+  const folderMove=(!isDrawer&&folders.length)?`<select class="si-move-select" title="Move to folder" onclick="event.stopPropagation()" onchange="setCharFolder('${s.id}',this.value||null)">${folderOpts}</select>`:'';
+  const onclick=isDrawer?`loadCharacter('${s.id}');closeDrawer()`:`loadCharacter('${s.id}')`;
+  return `<div class="save-item ${s.id===currentSaveId?'active':''}" onclick="${onclick}">
     <span class="si-body">
       <span class="si-name-row">
         <span class="si-name">${escH(s.name||'Unnamed')}</span>
@@ -4172,8 +4159,8 @@ async function loadSaves(){
   const el=document.getElementById('saveListWrap');
   if(el)el.innerHTML=fullHTML;
 
-  // Also refresh drawer save list
-  _refreshDrawerSaveList();
+  // Also refresh drawer save list, passing the already-merged data
+  _refreshDrawerSaveList(rawList,list,folders);
 }
 function _renameFolderPrompt(fid,currentName){
   const name=prompt('Rename folder:',currentName);
@@ -4288,6 +4275,38 @@ async function deleteSave(id){
   const newIdx=idx.filter(s=>s.id!==id);
   lsSaveIndex(newIdx);
   if(id===currentSaveId){currentSaveId=null;}
+  loadSaves();
+}
+
+async function cloneCharacter(){
+  // Clone the currently loaded character — must be saved at least once
+  if(!STATE.id||!currentSaveId){showStatus('Save the character first before cloning.');return;}
+  // Deep-copy current STATE and assign new identity
+  const clone=JSON.parse(JSON.stringify(STATE));
+  clone.id=_uuid();
+  clone.name=(STATE.name||'Unnamed')+' (Copy)';
+  // Dual-write clone — does not touch STATE or currentSaveId
+  let fssSaved=false;
+  if(_fssCharsHandle){
+    fssSaved=await _fssWriteChar(clone);
+    if(!fssSaved)showStatus('Folder save failed for clone — saving to browser only.',4000);
+  }
+  try{
+    localStorage.setItem(LS_PREFIX+clone.id,JSON.stringify(clone));
+    const idx=lsGetIndex();
+    idx.push({id:clone.id,name:clone.name,theme:clone.theme||'neutral',tags:[],last_modified:Date.now(),folder:null});
+    idx.sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+    lsSaveIndex(idx);
+    showStatus(`Cloned as "${clone.name}".`);
+  }catch(e){
+    if(_isQuotaError(e)){
+      if(fssSaved)showStatus('Cloned to folder. Browser storage full — browser backup unavailable.',4000);
+      else showStatus(LS_STORAGE_FULL_MSG,4000);
+    }else{
+      if(!fssSaved)showStatus('Clone failed — unexpected error.');
+      else showStatus('Cloned to folder. Browser save failed — unexpected error.',4000);
+    }
+  }
   loadSaves();
 }
 
@@ -5127,6 +5146,19 @@ async function _fssWriteChar(state){
   if(!_fssCharsHandle)return false;
   try{
     const filename=_fssSafeFilename(state);
+    // Delete any existing file for this id that has a different name (rename case).
+    // Without this, renaming a character leaves an orphan file under the old name,
+    // which causes duplicate entries in the save list.
+    try{
+      for await(const [name,handle] of _fssCharsHandle.entries()){
+        if(!name.endsWith('.json')||name===filename)continue;
+        try{
+          const file=await handle.getFile();
+          const parsed=JSON.parse(await file.text());
+          if(parsed&&parsed.id===state.id){await _fssCharsHandle.removeEntry(name);break;}
+        }catch(e){}
+      }
+    }catch(e){}
     const fileHandle=await _fssCharsHandle.getFileHandle(filename,{create:true});
     const writable=await fileHandle.createWritable();
     await writable.write(JSON.stringify(state,null,2));
@@ -5688,26 +5720,7 @@ function _stGetSourceResourceTracks(src){
   return tracks;
 }
 
-// Returns a list of {sd, sk, track} for all enabled resource tracks on an instance
-function _stGetEnabledResourceTracks(inst,src){
-  if(!src)return[];
-  const cfg=src.sectionConfig||{};
-  const srcMaxes=src.resource_track_maxes||{};
-  const result=[];
-  SECTION_DEFS.forEach(sd=>{
-    if(sd.type!=='resource-track')return;
-    if(cfg[sd.key]===false)return;
-    const sk=sd.state_key||sd.key;
-    const rtMax=srcMaxes[sk]!=null?srcMaxes[sk]:(sd.max||20);
-    const tracks=inst.resource_tracks||{};
-    // Fall back to legacy inst.resource_track for old instances with single track
-    let track=tracks[sk];
-    if(track===undefined&&sk===Object.keys(tracks)[0])track=inst.resource_track;
-    if(!Array.isArray(track))track=Array(rtMax).fill(false);
-    result.push({sd,sk,track});
-  });
-  return result;
-}
+
 
 // Returns a fresh empty track array for a custom track section (clarity/stability),
 // sized to match the source character's max override or default 5.
@@ -6207,11 +6220,6 @@ function _stArmorParts(armorArr,iid){
     coverageRowHTML=`<div class="st-armor-coverage">${cells}</div>`;
   }
   return{linesHTML,coverageRowHTML};
-}
-// Convenience: full combined HTML for card header (lines + coverage row)
-function _stArmorSummaryHTML(armorArr,iid){
-  const{linesHTML,coverageRowHTML}=_stArmorParts(armorArr,iid);
-  return linesHTML+coverageRowHTML;
 }
 
 
