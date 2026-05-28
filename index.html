@@ -80,6 +80,7 @@
       <button class="primary" onclick="saveCharacter()">Save</button>
       <button onclick="copyText()">Copy text</button>
       <button onclick="window.print()" class="no-print">Print / Save as PDF</button>
+      <button onclick="cloneCharacter()" class="no-print">Clone</button>
       <button onclick="collapseAll()" class="sm no-print">Collapse all</button>
       <button onclick="expandAll()" class="sm no-print">Expand all</button>
     </div>
@@ -89,7 +90,7 @@
       <div class="hdr-grid" style="grid-template-columns:1fr;margin-bottom:6px">
         <div class="hdr-field hdr-field-name">
           <span class="hdr-lbl">Name</span>
-          <input class="hdr-inp name-inp" id="charName" placeholder="Character name" oninput="STATE.name=this.value;autoSave()">
+          <input class="hdr-inp name-inp" id="charName" placeholder="Character name" oninput="STATE.name=this.value">
         </div>
       </div>
       <!-- Dynamic header fields -->

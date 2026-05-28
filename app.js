@@ -4278,6 +4278,38 @@ async function deleteSave(id){
   loadSaves();
 }
 
+async function cloneCharacter(){
+  // Clone the currently loaded character — must be saved at least once
+  if(!STATE.id||!currentSaveId){showStatus('Save the character first before cloning.');return;}
+  // Deep-copy current STATE and assign new identity
+  const clone=JSON.parse(JSON.stringify(STATE));
+  clone.id=_uuid();
+  clone.name=(STATE.name||'Unnamed')+' (Copy)';
+  // Dual-write clone — does not touch STATE or currentSaveId
+  let fssSaved=false;
+  if(_fssCharsHandle){
+    fssSaved=await _fssWriteChar(clone);
+    if(!fssSaved)showStatus('Folder save failed for clone — saving to browser only.',4000);
+  }
+  try{
+    localStorage.setItem(LS_PREFIX+clone.id,JSON.stringify(clone));
+    const idx=lsGetIndex();
+    idx.push({id:clone.id,name:clone.name,theme:clone.theme||'neutral',tags:[],last_modified:Date.now(),folder:null});
+    idx.sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+    lsSaveIndex(idx);
+    showStatus(`Cloned as "${clone.name}".`);
+  }catch(e){
+    if(_isQuotaError(e)){
+      if(fssSaved)showStatus('Cloned to folder. Browser storage full — browser backup unavailable.',4000);
+      else showStatus(LS_STORAGE_FULL_MSG,4000);
+    }else{
+      if(!fssSaved)showStatus('Clone failed — unexpected error.');
+      else showStatus('Cloned to folder. Browser save failed — unexpected error.',4000);
+    }
+  }
+  loadSaves();
+}
+
 function exportSheet(){
   if(!STATE.name&&!STATE.id){showStatus('Nothing to export — load or create a sheet first.');return;}
   const filename=(STATE.name||'character').replace(/[^a-z0-9_\-\s]/gi,'').trim()||'character';
