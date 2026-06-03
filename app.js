@@ -4325,22 +4325,100 @@ function _showImportResult(elId,ok,msg){
   // Success messages fade after 6s; errors stay until next interaction
   if(ok)el._hideTimer=setTimeout(()=>{el.className='import-result';el.textContent='';},6000);
 }
+// _loadCharacterFromJSON — shared core for importSheet and _shareLoadFromURL.
+// Parses jsonString, patches state, and renders the sheet. Returns true on
+// success, false on parse failure. Does not show any status messages itself.
+function _loadCharacterFromJSON(jsonString){
+  try{
+    STATE=JSON.parse(jsonString);patchState();currentSaveId=STATE.id||null;
+    showEditor();renderEditor();
+    return true;
+  }catch{
+    return false;
+  }
+}
 function importSheet(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=e=>{
-    try{
-      STATE=JSON.parse(e.target.result);patchState();currentSaveId=STATE.id||null;
-      showEditor();renderEditor();
+    if(_loadCharacterFromJSON(e.target.result)){
       showStatus('Sheet imported.');
       _showImportResult('sheetImportResult',true,`✓ "${STATE.name||'Unnamed'}" imported successfully.`);
-    }catch{
+    }else{
       showStatus('Import failed — invalid JSON file.');
       _showImportResult('sheetImportResult',false,'✕ Import failed — not a valid sheet file.');
     }
   };
   reader.readAsText(file);input.value='';
 }
+
+// ── Share Sheet URL ───────────────────────────────────────────────────────────
+// shareSheetURL — compresses STATE to a #share= URL and copies it to clipboard.
+// Also displays the URL inline in #shareUrlResult on the sidebar.
+function shareSheetURL(){
+  if(!STATE.name&&!STATE.id){showStatus('Nothing to share — load or create a sheet first.');return;}
+  if(typeof LZString==='undefined'){showStatus('Share unavailable — compression library failed to load.');return;}
+  const json=JSON.stringify(STATE);
+  const compressed=LZString.compressToEncodedURIComponent(json);
+  const url=window.location.origin+window.location.pathname+'#share='+compressed;
+  // Copy to clipboard
+  navigator.clipboard.writeText(url).then(()=>{
+    showStatus('Share URL copied to clipboard.');
+  }).catch(()=>{
+    showStatus('Share URL generated — see below to copy.');
+  });
+  // Show inline result in sidebar (drawer users see toast only — no result div there)
+  _showImportResult('shareUrlResult',true,'✓ URL copied to clipboard.');
+}
+
+// loadSheetURL — prompts the user for a share URL, decodes and loads the sheet.
+// Shows the warning banner after a successful load since the sheet is not saved.
+function loadSheetURL(){
+  const input=window.prompt('Paste a Mortals+ share URL:');
+  if(!input)return;
+  const match=input.match(/#share=([A-Za-z0-9+/=%-]+)/);
+  if(!match){showStatus('No share data found in that URL.');return;}
+  if(typeof LZString==='undefined'){showStatus('Load unavailable — compression library failed to load.');return;}
+  try{
+    const json=LZString.decompressFromEncodedURIComponent(match[1]);
+    if(!json)throw new Error('Decompression returned empty string');
+    if(_loadCharacterFromJSON(json)){
+      showStatus('Sheet loaded from share URL.');
+      showWarning('Sheet loaded from share link — not saved. Click Save to keep it.');
+    }else{
+      showStatus('Load failed — could not parse sheet data.');
+    }
+  }catch{
+    showStatus('Load failed — invalid or corrupted share URL.');
+  }
+}
+
+// _shareLoadFromURL — called at startup. Detects a #share= fragment in the
+// current URL, decodes it, and loads the sheet without auto-saving.
+// Clears the hash after loading so reloads do not re-trigger the load.
+function _shareLoadFromURL(){
+  const hash=window.location.hash;
+  if(!hash.startsWith('#share='))return;
+  const encoded=hash.slice('#share='.length);
+  if(!encoded)return;
+  if(typeof LZString==='undefined'){
+    showWarning('Share URL detected but compression library failed to load — try refreshing.');
+    return;
+  }
+  try{
+    const json=LZString.decompressFromEncodedURIComponent(encoded);
+    if(!json)throw new Error('Decompression returned empty string');
+    if(_loadCharacterFromJSON(json)){
+      history.replaceState(null,'',window.location.pathname+window.location.search);
+      showWarning('Sheet loaded from share link — not saved. Click Save to keep it.');
+    }else{
+      showStatus('Could not load share URL — invalid sheet data.');
+    }
+  }catch{
+    showStatus('Could not load share URL — invalid or corrupted link.');
+  }
+}
+// ── End Share Sheet URL ───────────────────────────────────────────────────────
 function getDataKeys(){
   return [...new Set(SECTION_DEFS.filter(s=>s.db_key&&s.type!=='forms-block').map(s=>s.db_key))];
 }
@@ -5518,6 +5596,7 @@ function _fssUnsupportedPopup(){
 
 _fssRestoreHandles().then(()=>{
   loadDB().then(()=>{
+    _shareLoadFromURL();
     loadSaves();
     _fssUpdateUI();
     _fssMaybeReconnectPrompt();
