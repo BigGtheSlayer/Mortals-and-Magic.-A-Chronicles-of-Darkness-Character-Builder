@@ -510,9 +510,10 @@ button.sm{font-size:.75rem;padding:.25rem .6rem}
 .quinpar-ctrl-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .quinpar-ctrl-row{display:flex;align-items:center;gap:5px}
 .quinpar-val{font-size:1.1rem;font-weight:700;min-width:20px;text-align:center}
+.quinpar-svg-hidden{display:none!important}
 /* Print: hide +/- controls; render SVG squares as empty outlines so the      */
 /* wheel can be filled in pencil. Paradox/Quintessence values zero out.       */
-@media print{.quinpar-controls{display:none!important}.quinpar-svg rect{fill:transparent!important;stroke:var(--border)!important}.quinpar-svg line{display:none!important}}
+@media print{.quinpar-controls{display:none!important}.quinpar-svg rect{fill:transparent!important;stroke:var(--border)!important}.quinpar-svg line{display:none!important}.quinpar-svg-hidden{display:block!important}.quinpar-svg-hidden .quinpar-lbl-top,.quinpar-svg-hidden .quinpar-lbl-btm{display:none!important}}
 .rsquare{width:100%;aspect-ratio:1;border:1.5px solid var(--border);border-radius:2px;cursor:pointer;background:var(--surface);transition:background .1s}
 .rsquare:hover{border-color:var(--muted)}
 .rsquare.on{background:var(--text);border-color:var(--text)}
