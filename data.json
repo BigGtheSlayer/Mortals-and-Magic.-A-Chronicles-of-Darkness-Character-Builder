@@ -164,6 +164,7 @@
     "  xp_key:     for beats-xp — STATE key for the experience counter (default: 'experience')",
     "  top_label:   for quinpar-wheel — label for the top value (default: 'Quintessence')",
     "  bottom_label: for quinpar-wheel — label for the bottom value (default: 'Paradox')",
+    "  max:         for quinpar-wheel — total wheel capacity shared by both values (default: 20, minimum enforced: 10)",
     "",
     "Section types:",
     "  attributes      — the 9 core attributes (special renderer)",
@@ -2305,6 +2306,7 @@
       "state_key": "quintessence_paradox",
       "top_label": "Quintessence",
       "bottom_label": "Paradox",
+      "max": 20,
       "default": false,
       "config_category": "Other"
     },

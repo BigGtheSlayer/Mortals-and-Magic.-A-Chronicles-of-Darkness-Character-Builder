@@ -535,7 +535,7 @@ No theme required. Half-splats use the Neutral theme by default. No code changes
 | `forms-block` | Live reference table showing per-form calculated stats. Data-driven from `db_key`. Werewolf only. |
 | `cipher-block` | Visual gear/cross diagram with Embed 1–4, Interlock 1–3, Cipher, and Final Truth fields driven by the section's `fields` array. Demon only. |
 | `covers` | Structured identity cards with name, age, appearance, Cover Rating, notes, and per-cover Merits. Demon only. |
-| `quinpar-wheel` | Circular 20-square track for Quintessence and Paradox. Quintessence fills clockwise from the left; Paradox counter-clockwise. Increasing Paradox decrements Quintessence to keep their sum at 20. State: `sk_quintessence` and `sk_paradox` (integers). Controls hide on print; SVG prints as-is. |
+| `quinpar-wheel` | Circular track for Quintessence and Paradox. Total capacity set by `max` (default 20, minimum 10). Quintessence fills clockwise from the top; Paradox counter-clockwise. Increasing Paradox decrements Quintessence to keep their sum ≤ `max`. A `− max +` spinner in the section header allows per-character capacity overrides; hidden on print. State: `sk_quintessence` and `sk_paradox` (integers), `quinpar_maxes` (object of per-character overrides). SVG prints as-is. |
 | `weapons` | Weapon cards with full weapon fields. Special renderer. |
 | `armor` | Armor cards with full armor fields, including per-location coverage checkboxes (Head, Torso, Arms, Legs). Equipped pieces contribute to the Armor row in Other Traits. Special renderer. |
 | `equipment` | Equipment cards with full equipment fields. Special renderer. |
