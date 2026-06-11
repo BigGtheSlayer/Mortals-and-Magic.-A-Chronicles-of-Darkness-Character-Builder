@@ -3991,7 +3991,7 @@
   "help_sections": [
     {
       "title": "Getting Started",
-      "content": "Welcome to Mortals+, the Chronicles of Darkness character builder!\n\nClick **Generate Mortal** for a randomised mortal character, or **Generate Blank Mortal** to start from scratch with an empty sheet.\n\nFor spirits, ghosts, and other supernatural beings, use **Generate Ephemeral Entity** or **Generate Blank Entity**. Select a Rank first to set the entity's power level.\n\nOnce a sheet is open, fill in your character's name and identity fields at the top. All fields save automatically to your browser.\n\nWhen you're ready to run a scene, use **⚔ Storyteller Mode** in the sidebar to open the live scene workspace."
+      "content": "Welcome to Mortals+, the Chronicles of Darkness character builder!\n\nClick **Generate Mortal** for a randomised mortal character, or **Generate Blank Mortal** to start from scratch with an empty sheet.\n\nFor spirits, ghosts, and other supernatural beings, use **Generate Ephemeral Entity** or **Generate Blank Entity**. Select a Rank first to set the entity's power level.\n\nOnce a sheet is open, fill in your character's name and identity fields at the top. All fields save automatically to your browser.\n\nIn order to add new entries (Merits, Equipment, etc), type the name of the entry and click the **Add** button. Use the **Pick** button to select from existing entries in the data library, then click the **Add** button.\n\nWhen you're ready to run a scene, use **⚔ Storyteller Mode** in the sidebar to open the live scene workspace."
     },
     {
       "title": "Saving, Folders & Tags",
