@@ -117,7 +117,7 @@ async function loadDB(){
   DB.entityBans=d.entity_bans||[];
   DB.entityBanes=d.entity_banes||[];
   DB.rankStats=d.rank_stats||{};
-  DB.mortalGeneration=d.mortal_generation||{attribute_spreads:[5,4,3],skill_spreads:[11,7,4],size:5};
+  DB.mortalGeneration=d.mortal_generation||{attribute_spreads:[5,4,3,2],skill_spreads:[11,7,4,1],size:5};
   DB.helpSections=d.help_sections||[];
 
   buildCfgPanel();
@@ -949,12 +949,12 @@ function generateMortal(){
   _applySelectedPreset('Mortal');
   // ── Mortal generation (data-driven spreads) ───────────────────────────────
   const d=window._DB_RAW||{};
-  const gen=DB.mortalGeneration||{attribute_spreads:[5,4,3],skill_spreads:[11,7,4],size:5};
+  const gen=DB.mortalGeneration||{attribute_spreads:[5,4,3,2],skill_spreads:[11,7,4,1],size:5};
   const names=d.mortal_names||['Unnamed'];
   const cats=Object.keys(ATTRIBUTES);
   for(let i=cats.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[cats[i],cats[j]]=[cats[j],cats[i]];}
-  const attrSpreads=gen.attribute_spreads||[5,4,3];
-  const extraDots={[cats[0]]:attrSpreads[0]||5,[cats[1]]:attrSpreads[1]||4,[cats[2]]:attrSpreads[2]||3};
+  const attrSpreads=gen.attribute_spreads||[5,4,3,2];
+  const extraDots={[cats[0]]:attrSpreads[0]||5,[cats[1]]:attrSpreads[1]||4,[cats[2]]:attrSpreads[2]||3,[cats[3]]:attrSpreads[3]||2};
   const attrs={};
   Object.entries(ATTRIBUTES).forEach(([cat,attrList])=>{
     const vals=_distribute((extraDots[cat]||3)+attrList.length,attrList.length);
@@ -962,8 +962,8 @@ function generateMortal(){
   });
   const skillCats=Object.keys(SKILLS);
   for(let i=skillCats.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[skillCats[i],skillCats[j]]=[skillCats[j],skillCats[i]];}
-  const skillSpreads=gen.skill_spreads||[11,7,4];
-  const skillDots={[skillCats[0]]:skillSpreads[0]||11,[skillCats[1]]:skillSpreads[1]||7,[skillCats[2]]:skillSpreads[2]||4};
+  const skillSpreads=gen.skill_spreads||[11,7,4,1];
+  const skillDots={[skillCats[0]]:skillSpreads[0]||11,[skillCats[1]]:skillSpreads[1]||7,[skillCats[2]]:skillSpreads[2]||4,[skillCats[3]]:skillSpreads[3]||1};
   const skills={};
   ALL_SKILLS.forEach(s=>skills[s]={rating:0,rote:false,specialty:'',label:SKILL_LABELS[s]});
   Object.entries(SKILLS).forEach(([cat,skList])=>{
