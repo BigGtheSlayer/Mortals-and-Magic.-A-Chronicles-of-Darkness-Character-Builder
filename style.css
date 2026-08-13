@@ -371,7 +371,7 @@ button.sm{font-size:.75rem;padding:.25rem .6rem}
 .attr-row-labels{display:grid;grid-template-rows:auto 1fr 1fr 1fr;padding-right:6px;gap:5px;align-items:stretch}
 .attr-row-lbl-spacer{font-size:.6rem;line-height:1.4;padding-bottom:3px;border-bottom:1px solid transparent;margin-bottom:2px;flex-shrink:0;visibility:hidden}
 .attr-row-lbl{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.55rem;font-family:sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;justify-content:center;min-height:64px}
-.attr-block{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;flex:1}
+.attr-block{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;flex:1}
 .attr-block-entity{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
 .attr-category{display:flex;flex-direction:column;gap:5px}
 .attr-cat-lbl{font-size:.6rem;font-family:sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:center;padding-bottom:3px;border-bottom:1px solid var(--border-light);margin-bottom:2px}
