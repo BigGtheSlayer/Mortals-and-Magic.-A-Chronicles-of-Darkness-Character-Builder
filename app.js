@@ -1,9 +1,8 @@
 // ── Global constants ──────────────────────────────────────────────────────────
 // ATTRIBUTES / ATTR_LABELS — hardcoded; cannot be configured via data.json.
 // The 9 CofD attributes (3 categories × 3) are fixed by the game system.
-const ATTRIBUTES={mental:['intelligence','wits','resolve'],physical:['strength','dexterity','stamina'],social:['presence','manipulation','composure']};
-const ATTR_LABELS={intelligence:'Intelligence',wits:'Wits',resolve:'Resolve',strength:'Strength',dexterity:'Dexterity',stamina:'Stamina',presence:'Presence',manipulation:'Manipulation',composure:'Composure'};
-
+const ATTRIBUTES={mental:['intelligence','wits','resolve'],physical:['strength','dexterity','stamina'],social:['presence','manipulation','composure'],magical:['magic_test_a','magic_test_b','magic_test_c']};
+const ATTR_LABELS={intelligence:'Intelligence',wits:'Wits',resolve:'Resolve',strength:'Strength',dexterity:'Dexterity',stamina:'Stamina',presence:'Presence',manipulation:'Manipulation',composure:'Composure',magic_test_a:'Magic Test A',magic_test_b:'Magic Test B',magic_test_c:'Magic Test C'};
 // SKILLS / SKILL_LABELS / ALL_SKILLS — populated from data.json skill_definitions.
 // Skills are configurable (add/remove/rename) unlike attributes.
 let SKILLS={},SKILL_LABELS={},ALL_SKILLS=[];
