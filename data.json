@@ -139,6 +139,46 @@
       "key": "subterfuge",
       "label": "Subterfuge",
       "category": "social"
+    },
+    {
+      "key": "arcana",
+      "label": "Arcana",
+      "category": "magical"
+    },
+    {
+      "key": "sensing",
+      "label": "Sensing",
+      "category": "magical"
+    },
+    {
+      "key": "attunement",
+      "label": "Attunement",
+      "category": "magical"
+    },
+    {
+      "key": "projection",
+      "label": "Projection",
+      "category": "magical"
+    },
+    {
+      "key": "infusion",
+      "label": "Infusion",
+      "category": "magical"
+    },
+    {
+      "key": "synthesis",
+      "label": "Synthesis",
+      "category": "magical"
+    },
+    {
+      "key": "ritual",
+      "label": "Ritual",
+      "category": "magical"
+    },
+    {
+      "key": "disjunction",
+      "label": "Disjunction",
+      "category": "magical"
     }
   ],
   "_sections_comment": [
@@ -167,8 +207,8 @@
     "  max:         for quinpar-wheel — total wheel capacity shared by both values (default: 20, minimum enforced: 10)",
     "",
     "Section types:",
-    "  attributes      — the 9 core attributes (special renderer)",
-    "  skills          — the 27 skills with rote/specialty (special renderer)",
+    "  attributes      — the 12 core attributes (special renderer)",
+    "  skills          — the 32 skills with rote/specialty (special renderer)",
     "  derived-traits  — health, willpower, defense, initiative, speed (special renderer)",
     "  dot-track       — a simple 1–N dot track (e.g. Integrity, Humanity)",
     "  header-fields   — text fields in the character header",
