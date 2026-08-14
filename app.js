@@ -1,8 +1,8 @@
 // ── Global constants ──────────────────────────────────────────────────────────
 // ATTRIBUTES / ATTR_LABELS — hardcoded; cannot be configured via data.json.
-// The 9 CofD attributes (3 categories × 3) are fixed by the game system.
-const ATTRIBUTES={mental:['intelligence','wits','resolve'],physical:['strength','dexterity','stamina'],social:['presence','manipulation','composure'],magical:['magic_test_a','magic_test_b','magic_test_c']};
-const ATTR_LABELS={intelligence:'Intelligence',wits:'Wits',resolve:'Resolve',strength:'Strength',dexterity:'Dexterity',stamina:'Stamina',presence:'Presence',manipulation:'Manipulation',composure:'Composure',magic_test_a:'Magic Test A',magic_test_b:'Magic Test B',magic_test_c:'Magic Test C'};
+// The 12 CofD attributes (4 categories × 3) are fixed by the game system.
+const ATTRIBUTES={mental:['intelligence','wits','resolve'],physical:['strength','dexterity','stamina'],social:['presence','manipulation','composure'],magical:['potency','control','fortitude']};
+const ATTR_LABELS={intelligence:'Intelligence',wits:'Wits',resolve:'Resolve',strength:'Strength',dexterity:'Dexterity',stamina:'Stamina',presence:'Presence',manipulation:'Manipulation',composure:'Composure',potency:'Potency',control:'Control',fortitude:'Fortitude'};
 // SKILLS / SKILL_LABELS / ALL_SKILLS — populated from data.json skill_definitions.
 // Skills are configurable (add/remove/rename) unlike attributes.
 let SKILLS={},SKILL_LABELS={},ALL_SKILLS=[];
@@ -117,7 +117,7 @@ async function loadDB(){
   DB.entityBans=d.entity_bans||[];
   DB.entityBanes=d.entity_banes||[];
   DB.rankStats=d.rank_stats||{};
-  DB.mortalGeneration=d.mortal_generation||{attribute_spreads:[5,4,3,2],skill_spreads:[11,7,4,1],size:5};
+  DB.mortalGeneration=d.mortal_generation||{attribute_spreads:[5,4,3,2],skill_spreads:[11,7,4,3],size:5};
   DB.helpSections=d.help_sections||[];
 
   buildCfgPanel();
@@ -949,7 +949,7 @@ function generateMortal(){
   _applySelectedPreset('Mortal');
   // ── Mortal generation (data-driven spreads) ───────────────────────────────
   const d=window._DB_RAW||{};
-  const gen=DB.mortalGeneration||{attribute_spreads:[5,4,3,2],skill_spreads:[11,7,4,1],size:5};
+  const gen=DB.mortalGeneration||{attribute_spreads:[5,4,3,2],skill_spreads:[11,7,4,3],size:5};
   const names=d.mortal_names||['Unnamed'];
   const cats=Object.keys(ATTRIBUTES);
   for(let i=cats.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[cats[i],cats[j]]=[cats[j],cats[i]];}
@@ -962,8 +962,8 @@ function generateMortal(){
   });
   const skillCats=Object.keys(SKILLS);
   for(let i=skillCats.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[skillCats[i],skillCats[j]]=[skillCats[j],skillCats[i]];}
-  const skillSpreads=gen.skill_spreads||[11,7,4,1];
-  const skillDots={[skillCats[0]]:skillSpreads[0]||11,[skillCats[1]]:skillSpreads[1]||7,[skillCats[2]]:skillSpreads[2]||4,[skillCats[3]]:skillSpreads[3]||1};
+  const skillSpreads=gen.skill_spreads||[11,7,4,3];
+  const skillDots={[skillCats[0]]:skillSpreads[0]||11,[skillCats[1]]:skillSpreads[1]||7,[skillCats[2]]:skillSpreads[2]||4,[skillCats[3]]:skillSpreads[3]||3};
   const skills={};
   ALL_SKILLS.forEach(s=>skills[s]={rating:0,rote:false,specialty:'',label:SKILL_LABELS[s]});
   Object.entries(SKILLS).forEach(([cat,skList])=>{
