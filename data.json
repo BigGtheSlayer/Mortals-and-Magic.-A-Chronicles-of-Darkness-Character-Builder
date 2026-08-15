@@ -18,179 +18,334 @@
     "To add a skill: append an entry. To remove: delete the entry.",
     "Skills are shown in the order listed here."
   ],
-  "skill_definitions": [
-    {
-      "key": "academics",
-      "label": "Academics",
-      "category": "mental",
-      "specialties": [
-        "Ancient History",
-        "Legal Codes",
-        "Theology"
-      ]
-    },
-    {
-      "key": "computer",
-      "label": "Computer",
-      "category": "mental",
-      "specialties": [
-        "Hacking",
-        "Data Mining",
-        "Graphic Design"
-      ]
-    },
-    {
-      "key": "crafts",
-      "label": "Crafts",
-      "category": "mental"
-    },
-    {
-      "key": "investigation",
-      "label": "Investigation",
-      "category": "mental"
-    },
-    {
-      "key": "medicine",
-      "label": "Medicine",
-      "category": "mental"
-    },
-    {
-      "key": "occult",
-      "label": "Occult",
-      "category": "mental"
-    },
-    {
-      "key": "politics",
-      "label": "Politics",
-      "category": "mental"
-    },
-    {
-      "key": "science",
-      "label": "Science",
-      "category": "mental"
-    },
-    {
-      "key": "athletics",
-      "label": "Athletics",
-      "category": "physical",
-      "_note": "athletics key is used in the Defense formula — renaming the label is safe, but do not change the key"
-    },
-    {
-      "key": "brawl",
-      "label": "Brawl",
-      "category": "physical"
-    },
-    {
-      "key": "drive",
-      "label": "Drive",
-      "category": "physical"
-    },
-    {
-      "key": "firearms",
-      "label": "Firearms",
-      "category": "physical"
-    },
-    {
-      "key": "larceny",
-      "label": "Larceny",
-      "category": "physical"
-    },
-    {
-      "key": "stealth",
-      "label": "Stealth",
-      "category": "physical"
-    },
-    {
-      "key": "survival",
-      "label": "Survival",
-      "category": "physical"
-    },
-    {
-      "key": "weaponry",
-      "label": "Weaponry",
-      "category": "physical"
-    },
-    {
-      "key": "animal_ken",
-      "label": "Animal Ken",
-      "category": "social"
-    },
-    {
-      "key": "empathy",
-      "label": "Empathy",
-      "category": "social"
-    },
-    {
-      "key": "expression",
-      "label": "Expression",
-      "category": "social"
-    },
-    {
-      "key": "intimidation",
-      "label": "Intimidation",
-      "category": "social"
-    },
-    {
-      "key": "persuasion",
-      "label": "Persuasion",
-      "category": "social"
-    },
-    {
-      "key": "socialize",
-      "label": "Socialize",
-      "category": "social"
-    },
-    {
-      "key": "streetwise",
-      "label": "Streetwise",
-      "category": "social"
-    },
-    {
-      "key": "subterfuge",
-      "label": "Subterfuge",
-      "category": "social"
-    },
-    {
-      "key": "arcana",
-      "label": "Arcana",
-      "category": "magical"
-    },
-    {
-      "key": "sensing",
-      "label": "Sensing",
-      "category": "magical"
-    },
-    {
-      "key": "attunement",
-      "label": "Attunement",
-      "category": "magical"
-    },
-    {
-      "key": "projection",
-      "label": "Projection",
-      "category": "magical"
-    },
-    {
-      "key": "infusion",
-      "label": "Infusion",
-      "category": "magical"
-    },
-    {
-      "key": "synthesis",
-      "label": "Synthesis",
-      "category": "magical"
-    },
-    {
-      "key": "ritual",
-      "label": "Ritual",
-      "category": "magical"
-    },
-    {
-      "key": "disjunction",
-      "label": "Disjunction",
-      "category": "magical"
-    }
+
+ "skill_definitions": [
+  {
+    "key": "academics",
+    "label": "Academics",
+    "category": "mental",
+    "specialties": [
+      "Ancient History",
+      "Legal Codes",
+      "Theology"
+    ]
+  },
+  {
+    "key": "computer",
+    "label": "Computer",
+    "category": "mental",
+    "specialties": [
+      "Hacking",
+      "Data Mining",
+      "Graphic Design"
+    ]
+  },
+  {
+    "key": "crafts",
+    "label": "Crafts",
+    "category": "mental",
+    "specialties": [
+      "Carpentry",
+      "Jewelry Making",
+      "Weapon Crafting"
+    ]
+  },
+  {
+    "key": "investigation",
+    "label": "Investigation",
+    "category": "mental",
+    "specialties": [
+      "Forensics",
+      "Crime Scenes",
+      "Surveillance"
+    ]
+  },
+  {
+    "key": "medicine",
+    "label": "Medicine",
+    "category": "mental",
+    "specialties": [
+      "Emergency Care",
+      "Surgery",
+      "Toxicology"
+    ]
+  },
+  {
+    "key": "occult",
+    "label": "Occult",
+    "category": "mental",
+    "specialties": [
+      "Demons",
+      "Rituals",
+      "Spirits"
+    ]
+  },
+  {
+    "key": "politics",
+    "label": "Politics",
+    "category": "mental",
+    "specialties": [
+      "Lobbying",
+      "Intrigue",
+      "Diplomacy"
+    ]
+  },
+  {
+    "key": "science",
+    "label": "Science",
+    "category": "mental",
+    "specialties": [
+      "Chemistry",
+      "Physics",
+      "Genetics"
+    ]
+  },
+
+  {
+    "key": "athletics",
+    "label": "Athletics",
+    "category": "physical",
+    "specialties": [
+      "Swimming",
+      "Parkour",
+      "Climbing"
+    ],
+    "_note": "athletics key is used in the Defense formula — renaming the label is safe, but do not change the key"
+  },
+  {
+    "key": "brawl",
+    "label": "Brawl",
+    "category": "physical",
+    "specialties": [
+      "Grappling",
+      "Dirty Fighting",
+      "Boxing"
+    ]
+  },
+  {
+    "key": "drive",
+    "label": "Drive",
+    "category": "physical",
+    "specialties": [
+      "High-Speed Driving",
+      "Motorcycles",
+      "Stunt Driving"
+    ]
+  },
+  {
+    "key": "firearms",
+    "label": "Firearms",
+    "category": "physical",
+    "specialties": [
+      "Sniping",
+      "Handguns",
+      "Shotguns"
+    ]
+  },
+  {
+    "key": "larceny",
+    "label": "Larceny",
+    "category": "physical",
+    "specialties": [
+      "Lockpicking",
+      "Pickpocketing",
+      "Forgery"
+    ]
+  },
+  {
+    "key": "stealth",
+    "label": "Stealth",
+    "category": "physical",
+    "specialties": [
+      "Urban Environments",
+      "Camouflage",
+      "Shadowing"
+    ]
+  },
+  {
+    "key": "survival",
+    "label": "Survival",
+    "category": "physical",
+    "specialties": [
+      "Foraging",
+      "Tracking",
+      "Navigation"
+    ]
+  },
+  {
+    "key": "weaponry",
+    "label": "Weaponry",
+    "category": "physical",
+    "specialties": [
+      "Bows",
+      "Improvised Weapons",
+      "Knives"
+    ]
+  },
+
+  {
+    "key": "animal_ken",
+    "label": "Animal Ken",
+    "category": "social",
+    "specialties": [
+      "Horses",
+      "Guard Dogs",
+      "Falconry"
+    ]
+  },
+  {
+    "key": "empathy",
+    "label": "Empathy",
+    "category": "social",
+    "specialties": [
+      "Detecting Lies",
+      "Counseling",
+      "First Impressions"
+    ]
+  },
+  {
+    "key": "expression",
+    "label": "Expression",
+    "category": "social",
+    "specialties": [
+      "Acting",
+      "Poetry",
+      "Public Speaking"
+    ]
+  },
+  {
+    "key": "intimidation",
+    "label": "Intimidation",
+    "category": "social",
+    "specialties": [
+      "Physical Presence",
+      "Veiled Threats",
+      "Interrogation"
+    ]
+  },
+  {
+    "key": "persuasion",
+    "label": "Persuasion",
+    "category": "social",
+    "specialties": [
+      "Negotiation",
+      "Flirting",
+      "Debate"
+    ]
+  },
+  {
+    "key": "socialize",
+    "label": "Socialize",
+    "category": "social",
+    "specialties": [
+      "High Society",
+      "Small Talk",
+      "Hosting"
+    ]
+  },
+  {
+    "key": "streetwise",
+    "label": "Streetwise",
+    "category": "social",
+    "specialties": [
+      "Black Markets",
+      "Gang Culture",
+      "Scouting"
+    ]
+  },
+  {
+    "key": "subterfuge",
+    "label": "Subterfuge",
+    "category": "social",
+    "specialties": [
+      "Lying",
+      "Misdirection",
+      "Con Jobs"
+    ]
+  },
+
+  {
+    "key": "arcana",
+    "label": "Arcana",
+    "category": "magical",
+    "specialties": [
+      "Theory",
+      "Mechanics",
+      "History"
+    ]
+  },
+  {
+    "key": "sensing",
+    "label": "Sensing",
+    "category": "magical",
+    "specialties": [
+      "Detection",
+      "Appraisal",
+      "Tracking"
+    ]
+  },
+  {
+    "key": "attunement",
+    "label": "Attunement",
+    "category": "magical",
+    "specialties": [
+      "Connection",
+      "Resonance",
+      "Synchronization"
+    ]
+  },
+  {
+    "key": "projection",
+    "label": "Projection",
+    "category": "magical",
+    "specialties": [
+      "Distance",
+      "Area",
+      "Duration"
+    ]
+  },
+  {
+    "key": "infusion",
+    "label": "Infusion",
+    "category": "magical",
+    "specialties": [
+      "Augmentation",
+      "Transfer",
+      "Overcharge"
+    ]
+  },
+  {
+    "key": "synthesis",
+    "label": "Synthesis",
+    "category": "magical",
+    "specialties": [
+      "Combination",
+      "Integration",
+      "Harmony"
+    ]
+  },
+  {
+    "key": "ritual",
+    "label": "Ritual",
+    "category": "magical",
+    "specialties": [
+      "Preparation",
+      "Components",
+      "Complexity"
+    ]
+  },
+  {
+    "key": "disjunction",
+    "label": "Disjunction",
+    "category": "magical",
+    "specialties": [
+      "Effects",
+      "Enchantments",
+      "Connections"
+    ]
+  }
   ],
+  
   "_sections_comment": [
     "section_definitions: ordered registry of every toggleable sheet section.",
     "Each entry: { key, label, group, zone, order, type, default, [state_key], [max_rating], [max], [beats_key], [xp_key] }",
