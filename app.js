@@ -2636,6 +2636,7 @@ function renderSkillBlock(){
             type="button"
             class="skill-spec"
             onclick="toggleSkillSpecialties('${sk}')"
+            style="font-size:.6rem;"
           >
             ${open?'▾':'▸'} Specialties${specialties.length?` (${specialties.length})`:''}
           </button>
