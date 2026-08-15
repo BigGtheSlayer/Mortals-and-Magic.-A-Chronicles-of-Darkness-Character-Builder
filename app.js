@@ -2440,7 +2440,38 @@ function renderSkillBlock(){
   const el=document.getElementById('skillBlock');
   if(!el)return;
 
-  el.innerHTML=Object.entries(SKILLS).map(([cat,skillList])=>{
+  const eligibleSkills=ALL_SKILLS.filter(sk=>{
+    const choices=SKILL_SPECIALTIES[sk]||[];
+    const selected=STATE.skills[sk]&&Array.isArray(STATE.skills[sk].specialties)
+      ? STATE.skills[sk].specialties
+      : [];
+
+    return choices.length>0 || selected.length>0;
+  });
+
+  const allSpecialtiesOpen=
+    eligibleSkills.length>0 &&
+    eligibleSkills.every(sk=>OPEN_SKILL_SPECIALTIES.has(sk));
+
+  el.innerHTML=`
+    <div style="
+      display:flex;
+      justify-content:flex-end;
+      margin-bottom:4px;
+    ">
+      <button
+        type="button"
+        onclick="toggleAllSkillSpecialties()"
+        title="${allSpecialtiesOpen?'Collapse all specialties':'Expand all specialties'}"
+        style="
+          font-size:.65rem;
+          padding:1px 5px;
+        "
+      >
+        ${allSpecialtiesOpen?'▾':'▸'} All
+      </button>
+    </div>
+  ` + Object.entries(SKILLS).map(([cat,skillList])=>{
 
     const skillRows=skillList.map(sk=>{
 
@@ -2655,6 +2686,34 @@ function renderSkillBlock(){
     `;
 
   }).join('');
+}
+
+function toggleAllSkillSpecialties(){
+  const eligibleSkills=ALL_SKILLS.filter(sk=>{
+    const choices=SKILL_SPECIALTIES[sk]||[];
+    const selected=STATE.skills[sk]&&Array.isArray(STATE.skills[sk].specialties)
+      ? STATE.skills[sk].specialties
+      : [];
+
+    return choices.length>0 || selected.length>0;
+  });
+
+  const allOpen=
+    eligibleSkills.length>0 &&
+    eligibleSkills.every(sk=>OPEN_SKILL_SPECIALTIES.has(sk));
+
+  if(allOpen){
+    eligibleSkills.forEach(sk=>{
+      OPEN_SKILL_SPECIALTIES.delete(sk);
+      EDITING_SKILL_SPECIALTIES.delete(sk);
+    });
+  }else{
+    eligibleSkills.forEach(sk=>{
+      OPEN_SKILL_SPECIALTIES.add(sk);
+    });
+  }
+
+  renderSkillBlock();
 }
 
 function setSkillRating(sk,val){
