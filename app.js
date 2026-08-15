@@ -2386,10 +2386,23 @@ function toggleEntityWpBox(idx){
 
 // ── Skill specialty UI ────────────────────────────────────────────────────────
 const OPEN_SKILL_SPECIALTIES=new Set();
+const EDITING_SKILL_SPECIALTIES=new Set();
+
+function toggleSkillSpecialtyEdit(sk){
+  if(EDITING_SKILL_SPECIALTIES.has(sk)){
+    EDITING_SKILL_SPECIALTIES.delete(sk);
+  }else{
+    EDITING_SKILL_SPECIALTIES.add(sk);
+  }
+
+  OPEN_SKILL_SPECIALTIES.add(sk);
+  renderSkillBlock();
+}
 
 function toggleSkillSpecialties(sk){
   if(OPEN_SKILL_SPECIALTIES.has(sk)){
     OPEN_SKILL_SPECIALTIES.delete(sk);
+    EDITING_SKILL_SPECIALTIES.delete(sk);
   }else{
     OPEN_SKILL_SPECIALTIES.add(sk);
   }
@@ -2489,50 +2502,115 @@ function renderSkillBlock(){
 
         ${open?`
           <div style="
-            margin:2px 0 8px 28px;
-            padding:6px 8px;
+            margin:2px 0 6px 32px;
+            padding:3px 8px;
             border-left:2px solid var(--border);
+            font-size:.72rem;
           ">
 
-            ${specialties.map((spec,i)=>`
+            ${!EDITING_SKILL_SPECIALTIES.has(sk)?`
+
               <div style="
                 display:flex;
                 align-items:center;
                 justify-content:space-between;
-                margin-bottom:3px;
-                font-size:.75rem;
+                gap:8px;
+                min-height:22px;
               ">
-                <span>${escH(spec)}</span>
+
+                <span style="
+                  flex:1;
+                  min-width:0;
+                ">
+                  ${specialties.length
+                    ? escH(specialties.join(', '))
+                    : '<span style="color:var(--faint)">No specialties</span>'
+                  }
+                </span>
 
                 <button
                   type="button"
-                  onclick="removeSkillSpecialty('${sk}',${i})"
-                  title="Remove specialty"
+                  onclick="toggleSkillSpecialtyEdit('${sk}')"
+                  style="
+                    padding:1px 5px;
+                    font-size:.68rem;
+                    flex-shrink:0;
+                  "
                 >
-                  ×
+                  Edit
                 </button>
+
               </div>
-            `).join('')}
 
-            ${availableChoices.length?`
-              <select
-                onchange="addSkillSpecialty('${sk}',this.value)"
-                onclick="event.stopPropagation()"
-              >
-                <option value="">+ Add specialty…</option>
+            `:`
 
-                ${availableChoices.map(spec=>`
-                  <option value="${escH(spec)}">${escH(spec)}</option>
+              `<div style="
+                display:flex;
+                align-items:center;
+                flex-wrap:wrap;
+                gap:4px;
+              ">
+
+                ${specialties.map((spec,i)=>`
+                  <span style="
+                    display:inline-flex;
+                    align-items:center;
+                    gap:3px;
+                    padding:1px 4px;
+                    border:1px solid var(--border);
+                    border-radius:3px;
+                    white-space:nowrap;
+                  ">
+                    ${escH(spec)}
+
+                    <button
+                      type="button"
+                      onclick="removeSkillSpecialty('${sk}',${i})"
+                      title="Remove specialty"
+                      style="
+                        border:0;
+                        background:none;
+                        padding:0 1px;
+                        cursor:pointer;
+                        font-size:.75rem;
+                      "
+                    >
+                      ×
+                    </button>
+                  </span>
                 `).join('')}
 
-              </select>
-            `:`
-              <span style="font-size:.7rem;color:var(--faint)">
-                ${allChoices.length
-                  ? 'All available specialties selected.'
-                  : 'No specialties configured for this skill.'}
-              </span>
-            `}
+                ${availableChoices.length?`
+                  <select
+                    onchange="addSkillSpecialty('${sk}',this.value)"
+                    onclick="event.stopPropagation()"
+                    style="
+                      width:auto;
+                      padding:1px 3px;
+                      font-size:.68rem;
+                    "
+                  >
+                    <option value="">+ Add specialty...</option>
+
+                    ${availableChoices.map(spec=>`
+                      <option value="${escH(spec)}">${escH(spec)}</option>
+                    `).join('')}
+                  </select>
+                `:''}
+
+                <button
+                  type="button"
+                  onclick="toggleSkillSpecialtyEdit('${sk}')"
+                  style="
+                    padding:1px 5px;
+                    font-size:.68rem;
+                  "
+                >
+                  Done
+                </button>
+
+              </div>`
+            }
 
           </div>
         `:''}
