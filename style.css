@@ -1084,7 +1084,7 @@ body.touch-device .ta-wrap textarea{
   .print-skill-name{color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
   .print-arcana-name{color:var(--text);white-space:normal;word-break:break-word}
   .print-skill-dots{display:flex;gap:2px;justify-content:flex-end}
-  .print-skill-spec{font-size:.6rem;color:var(--muted);font-style:italic;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .print-skill-spec{font-size:.8rem;color:var(--muted);font-style:italic;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
   .print-skill-spec-blank{border-bottom:1px solid var(--border-light);height:1px;align-self:flex-end;margin-bottom:3px}
 
   /* ── Resource tracks — compact squares at print ──────────────────────── */
