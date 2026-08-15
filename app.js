@@ -2437,12 +2437,12 @@ function removeSkillSpecialty(sk,index){
 }
 
 function renderSkillBlock(){
-  const el=document.getElementById('skillBlock');if(!el)return;
+  const el=document.getElementById('skillBlock');
+  if(!el)return;
 
-  el.innerHTML=Object.entries(SKILLS).map(([cat,skillList])=>`
-    <div class="skill-cat-lbl">${cat}</div>
+  el.innerHTML=Object.entries(SKILLS).map(([cat,skillList])=>{
 
-    <div class="skill-list">${skillList.map(sk=>{
+    const skillRows=skillList.map(sk=>{
 
       const sd=STATE.skills[sk]||{
         rating:0,
@@ -2457,18 +2457,158 @@ function renderSkillBlock(){
       const label=sd.label||SKILL_LABELS[sk];
 
       const allChoices=SKILL_SPECIALTIES[sk]||[];
-
       const availableChoices=allChoices.filter(
         spec=>!specialties.includes(spec)
       );
 
       const open=OPEN_SKILL_SPECIALTIES.has(sk);
+      const editing=EDITING_SKILL_SPECIALTIES.has(sk);
 
       const dots=[1,2,3,4,5].map(d=>
-        `<span class="dot${rating>=d?' filled':''}"
-          onclick="setSkillRating('${sk}',${d})"></span>`
+        `<span
+          class="dot${rating>=d?' filled':''}"
+          onclick="setSkillRating('${sk}',${d})"
+        ></span>`
       ).join('');
 
+      // ── Specialty area ────────────────────────────────────────────────
+      let specialtyPanel='';
+
+      if(open){
+
+        // Normal compact view
+        if(!editing){
+
+          const specialtyText=specialties.length
+            ? escH(specialties.join(', '))
+            : '<span style="color:var(--faint)">No specialties</span>';
+
+          specialtyPanel=`
+            <div style="
+              margin:2px 0 6px 32px;
+              padding:3px 8px;
+              border-left:2px solid var(--border);
+              font-size:.72rem;
+            ">
+              <div style="
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:8px;
+                min-height:22px;
+              ">
+                <span style="
+                  flex:1;
+                  min-width:0;
+                ">
+                  ${specialtyText}
+                </span>
+
+                <button
+                  type="button"
+                  onclick="toggleSkillSpecialtyEdit('${sk}')"
+                  style="
+                    padding:1px 5px;
+                    font-size:.68rem;
+                    flex-shrink:0;
+                  "
+                >
+                  Edit
+                </button>
+              </div>
+            </div>
+          `;
+
+        }
+
+        // Edit view
+        else{
+
+          const selectedSpecialties=specialties.map((spec,i)=>`
+            <span style="
+              display:inline-flex;
+              align-items:center;
+              gap:3px;
+              padding:1px 4px;
+              border:1px solid var(--border);
+              border-radius:3px;
+              white-space:nowrap;
+            ">
+              ${escH(spec)}
+
+              <button
+                type="button"
+                onclick="removeSkillSpecialty('${sk}',${i})"
+                title="Remove specialty"
+                style="
+                  border:0;
+                  background:none;
+                  padding:0 1px;
+                  cursor:pointer;
+                  font-size:.75rem;
+                "
+              >
+                ×
+              </button>
+            </span>
+          `).join('');
+
+          const addSpecialty=availableChoices.length
+            ? `
+              <select
+                onchange="addSkillSpecialty('${sk}',this.value)"
+                onclick="event.stopPropagation()"
+                style="
+                  width:auto;
+                  padding:1px 3px;
+                  font-size:.68rem;
+                "
+              >
+                <option value="">+ Add specialty...</option>
+
+                ${availableChoices.map(spec=>`
+                  <option value="${escH(spec)}">
+                    ${escH(spec)}
+                  </option>
+                `).join('')}
+              </select>
+            `
+            : '';
+
+          specialtyPanel=`
+            <div style="
+              margin:2px 0 6px 32px;
+              padding:3px 8px;
+              border-left:2px solid var(--border);
+              font-size:.72rem;
+            ">
+              <div style="
+                display:flex;
+                align-items:center;
+                flex-wrap:wrap;
+                gap:4px;
+              ">
+                ${selectedSpecialties}
+
+                ${addSpecialty}
+
+                <button
+                  type="button"
+                  onclick="toggleSkillSpecialtyEdit('${sk}')"
+                  style="
+                    padding:1px 5px;
+                    font-size:.68rem;
+                  "
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      // ── Main skill row ────────────────────────────────────────────────
       return `
         <div class="skill-row">
 
@@ -2488,7 +2628,9 @@ function renderSkillBlock(){
             title="Click to rename"
           >
 
-          <div class="dot-row">${dots}</div>
+          <div class="dot-row">
+            ${dots}
+          </div>
 
           <button
             type="button"
@@ -2500,124 +2642,19 @@ function renderSkillBlock(){
 
         </div>
 
-        ${open?`
-          <div style="
-            margin:2px 0 6px 32px;
-            padding:3px 8px;
-            border-left:2px solid var(--border);
-            font-size:.72rem;
-          ">
-
-            ${!EDITING_SKILL_SPECIALTIES.has(sk)?`
-
-              <div style="
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
-                gap:8px;
-                min-height:22px;
-              ">
-
-                <span style="
-                  flex:1;
-                  min-width:0;
-                ">
-                  ${specialties.length
-                    ? escH(specialties.join(', '))
-                    : '<span style="color:var(--faint)">No specialties</span>'
-                  }
-                </span>
-
-                <button
-                  type="button"
-                  onclick="toggleSkillSpecialtyEdit('${sk}')"
-                  style="
-                    padding:1px 5px;
-                    font-size:.68rem;
-                    flex-shrink:0;
-                  "
-                >
-                  Edit
-                </button>
-
-              </div>
-
-            `:`
-
-              <div style="
-                display:flex;
-                align-items:center;
-                flex-wrap:wrap;
-                gap:4px;
-              ">
-
-                ${specialties.map((spec,i)=>`
-                  <span style="
-                    display:inline-flex;
-                    align-items:center;
-                    gap:3px;
-                    padding:1px 4px;
-                    border:1px solid var(--border);
-                    border-radius:3px;
-                    white-space:nowrap;
-                  ">
-                    ${escH(spec)}
-
-                    <button
-                      type="button"
-                      onclick="removeSkillSpecialty('${sk}',${i})"
-                      title="Remove specialty"
-                      style="
-                        border:0;
-                        background:none;
-                        padding:0 1px;
-                        cursor:pointer;
-                        font-size:.75rem;
-                      "
-                    >
-                      ×
-                    </button>
-                  </span>
-                `).join('')}
-
-                ${availableChoices.length?`
-                  <select
-                    onchange="addSkillSpecialty('${sk}',this.value)"
-                    onclick="event.stopPropagation()"
-                    style="
-                      width:auto;
-                      padding:1px 3px;
-                      font-size:.68rem;
-                    "
-                  >
-                    <option value="">+ Add specialty...</option>
-
-                    ${availableChoices.map(spec=>`
-                      <option value="${escH(spec)}">${escH(spec)}</option>
-                    `).join('')}
-                  </select>
-                `:''}
-
-                <button
-                  type="button"
-                  onclick="toggleSkillSpecialtyEdit('${sk}')"
-                  style="
-                    padding:1px 5px;
-                    font-size:.68rem;
-                  "
-                >
-                  Done
-                </button>
-
-              </div>`
-            }
-
-          </div>
-        `:''}
+        ${specialtyPanel}
       `;
 
-    }).join('')}</div>
-  `).join('');
+    }).join('');
+
+    return `
+      <div class="skill-cat-lbl">${cat}</div>
+      <div class="skill-list">
+        ${skillRows}
+      </div>
+    `;
+
+  }).join('');
 }
 
 function setSkillRating(sk,val){
