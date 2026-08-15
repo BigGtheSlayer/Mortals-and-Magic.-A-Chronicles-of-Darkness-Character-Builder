@@ -2544,7 +2544,7 @@ function renderSkillBlock(){
 
             `:`
 
-              `<div style="
+              <div style="
                 display:flex;
                 align-items:center;
                 flex-wrap:wrap;
