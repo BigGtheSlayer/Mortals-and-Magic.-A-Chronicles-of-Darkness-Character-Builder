@@ -2441,12 +2441,11 @@ function renderSkillBlock(){
   if(!el)return;
 
   const eligibleSkills=ALL_SKILLS.filter(sk=>{
-    const choices=SKILL_SPECIALTIES[sk]||[];
     const selected=STATE.skills[sk]&&Array.isArray(STATE.skills[sk].specialties)
       ? STATE.skills[sk].specialties
       : [];
 
-    return choices.length>0 || selected.length>0;
+    return selected.length>0;
   });
 
   const allSpecialtiesOpen=
@@ -2454,24 +2453,27 @@ function renderSkillBlock(){
     eligibleSkills.every(sk=>OPEN_SKILL_SPECIALTIES.has(sk));
 
   el.innerHTML=`
-    <div style="
-      display:flex;
-      justify-content:flex-end;
-      margin-bottom:4px;
-    ">
-      <button
-        type="button"
-        onclick="toggleAllSkillSpecialties()"
-        title="${allSpecialtiesOpen?'Collapse all specialties':'Expand all specialties'}"
-        style="
-          font-size:.65rem;
-          padding:1px 5px;
-        "
-      >
-        ${allSpecialtiesOpen?'▾':'▸'} All
-      </button>
-    </div>
-  ` + Object.entries(SKILLS).map(([cat,skillList])=>{
+  <div style="
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    margin:0;
+    height:14px;
+  ">
+    <button
+      type="button"
+      onclick="toggleAllSkillSpecialties()"
+      title="${allSpecialtiesOpen?'Collapse all specialties':'Expand all specialties'}"
+      style="
+        font-size:.65rem;
+        padding:0 4px;
+        line-height:1;
+      "
+    >
+      ${allSpecialtiesOpen?'▾':'▸'} All
+    </button>
+  </div>
+` + Object.entries(SKILLS).map(([cat,skillList])=>{
 
     const skillRows=skillList.map(sk=>{
 
@@ -2690,12 +2692,11 @@ function renderSkillBlock(){
 
 function toggleAllSkillSpecialties(){
   const eligibleSkills=ALL_SKILLS.filter(sk=>{
-    const choices=SKILL_SPECIALTIES[sk]||[];
     const selected=STATE.skills[sk]&&Array.isArray(STATE.skills[sk].specialties)
       ? STATE.skills[sk].specialties
       : [];
 
-    return choices.length>0 || selected.length>0;
+    return selected.length>0;
   });
 
   const allOpen=
