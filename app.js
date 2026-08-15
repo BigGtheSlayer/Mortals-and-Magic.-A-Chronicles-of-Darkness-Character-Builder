@@ -2470,7 +2470,7 @@ function renderSkillBlock(){
         line-height:1;
       "
     >
-      ${allSpecialtiesOpen?'▾':'▸'} All
+      ${allSpecialtiesOpen?'▾':'▸'} Show/Hide All Specialties
     </button>
   </div>
 ` + Object.entries(SKILLS).map(([cat,skillList])=>{
