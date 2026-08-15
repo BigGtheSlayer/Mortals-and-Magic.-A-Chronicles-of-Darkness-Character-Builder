@@ -5,7 +5,7 @@ const ATTRIBUTES={mental:['intelligence','wits','resolve'],physical:['strength',
 const ATTR_LABELS={intelligence:'Intelligence',wits:'Wits',resolve:'Resolve',strength:'Strength',dexterity:'Dexterity',stamina:'Stamina',presence:'Presence',manipulation:'Manipulation',composure:'Composure',potency:'Potency',control:'Control',fortitude:'Fortitude'};
 // SKILLS / SKILL_LABELS / ALL_SKILLS — populated from data.json skill_definitions.
 // Skills are configurable (add/remove/rename) unlike attributes.
-let SKILLS={},SKILL_LABELS={},ALL_SKILLS=[];
+let SKILLS={},SKILL_LABELS={},SKILL_SPECIALTIES={},ALL_SKILLS=[];
 
 // SECTION_DEFS — full array of section definition objects from data.json.
 // SEC_DEFAULTS — map of key → boolean (true = visible by default for that section).
@@ -90,10 +90,15 @@ async function loadDB(){
   });
 
   window._DB_RAW=d;
-  SKILLS={};SKILL_LABELS={};ALL_SKILLS=[];
+  SKILLS={};SKILL_LABELS={};SKILL_SPECIALTIES={};ALL_SKILLS=[];
+
   (d.skill_definitions||[]).forEach(sd=>{
     if(!SKILLS[sd.category])SKILLS[sd.category]=[];
-    SKILLS[sd.category].push(sd.key);SKILL_LABELS[sd.key]=sd.label;ALL_SKILLS.push(sd.key);
+   
+    SKILLS[sd.category].push(sd.key);
+    SKILL_LABELS[sd.key]=sd.label;
+    SKILL_SPECIALTIES[sd.key]=Array.isArray(sd.specialties) ? sd.specialties : [];
+    ALL_SKILLS.push(sd.key);
   });
   rebuildZones();
   PRESETS=d.sheet_presets||[];
@@ -965,7 +970,13 @@ function generateMortal(){
   const skillSpreads=gen.skill_spreads||[11,7,4,3];
   const skillDots={[skillCats[0]]:skillSpreads[0]||11,[skillCats[1]]:skillSpreads[1]||7,[skillCats[2]]:skillSpreads[2]||4,[skillCats[3]]:skillSpreads[3]||3};
   const skills={};
-  ALL_SKILLS.forEach(s=>skills[s]={rating:0,rote:false,specialty:'',label:SKILL_LABELS[s]});
+    ALL_SKILLS.forEach(s=>skills[s]={
+      rating:0,
+      rote:false,
+      specialties:[],
+      label:SKILL_LABELS[s]
+    });
+
   Object.entries(SKILLS).forEach(([cat,skList])=>{
     const vals=_distributeSkills(skillDots[cat]||4,skList.length);
     skList.forEach((s,i)=>skills[s].rating=Math.min(5,vals[i]));
@@ -1009,7 +1020,17 @@ function generateEntity(){
   // Preserve existing sectionConfig (preset already applied)
   const savedConfig={...STATE.sectionConfig};
   const attrs=Object.fromEntries(Object.values(ATTRIBUTES).flat().map(a=>[a,1]));
-  const skills=Object.fromEntries(ALL_SKILLS.map(s=>[s,{rating:0,rote:false,specialty:'',label:SKILL_LABELS[s]}]));
+  const skills=Object.fromEntries(
+    ALL_SKILLS.map(s=>[
+      s,
+      {
+        rating:0,
+        rote:false,
+        specialties:[],
+        label:SKILL_LABELS[s]
+      }
+    ])
+  );
   STATE=_baseCharacterFields(attrs,skills);
   STATE.sectionConfig=savedConfig;
   STATE.name=name;
@@ -1034,7 +1055,17 @@ function blank(){
   _applySelectedPreset('Mortal');
   const appliedConfig={...STATE.sectionConfig};
   const attrs=Object.fromEntries(Object.values(ATTRIBUTES).flat().map(a=>[a,1]));
-  const skills=Object.fromEntries(ALL_SKILLS.map(s=>[s,{rating:0,rote:false,specialty:'',label:SKILL_LABELS[s]}]));
+  const skills=Object.fromEntries(
+    ALL_SKILLS.map(s=>[
+      s,
+      {
+        rating:0,
+        rote:false,
+        specialties:[],
+        label:SKILL_LABELS[s]
+      }
+    ])
+  );
   STATE=_baseCharacterFields(attrs,skills);
   // Restore the applied preset config (overrides the empty sectionConfig from _baseCharacterFields)
   STATE.sectionConfig={...appliedConfig};
@@ -1047,7 +1078,17 @@ function blankEntity(){
   const rankSel=document.getElementById('entityRankSelect');
   const rank=parseInt((rankSel&&rankSel.value)||'3')||3;
   const attrs=Object.fromEntries(Object.values(ATTRIBUTES).flat().map(a=>[a,1]));
-  const skills=Object.fromEntries(ALL_SKILLS.map(s=>[s,{rating:0,rote:false,specialty:'',label:SKILL_LABELS[s]}]));
+  const skills=Object.fromEntries(
+    ALL_SKILLS.map(s=>[
+      s,
+      {
+        rating:0,
+        rote:false,
+        specialties:[],
+        label:SKILL_LABELS[s]
+      }
+    ])
+  );
   const savedConfig={...STATE.sectionConfig};
   STATE=_baseCharacterFields(attrs,skills);
   STATE.sectionConfig=savedConfig;
@@ -1088,9 +1129,25 @@ function patchState(){
   Object.values(ATTRIBUTES).flat().forEach(a=>{if(STATE.attributes[a]==null)STATE.attributes[a]=1;});
   if(!STATE.skills)STATE.skills={};
   ALL_SKILLS.forEach(s=>{
-    if(!STATE.skills[s])STATE.skills[s]={rating:0,rote:false,specialty:'',label:SKILL_LABELS[s]};
+    if(!STATE.skills[s]){
+      STATE.skills[s]={
+        rating:0,
+        rote:false,
+        specialties:[],
+        label:SKILL_LABELS[s]
+      };
+    }
+
     if(STATE.skills[s].rote==null)STATE.skills[s].rote=false;
-    if(STATE.skills[s].specialty==null)STATE.skills[s].specialty='';
+
+    // Migrate old characters with one free-text specialty
+    if(!Array.isArray(STATE.skills[s].specialties)){
+      STATE.skills[s].specialties=
+        STATE.skills[s].specialty
+          ? [STATE.skills[s].specialty]
+          : [];
+    }
+
     if(!STATE.skills[s].label)STATE.skills[s].label=SKILL_LABELS[s];
   });
   SECTION_DEFS.forEach(sd=>{
@@ -2327,30 +2384,177 @@ function toggleEntityWpBox(idx){
 }
 // ── End Ephemeral Entity renderers ────────────────────────────────────────────
 
+// ── Skill specialty UI ────────────────────────────────────────────────────────
+const OPEN_SKILL_SPECIALTIES=new Set();
+
+function toggleSkillSpecialties(sk){
+  if(OPEN_SKILL_SPECIALTIES.has(sk)){
+    OPEN_SKILL_SPECIALTIES.delete(sk);
+  }else{
+    OPEN_SKILL_SPECIALTIES.add(sk);
+  }
+
+  renderSkillBlock();
+}
+
+function addSkillSpecialty(sk,spec){
+  if(!spec)return;
+
+  if(!STATE.skills[sk].specialties){
+    STATE.skills[sk].specialties=[];
+  }
+
+  if(!STATE.skills[sk].specialties.includes(spec)){
+    STATE.skills[sk].specialties.push(spec);
+  }
+
+  OPEN_SKILL_SPECIALTIES.add(sk);
+  renderSkillBlock();
+  autoSave();
+}
+
+function removeSkillSpecialty(sk,index){
+  if(!Array.isArray(STATE.skills[sk].specialties))return;
+
+  STATE.skills[sk].specialties.splice(index,1);
+
+  OPEN_SKILL_SPECIALTIES.add(sk);
+  renderSkillBlock();
+  autoSave();
+}
+
 function renderSkillBlock(){
   const el=document.getElementById('skillBlock');if(!el)return;
+
   el.innerHTML=Object.entries(SKILLS).map(([cat,skillList])=>`
     <div class="skill-cat-lbl">${cat}</div>
+
     <div class="skill-list">${skillList.map(sk=>{
-      const sd=STATE.skills[sk]||{rating:0,rote:false,specialty:'',label:SKILL_LABELS[sk]};
-      const rating=sd.rating||0,rote=sd.rote||false,spec=sd.specialty||'',label=sd.label||SKILL_LABELS[sk];
-      const dots=[1,2,3,4,5].map(d=>`<span class="dot${rating>=d?' filled':''}" onclick="setSkillRating('${sk}',${d})"></span>`).join('');
-      return `<div class="skill-row">
-        <input type="checkbox" class="skill-rote" title="Rote skill" ${rote?'checked':''}
-          onchange="STATE.skills['${sk}'].rote=this.checked">
-        <input class="skill-name-inp" value="${escH(label)}"
-          onchange="STATE.skills['${sk}'].label=this.value" onclick="event.stopPropagation()" title="Click to rename">
-        <div class="dot-row">${dots}</div>
-        <input class="skill-spec" value="${escH(spec)}"
-          onchange="STATE.skills['${sk}'].specialty=this.value" onclick="event.stopPropagation()">
-      </div>`;
-    }).join('')}</div>`).join('');
+
+      const sd=STATE.skills[sk]||{
+        rating:0,
+        rote:false,
+        specialties:[],
+        label:SKILL_LABELS[sk]
+      };
+
+      const rating=sd.rating||0;
+      const rote=sd.rote||false;
+      const specialties=Array.isArray(sd.specialties)?sd.specialties:[];
+      const label=sd.label||SKILL_LABELS[sk];
+
+      const allChoices=SKILL_SPECIALTIES[sk]||[];
+
+      const availableChoices=allChoices.filter(
+        spec=>!specialties.includes(spec)
+      );
+
+      const open=OPEN_SKILL_SPECIALTIES.has(sk);
+
+      const dots=[1,2,3,4,5].map(d=>
+        `<span class="dot${rating>=d?' filled':''}"
+          onclick="setSkillRating('${sk}',${d})"></span>`
+      ).join('');
+
+      return `
+        <div class="skill-row">
+
+          <input
+            type="checkbox"
+            class="skill-rote"
+            title="Rote skill"
+            ${rote?'checked':''}
+            onchange="STATE.skills['${sk}'].rote=this.checked"
+          >
+
+          <input
+            class="skill-name-inp"
+            value="${escH(label)}"
+            onchange="STATE.skills['${sk}'].label=this.value"
+            onclick="event.stopPropagation()"
+            title="Click to rename"
+          >
+
+          <div class="dot-row">${dots}</div>
+
+          <button
+            type="button"
+            class="skill-spec"
+            onclick="toggleSkillSpecialties('${sk}')"
+          >
+            ${open?'▾':'▸'} Specialties${specialties.length?` (${specialties.length})`:''}
+          </button>
+
+        </div>
+
+        ${open?`
+          <div style="
+            margin:2px 0 8px 28px;
+            padding:6px 8px;
+            border-left:2px solid var(--border);
+          ">
+
+            ${specialties.map((spec,i)=>`
+              <div style="
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                margin-bottom:3px;
+                font-size:.75rem;
+              ">
+                <span>${escH(spec)}</span>
+
+                <button
+                  type="button"
+                  onclick="removeSkillSpecialty('${sk}',${i})"
+                  title="Remove specialty"
+                >
+                  ×
+                </button>
+              </div>
+            `).join('')}
+
+            ${availableChoices.length?`
+              <select
+                onchange="addSkillSpecialty('${sk}',this.value)"
+                onclick="event.stopPropagation()"
+              >
+                <option value="">+ Add specialty…</option>
+
+                ${availableChoices.map(spec=>`
+                  <option value="${escH(spec)}">${escH(spec)}</option>
+                `).join('')}
+
+              </select>
+            `:`
+              <span style="font-size:.7rem;color:var(--faint)">
+                ${allChoices.length
+                  ? 'All available specialties selected.'
+                  : 'No specialties configured for this skill.'}
+              </span>
+            `}
+
+          </div>
+        `:''}
+      `;
+
+    }).join('')}</div>
+  `).join('');
 }
+
 function setSkillRating(sk,val){
-  if(!STATE.skills[sk])STATE.skills[sk]={rating:0,rote:false,specialty:'',label:SKILL_LABELS[sk]};
+  if(!STATE.skills[sk])STATE.skills[sk]={
+    rating:0,
+    rote:false,
+    specialties:[],
+    label:SKILL_LABELS[sk]
+  };
+
   STATE.skills[sk].rating=(val===STATE.skills[sk].rating)?val-1:val;
   STATE.skills[sk].rating=Math.max(0,STATE.skills[sk].rating);
-  updateDerived();renderSkillBlock();
+
+  updateDerived();
+  renderSkillBlock();
 }
 
 function getDerivedOverrides(){if(!STATE.derivedOverrides)STATE.derivedOverrides={};return STATE.derivedOverrides;}
@@ -3725,7 +3929,8 @@ function copyText(){
   const skillStr=Object.entries(SKILLS).map(([cat,skList])=>
     `  ${cat.toUpperCase()}:\n`+skList.filter(k=>sk(k)>0).map(k=>{
       const sd=STATE.skills[k]||{};
-      return `    ${sd.label||SKILL_LABELS[k]} ${'●'.repeat(sk(k))}${sd.specialty?` (${sd.specialty})`:''}${sd.rote?' [Rote]':''}`;
+      const specialties=Array.isArray(sd.specialties)?sd.specialties:[];
+      return `    ${sd.label||SKILL_LABELS[k]} ${'●'.repeat(sk(k))}${specialties.length?` (${specialties.join(', ')})`:''}${sd.rote?' [Rote]':''}`;
     }).join('\n')).join('\n');
   const healthStr=(STATE.health_track||[]).map(s=>!s?'□':s==='b'?'/':s==='l'?'X':'*').join(' ');
   const hdrStr=(ZONES['header']||[]).filter(sd=>sd.type==='header-fields'&&secVisible(sd.key)).flatMap(sd=>
@@ -7156,13 +7361,14 @@ function renderSkillBlockCompact(){
   Object.entries(SKILLS).forEach(([cat,skillList])=>{
     rows.push(`<div class="print-skill-cat">${cat}</div>`);
     skillList.forEach(sk=>{
-      const sd=STATE.skills[sk]||{rating:0,rote:false,specialty:'',label:SKILL_LABELS[sk]};
+      const sd=STATE.skills[sk]||{rating:0,rote:false,specialties:[],label:SKILL_LABELS[sk]};
       const rating=sd.rating||0;
       const dots=Array.from({length:5},(_,i)=>
         `<span class="dot${rating>=i+1?' filled':''}" style="width:9px;height:9px;border-width:1px"></span>`
       ).join('');
-      const spec=sd.specialty
-        ?`<span class="print-skill-spec">${escH(sd.specialty)}</span>`
+      const specialties=Array.isArray(sd.specialties)?sd.specialties:[];
+      const spec=specialties.length
+        ?`<span class="print-skill-spec">${escH(specialties.join(', '))}</span>`
         :`<span class="print-skill-spec-blank"></span>`;
       // Only show rote marker when the skill is actually marked as rote
       const rote=sd.rote?'<span class="print-skill-rote">●</span>':'<span class="print-skill-rote-empty"></span>';

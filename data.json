@@ -22,12 +22,22 @@
     {
       "key": "academics",
       "label": "Academics",
-      "category": "mental"
+      "category": "mental",
+      "specialties": [
+        "Ancient History",
+        "Legal Codes",
+        "Theology"
+      ]
     },
     {
       "key": "computer",
       "label": "Computer",
-      "category": "mental"
+      "category": "mental",
+      "specialties": [
+        "Hacking",
+        "Data Mining",
+        "Graphic Design"
+      ]
     },
     {
       "key": "crafts",
